@@ -1,8 +1,13 @@
 version: 2
 updates:
+  # Major versions are upgraded by hand, one at a time; Dependabot only proposes minor and patch updates. A Python
+  # update must also bump the exact pins in `job_dependencies` (databricks.yml), which the jobs install.
   - package-ecosystem: uv
     directory: /
     schedule: { interval: weekly }
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
     groups:
       python: { patterns: ["*"] }
 
@@ -12,6 +17,9 @@ updates:
     directory: /app/brickfill
     schedule: { interval: weekly }
     labels: [dependencies, needs-dev-deploy]
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
     groups:
       appkit:
         patterns: ["@databricks/*"]
