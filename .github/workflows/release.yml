@@ -43,5 +43,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          prerelease=$([[ "$GITHUB_REF_NAME" == v0.* || "$GITHUB_REF_NAME" == *-* ]] && echo --prerelease || true)
+          # only a suffixed tag (v1.0.0-rc.1) is a pre-release; a plain vX.Y.Z is published as the latest release
+          prerelease=$([[ "$GITHUB_REF_NAME" == *-* ]] && echo --prerelease || true)
           gh release create "$GITHUB_REF_NAME" --title "BrickFill $GITHUB_REF_NAME" --notes-file notes.md --verify-tag $prerelease
