@@ -10,5 +10,6 @@ __pycache__/
 .databricks/
 .env
 
-# Local agent workspace
+# Local agent workspace and design-tool working files (Impeccable briefs, captures, sidecar)
 .isaac/
+.impeccable/
