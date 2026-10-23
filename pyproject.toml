@@ -8,7 +8,7 @@ readme = "README.md"
 requires-python = ">=3.10,<3.13"
 dependencies = [
   "databricks-sdk[openai]>=0.81.0,<1",
-  "mcp>=1.30,<2",
+  "mcp>=1.30,<3",
   "httpx>=0.28,<1",
   "Pillow>=11,<13",
   "pydantic>=2.11,<3",
@@ -21,7 +21,7 @@ dev = [
   "jsonschema>=4,<5",
   "PyYAML>=6,<7",
   "regex>=2024,<2027",
-  "pytest>=8,<9",
+  "pytest>=8,<10",
   "ruff>=0.12,<1"
 ]
 
