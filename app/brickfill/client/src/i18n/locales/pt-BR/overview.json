@@ -25,7 +25,6 @@
     }
   },
   "nextAction": {
-    "title": "Próxima ação",
     "heading": "Priorize produtos com revisão necessária",
     "description": "Abra o catálogo, confira as fontes e registre qualquer correção com a sua evidência.",
     "cta": "Abrir fila de revisão"

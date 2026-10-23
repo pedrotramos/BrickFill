@@ -54,6 +54,7 @@ import type { TFunction } from '../i18n/translator';
 import { AttributeAudit } from '../components/AttributeAudit';
 import { ManualEvidenceForm } from '../components/ManualEvidenceForm';
 import type { EvidenceReference } from '../components/AttributeAudit';
+import { RefreshButton } from '../components/PageHeader';
 import { QualityInfo } from '../components/QualityInfo';
 import { StatusBadge, ToneBadge } from '../components/StatusBadge';
 import { useCatalogQuery } from '../lib/catalog-query';
@@ -200,6 +201,8 @@ const AUDIT_EVENTS = new Set([
 ]);
 
 const REVIEW_STATUSES = new Set(['PENDING', 'IN_REVIEW', 'APPROVED', 'REJECTED']);
+/** Review states shown beside the enrichment status; PENDING (no review yet) adds nothing to it. */
+const REVIEW_DECISIONS = new Set(['IN_REVIEW', 'APPROVED', 'REJECTED']);
 
 /** New value of a history event; review statuses are stored as codes and shown translated. */
 function historyValue(t: TFunction, event: AuditEvent): string {
@@ -550,38 +553,36 @@ export function ProductPage() {
           </AlertDescription>
         </Alert>
       ) : null}
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/catalog">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('product:backToCatalog')}
-            </Link>
-          </Button>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button disabled={refreshing} variant="outline" size="sm" onClick={refresh}>
-              <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-              {t('product:refresh')}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-3">
+        <Button asChild className="-ml-2" variant="ghost" size="sm">
+          <Link to="/catalog">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t('product:backToCatalog')}
+          </Link>
+        </Button>
+        <div className="order-last flex w-full flex-wrap items-center gap-2 md:order-none md:ml-auto md:w-auto">
+          <RefreshButton busy={refreshing} label={t('product:refresh')} onClick={refresh} />
+          {nextProduct ? (
+            <Button asChild size="sm" title={nextProduct.display_title}>
+              <Link to={`/catalog/${nextProduct.ean}`}>
+                {t('product:queue.next')}
+                <span className="ml-1 font-normal opacity-80">
+                  {t('product:queue.remaining', { count: nextProduct.remaining })}
+                </span>
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
-            {nextProduct ? (
-              <Button asChild size="sm" title={nextProduct.display_title}>
-                <Link to={`/catalog/${nextProduct.ean}`}>
-                  {t('product:queue.next')}
-                  <span className="ml-1 font-normal opacity-80">
-                    {t('product:queue.remaining', { count: nextProduct.remaining })}
-                  </span>
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            ) : next.data ? (
-              <span className="text-xs text-muted-foreground">{t('product:queue.empty')}</span>
-            ) : null}
-          </div>
+          ) : next.data ? (
+            <span className="text-xs text-muted-foreground">{t('product:queue.empty')}</span>
+          ) : null}
         </div>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-4xl">
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <StatusBadge status={reviewState.review?.status ?? product.status} />
+              <StatusBadge status={product.status} />
+              {reviewState.review?.status && REVIEW_DECISIONS.has(reviewState.review.status) ? (
+                <StatusBadge status={reviewState.review.status} />
+              ) : null}
               <Badge variant="outline">{t('product:gtin', { gtin: product.ean })}</Badge>
               {productId ? <Badge variant="outline">{t('product:productId', { id: productId })}</Badge> : null}
               {product.category ? (
@@ -596,7 +597,7 @@ export function ProductPage() {
                 </Badge>
               ) : null}
             </div>
-            <h1 className="break-words text-3xl font-semibold tracking-tight">
+            <h1 className="break-words text-[1.375rem] leading-7 font-semibold">
               {product.generated_title || product.source_title || t('product:gtin', { gtin: product.ean })}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">

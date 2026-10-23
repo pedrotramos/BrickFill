@@ -25,7 +25,6 @@
     }
   },
   "nextAction": {
-    "title": "Siguiente paso",
     "heading": "Empieza por los productos que requieren revisión",
     "description": "Abre el catálogo, revisa las fuentes y registra cada corrección con su evidencia.",
     "cta": "Abrir la cola de revisión"

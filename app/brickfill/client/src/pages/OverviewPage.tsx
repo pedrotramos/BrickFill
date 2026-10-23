@@ -1,24 +1,16 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Skeleton,
-} from '@databricks/appkit-ui/react';
-import { AlertCircle, CheckCircle2, ClipboardList, Database, RefreshCw, Sparkles } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle, Card, CardContent, Skeleton } from '@databricks/appkit-ui/react';
+import { AlertCircle, CheckCircle2, ClipboardList, Database, Gauge } from 'lucide-react';
 import { useTranslation } from '../i18n/react';
 import { Link } from 'react-router';
 import { queryErrorText } from '../lib/api-errors';
+import { PageHeader, RefreshButton } from '../components/PageHeader';
 import { QualityInfo } from '../components/QualityInfo';
 import { useCatalogQuery } from '../lib/catalog-query';
 import { formatDate, formatNumber, formatPercent } from '../lib/formatters';
 
-function MetricCard({
+/** One figure of the summary panel: label (with the tone icon of the status it counts), value and what it means. */
+function Metric({
   title,
   value,
   detail,
@@ -35,19 +27,15 @@ function MetricCard({
   info?: ReactNode;
 }) {
   return (
-    <Card className="gap-2">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="flex items-center gap-1 text-sm font-medium">
-          {title}
-          {info}
-        </CardTitle>
-        <Icon className={`h-4 w-4 ${iconClassName}`} aria-hidden="true" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-semibold tabular-nums">{value}</div>
-        <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
-      </CardContent>
-    </Card>
+    <div className="min-w-0 bg-card p-4 sm:p-5">
+      <h2 className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+        <Icon className={`h-4 w-4 shrink-0 ${iconClassName}`} aria-hidden="true" />
+        {title}
+        {info}
+      </h2>
+      <p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p>
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">{detail}</p>
+    </div>
   );
 }
 
@@ -62,28 +50,20 @@ export function OverviewPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{t('overview:title')}</h1>
-          <p className="mt-1 text-muted-foreground">{t('overview:subtitle')}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <p className="text-xs text-muted-foreground">
-            {row?.last_updated_at
-              ? t('overview:updatedAt', { date: formatDate(row.last_updated_at) })
-              : t('common:notUpdatedYet')}
-          </p>
-          <Button
-            aria-label={t('overview:refresh')}
-            disabled={loading}
-            size="icon"
-            variant="outline"
-            onClick={() => setRefreshToken(Date.now())}
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        actions={
+          <>
+            <p className="text-xs text-muted-foreground">
+              {row?.last_updated_at
+                ? t('overview:updatedAt', { date: formatDate(row.last_updated_at) })
+                : t('common:notUpdatedYet')}
+            </p>
+            <RefreshButton busy={loading} label={t('overview:refresh')} onClick={() => setRefreshToken(Date.now())} />
+          </>
+        }
+        description={t('overview:subtitle')}
+        title={t('overview:title')}
+      />
 
       {error && (
         <Alert variant="destructive">
@@ -94,34 +74,33 @@ export function OverviewPage() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
-          {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-36" />
-          ))}
-        </div>
+        <Skeleton className="h-32 rounded-xl" />
       ) : (
-        <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
-          <MetricCard
+        <section
+          aria-label={t('overview:title')}
+          className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border xl:grid-cols-4"
+        >
+          <Metric
             title={t('overview:metrics.products.title')}
             value={formatNumber(row?.product_count)}
             detail={t('overview:metrics.products.detail')}
             icon={Database}
           />
-          <MetricCard
+          <Metric
             title={t('overview:metrics.enriched.title')}
             value={formatNumber(row?.enriched_count)}
             detail={t('overview:metrics.enriched.detail')}
             icon={CheckCircle2}
             iconClassName="text-info"
           />
-          <MetricCard
+          <Metric
             title={t('overview:metrics.review.title')}
             value={formatNumber(row?.review_count)}
             detail={t('overview:metrics.review.detail')}
             icon={ClipboardList}
             iconClassName="text-warning"
           />
-          <MetricCard
+          <Metric
             title={t('overview:metrics.quality.title')}
             value={row?.average_quality == null ? '—' : formatPercent(row.average_quality)}
             detail={
@@ -133,25 +112,20 @@ export function OverviewPage() {
                   })
                 : t('overview:metrics.quality.empty')
             }
-            icon={Sparkles}
+            icon={Gauge}
             info={<QualityInfo averaged />}
           />
-        </div>
+        </section>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle aria-level={2} role="heading">
-            {t('overview:nextAction.title')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <Card className="py-5">
+        <CardContent className="flex flex-col gap-4 px-5 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="font-medium">{t('overview:nextAction.heading')}</p>
-            <p className="text-sm text-muted-foreground">{t('overview:nextAction.description')}</p>
+            <h2 className="text-sm font-semibold">{t('overview:nextAction.heading')}</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">{t('overview:nextAction.description')}</p>
           </div>
           <Link
-            className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="inline-flex min-h-8 shrink-0 items-center justify-center rounded-md bg-primary px-3 py-1.5 text-center text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             to="/catalog?status=REVIEW_REQUIRED"
           >
             {t('overview:nextAction.cta')}

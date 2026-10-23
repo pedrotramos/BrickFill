@@ -18,7 +18,7 @@
     "next": "Próximo para revisar",
     "remaining_one": "({{count}} restante)",
     "remaining_other": "({{count}} restantes)",
-    "empty": "A fila de revisão está vazia",
+    "empty": "Nenhum outro produto na fila de revisão",
     "afterDecision": "Ao aprovar ou rejeitar, o próximo produto da fila de revisão é aberto."
   },
   "gtin": "GTIN {{gtin}}",

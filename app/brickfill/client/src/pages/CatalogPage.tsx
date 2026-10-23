@@ -8,8 +8,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -28,7 +26,8 @@ import {
   TableHeader,
   TableRow,
 } from '@databricks/appkit-ui/react';
-import { AlertCircle, ArrowRight, ChevronLeft, ChevronRight, RefreshCw, Search, SlidersHorizontal } from 'lucide-react';
+import { AlertCircle, ArrowRight, ChevronLeft, ChevronRight, Search, SlidersHorizontal } from 'lucide-react';
+import { PageHeader, RefreshButton } from '../components/PageHeader';
 import { QualityInfo } from '../components/QualityInfo';
 import { StatusBadge } from '../components/StatusBadge';
 import { queryErrorText } from '../lib/api-errors';
@@ -51,6 +50,11 @@ const SORTS = [
 ] as const;
 /** Decisions saved by a reviewer, shown next to the status the enrichment job gave the product. */
 const DECISIONS = new Set(['IN_REVIEW', 'APPROVED', 'REJECTED']);
+
+/** A product never enriched has no quality or coverage yet: a dash, not a measured 0%. */
+function measured(product: { status: string }, value: number | null | undefined) {
+  return product.status === 'PENDING' ? '—' : formatPercent(value);
+}
 
 export function CatalogPage() {
   const { t } = useTranslation();
@@ -99,138 +103,128 @@ export function CatalogPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">{t('catalog:title')}</h1>
-        <p className="mt-1 text-muted-foreground">{t('catalog:subtitle')}</p>
-      </div>
+      <PageHeader
+        actions={<RefreshButton label={t('catalog:refresh')} onClick={() => setRefreshToken(Date.now())} />}
+        description={t('catalog:subtitle')}
+        title={t('catalog:title')}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle aria-level={2} role="heading">
-            {t('catalog:filters.title')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(280px,1fr)_160px_190px_200px_210px_auto]">
-          <form
-            className="relative"
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault();
-              changeFilter(setSearch)(searchInput.trim());
-            }}
-          >
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              aria-label={t('catalog:filters.searchLabel')}
-              className="pl-9"
-              placeholder={t('catalog:filters.searchPlaceholder')}
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-            />
-          </form>
-          <Button
-            aria-controls="catalog-filters"
-            aria-expanded={filtersOpen}
-            className="justify-between md:hidden"
-            variant="outline"
-            onClick={() => setFiltersOpen(!filtersOpen)}
-          >
-            <span className="inline-flex items-center gap-2">
-              <SlidersHorizontal aria-hidden className="h-4 w-4" />
-              {filtersOpen ? t('catalog:filters.hide') : t('catalog:filters.show')}
+      {/* A toolbar right above the table, as in the workspace lists; it wraps instead of overflowing. */}
+      <section aria-labelledby="catalog-filters-title" className="grid gap-2 md:flex md:flex-wrap md:items-center">
+        <h2 className="sr-only" id="catalog-filters-title">
+          {t('catalog:filters.title')}
+        </h2>
+        <form
+          className="relative md:min-w-56 md:max-w-96 md:flex-1"
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            changeFilter(setSearch)(searchInput.trim());
+          }}
+        >
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            aria-label={t('catalog:filters.searchLabel')}
+            className="pl-9"
+            placeholder={t('catalog:filters.searchPlaceholder')}
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+          />
+        </form>
+        <Button
+          aria-controls="catalog-filters"
+          aria-expanded={filtersOpen}
+          className="justify-between md:hidden"
+          variant="outline"
+          onClick={() => setFiltersOpen(!filtersOpen)}
+        >
+          <span className="inline-flex items-center gap-2">
+            <SlidersHorizontal aria-hidden className="h-4 w-4" />
+            {filtersOpen ? t('catalog:filters.hide') : t('catalog:filters.show')}
+          </span>
+          {activeFilters ? (
+            <span className="text-xs text-muted-foreground">
+              {t('catalog:filters.active', { count: activeFilters })}
             </span>
-            {activeFilters ? (
-              <span className="text-xs text-muted-foreground">
-                {t('catalog:filters.active', { count: activeFilters })}
-              </span>
-            ) : null}
-          </Button>
-          <div className={`${filtersOpen ? 'grid' : 'hidden'} gap-3 md:contents`} id="catalog-filters">
-            <Select
-              value={status || '__all__'}
-              onValueChange={(value) => changeFilter(setStatus)(value === '__all__' ? '' : value)}
+          ) : null}
+        </Button>
+        <div className={`${filtersOpen ? 'grid' : 'hidden'} gap-2 md:contents`} id="catalog-filters">
+          <Select
+            value={status || '__all__'}
+            onValueChange={(value) => changeFilter(setStatus)(value === '__all__' ? '' : value)}
+          >
+            <SelectTrigger aria-label={t('catalog:filters.statusLabel')} className="w-full md:w-auto">
+              <SelectValue placeholder={t('catalog:filters.allStatuses')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">{t('catalog:filters.allStatuses')}</SelectItem>
+              <SelectItem value="REVIEW_REQUIRED">{t('common:status.REVIEW_REQUIRED')}</SelectItem>
+              <SelectItem value="ENRICHED">{t('common:status.ENRICHED')}</SelectItem>
+              <SelectItem value="PENDING">{t('common:status.PENDING')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={category || '__all__'}
+            onValueChange={(value) => changeFilter(setCategory)(value === '__all__' ? '' : value)}
+          >
+            <SelectTrigger aria-label={t('catalog:filters.categoryLabel')} className="w-full md:w-auto">
+              <SelectValue placeholder={t('catalog:filters.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">{t('catalog:filters.allCategories')}</SelectItem>
+              {categories.data?.map((item) => (
+                <SelectItem key={categoryKey(item)} value={item.category}>
+                  {item.category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={issue || '__all__'}
+            onValueChange={(value) => changeFilter(setIssue)(value === '__all__' ? '' : value)}
+          >
+            <SelectTrigger aria-label={t('catalog:filters.issueLabel')} className="w-full md:w-auto">
+              <SelectValue placeholder={t('catalog:filters.allIssues')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">{t('catalog:filters.allIssues')}</SelectItem>
+              {issueCodes.data?.map((item) => (
+                <SelectItem key={item.issue_code} value={item.issue_code}>
+                  {issueTitle(item.issue_code)} ({formatNumber(item.product_count)})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={sort} onValueChange={changeFilter(setSort)}>
+            <SelectTrigger aria-label={t('catalog:filters.sortLabel')} className="w-full md:w-auto">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORTS.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {t(item.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearch('');
+                setSearchInput('');
+                setStatus('');
+                setCategory('');
+                setIssue('');
+                setSort(SORTS[0].value);
+                setPage(0);
+              }}
             >
-              <SelectTrigger aria-label={t('catalog:filters.statusLabel')} className="w-full">
-                <SelectValue placeholder={t('catalog:filters.allStatuses')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">{t('catalog:filters.allStatuses')}</SelectItem>
-                <SelectItem value="REVIEW_REQUIRED">{t('common:status.REVIEW_REQUIRED')}</SelectItem>
-                <SelectItem value="ENRICHED">{t('common:status.ENRICHED')}</SelectItem>
-                <SelectItem value="PENDING">{t('common:status.PENDING')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={category || '__all__'}
-              onValueChange={(value) => changeFilter(setCategory)(value === '__all__' ? '' : value)}
-            >
-              <SelectTrigger aria-label={t('catalog:filters.categoryLabel')} className="w-full">
-                <SelectValue placeholder={t('catalog:filters.allCategories')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">{t('catalog:filters.allCategories')}</SelectItem>
-                {categories.data?.map((item) => (
-                  <SelectItem key={categoryKey(item)} value={item.category}>
-                    {item.category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={issue || '__all__'}
-              onValueChange={(value) => changeFilter(setIssue)(value === '__all__' ? '' : value)}
-            >
-              <SelectTrigger aria-label={t('catalog:filters.issueLabel')} className="w-full">
-                <SelectValue placeholder={t('catalog:filters.allIssues')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">{t('catalog:filters.allIssues')}</SelectItem>
-                {issueCodes.data?.map((item) => (
-                  <SelectItem key={item.issue_code} value={item.issue_code}>
-                    {issueTitle(item.issue_code)} ({formatNumber(item.product_count)})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={sort} onValueChange={changeFilter(setSort)}>
-              <SelectTrigger aria-label={t('catalog:filters.sortLabel')} className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SORTS.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {t(item.label)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label={t('catalog:refresh')}
-                onClick={() => setRefreshToken(Date.now())}
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearch('');
-                  setSearchInput('');
-                  setStatus('');
-                  setCategory('');
-                  setIssue('');
-                  setSort(SORTS[0].value);
-                  setPage(0);
-                }}
-              >
-                {t('common:actions.clear')}
-              </Button>
-            </div>
+              {t('common:actions.clear')}
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {error && (
         <Alert variant="destructive">
@@ -311,11 +305,11 @@ export function CatalogPage() {
                           <QualityInfo />
                         </span>
                       </dt>
-                      <dd className="font-medium tabular-nums">{formatPercent(product.quality_score)}</dd>
+                      <dd className="font-medium tabular-nums">{measured(product, product.quality_score)}</dd>
                     </div>
                     <div>
                       <dt className="text-xs text-muted-foreground">{t('catalog:table.coverage')}</dt>
-                      <dd className="font-medium tabular-nums">{formatPercent(product.required_coverage)}</dd>
+                      <dd className="font-medium tabular-nums">{measured(product, product.required_coverage)}</dd>
                     </div>
                     <div>
                       <dt className="text-xs text-muted-foreground">{t('catalog:table.updated')}</dt>
@@ -329,30 +323,33 @@ export function CatalogPage() {
               <Table className="table-fixed [&_[data-slot=badge]]:whitespace-normal [&_td]:whitespace-normal [&_th]:whitespace-normal">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[30%]">{t('catalog:table.product')}</TableHead>
-                    <TableHead className="w-[17%]">{t('catalog:table.category')}</TableHead>
-                    <TableHead className="w-[14%]">{t('catalog:table.status')}</TableHead>
-                    <TableHead className="w-[10%]">
+                    <TableHead className="w-[31%] pl-4">{t('catalog:table.product')}</TableHead>
+                    <TableHead className="w-[18%]">{t('catalog:table.category')}</TableHead>
+                    <TableHead className="w-[17%]">{t('catalog:table.status')}</TableHead>
+                    <TableHead className="w-[10%] text-right">
                       <span className="inline-flex items-center gap-1">
                         {t('catalog:table.quality')}
                         <QualityInfo />
                       </span>
                     </TableHead>
-                    <TableHead className="w-[10%]">{t('catalog:table.coverage')}</TableHead>
-                    <TableHead className="w-[14%]">{t('catalog:table.updated')}</TableHead>
-                    <TableHead className="w-[5%] pr-4">
-                      <span className="sr-only">{t('catalog:table.open')}</span>
-                    </TableHead>
+                    <TableHead className="w-[10%] text-right">{t('catalog:table.coverage')}</TableHead>
+                    <TableHead className="w-[14%] pr-4 pl-6">{t('catalog:table.updated')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.map((product) => (
-                    <TableRow key={product.ean}>
-                      <TableCell className="min-w-0 overflow-hidden">
+                    <TableRow className="relative" key={product.ean}>
+                      <TableCell className="min-w-0 overflow-hidden pl-4">
                         <div className="min-w-0 overflow-hidden">
-                          <p className="line-clamp-2 break-words font-medium" title={product.display_title}>
+                          {/* the name is the row's link; its hit area covers the whole row */}
+                          <Link
+                            aria-label={t('catalog:table.openProduct', { title: product.display_title })}
+                            className="line-clamp-2 break-words font-medium after:absolute after:inset-0 hover:text-primary hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-ring"
+                            title={product.display_title}
+                            to={`/catalog/${product.ean}`}
+                          >
                             {product.display_title}
-                          </p>
+                          </Link>
                           <p className="text-xs text-muted-foreground">
                             {t('catalog:table.gtin', { gtin: product.ean })}
                             {product.brand ? ` · ${product.brand}` : ''}
@@ -379,18 +376,14 @@ export function CatalogPage() {
                           </p>
                         ) : null}
                       </TableCell>
-                      <TableCell className="tabular-nums">{formatPercent(product.quality_score)}</TableCell>
-                      <TableCell className="tabular-nums">{formatPercent(product.required_coverage)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{formatDate(product.created_at)}</TableCell>
-                      <TableCell className="pr-4 text-right">
-                        <Button asChild variant="ghost" size="sm">
-                          <Link
-                            aria-label={t('catalog:table.openProduct', { title: product.display_title })}
-                            to={`/catalog/${product.ean}`}
-                          >
-                            <ArrowRight className="h-4 w-4" />
-                          </Link>
-                        </Button>
+                      <TableCell className="text-right tabular-nums">
+                        {measured(product, product.quality_score)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {measured(product, product.required_coverage)}
+                      </TableCell>
+                      <TableCell className="pr-4 pl-6 text-xs whitespace-nowrap text-muted-foreground">
+                        {formatDate(product.created_at)}
                       </TableCell>
                     </TableRow>
                   ))}

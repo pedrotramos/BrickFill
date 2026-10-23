@@ -18,7 +18,7 @@
     "next": "Siguiente para revisar",
     "remaining_one": "(queda {{count}})",
     "remaining_other": "(quedan {{count}})",
-    "empty": "La cola de revisión está vacía",
+    "empty": "No hay otro producto en la cola de revisión",
     "afterDecision": "Al aprobar o rechazar se abre el siguiente producto de la cola de revisión."
   },
   "gtin": "GTIN {{gtin}}",

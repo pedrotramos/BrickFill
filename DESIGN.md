@@ -1,42 +1,47 @@
 ---
 name: BrickFill
-description: Evidence-first catalog enrichment on Databricks, a calm review workbench for catalog curators.
+description: Evidence-first catalog enrichment on Databricks, a review app that reads as part of the Databricks workspace it runs in.
 colors:
-  kiln: "oklch(0.553 0.174 38.4)"
-  kiln-foreground: "oklch(1 0 0)"
-  ink: "oklch(0.279 0.036 250.8)"
-  mortar: "oklch(0.949 0.014 74.4)"
-  paper: "oklch(0.98 0.006 75.4)"
-  card: "oklch(1 0 0)"
-  slate-muted: "oklch(0.506 0.027 256.2)"
-  muted-surface: "oklch(0.955 0.011 74.4)"
-  kiln-wash: "oklch(0.939 0.024 55.3)"
-  kiln-wash-foreground: "oklch(0.408 0.116 38.2)"
-  hairline: "oklch(0.907 0.016 73.7)"
-  field-outline: "oklch(0.64 0.02 73.7)"
-  focus-ring: "oklch(0.635 0.164 42.8)"
-  success: "oklch(0.44 0.08 170)"
-  success-soft: "oklch(0.95 0.035 170)"
-  warning: "oklch(0.45 0.095 80)"
-  warning-soft: "oklch(0.94 0.075 92)"
-  info: "oklch(0.43 0.07 250)"
-  info-soft: "oklch(0.945 0.022 250)"
-  danger: "oklch(0.505 0.19 27.5)"
-  danger-soft: "oklch(0.95 0.03 25)"
+  action-blue: "#2272b4"
+  action-blue-foreground: "#ffffff"
+  action-blue-deep: "#0e538b"
+  blue-wash: "#edf3f9"
+  sidebar-selected: "#e4ecf4"
+  slate-ink: "#11171c"
+  slate-secondary: "#5f7281"
+  white: "#ffffff"
+  cool-gray-surface: "#f6f7f9"
+  cool-border: "#d1d9e1"
+  field-outline: "#7a8c9b"
+  success: "#277c43"
+  success-soft: "#e9f6ec"
+  warning: "#8a5100"
+  warning-soft: "#fff4d6"
+  info-violet: "#5b4fb8"
+  info-violet-soft: "#f1effb"
+  danger: "#c82d4c"
+  danger-soft: "#fcebee"
+  brick: "oklch(0.553 0.174 38.4)"
 typography:
-  display:
+  page-title:
     fontFamily: "ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1.875rem"
+    fontSize: "1.375rem"
     fontWeight: 600
-    lineHeight: 1.2
+    lineHeight: "1.75rem"
     letterSpacing: "-0.025em"
-  headline:
+  dialog-title:
     fontFamily: "ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1.125rem"
+    fontSize: "1.25rem"
     fontWeight: 600
     lineHeight: 1.4
     letterSpacing: "-0.025em"
-  title:
+  metric:
+    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 600
+    lineHeight: "2rem"
+    fontFeature: "tnum"
+  panel-title:
     fontFamily: "ui-sans-serif, system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 600
@@ -45,18 +50,22 @@ typography:
     fontFamily: "ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 400
-    lineHeight: 1.5
+    lineHeight: "1.25rem"
+  reading:
+    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: "1.75rem"
+  table-head:
+    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.8125rem"
+    fontWeight: 600
+    lineHeight: 1.4
   label:
     fontFamily: "ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.75rem"
     fontWeight: 400
-    lineHeight: 1.33
-  metric:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1.875rem"
-    fontWeight: 600
-    lineHeight: 1.2
-    fontFeature: "tnum"
+    lineHeight: "1.25rem"
   wordmark:
     fontFamily: "ui-sans-serif, system-ui, sans-serif"
     fontSize: "1.125rem"
@@ -64,82 +73,101 @@ typography:
     lineHeight: 1
     letterSpacing: "-0.025em"
 rounded:
-  sm: "6px"
-  md: "8px"
-  lg: "10px"
-  xl: "14px"
-  full: "9999px"
+  tag: "4px"
+  control: "6px"
+  panel: "8px"
 spacing:
   xs: "4px"
   sm: "8px"
   md: "12px"
   lg: "16px"
-  xl: "24px"
+  xl: "20px"
+  2xl: "24px"
+  3xl: "32px"
+  control: "32px"
   touch: "44px"
+  sidebar: "240px"
 components:
   button-primary:
-    backgroundColor: "{colors.kiln}"
-    textColor: "{colors.kiln-foreground}"
+    backgroundColor: "{colors.action-blue}"
+    textColor: "{colors.action-blue-foreground}"
     typography: "{typography.body}"
-    rounded: "{rounded.md}"
-    padding: "8px 16px"
-    height: "36px"
+    rounded: "{rounded.control}"
+    padding: "6px 12px"
+    height: "32px"
+  button-primary-hover:
+    backgroundColor: "{colors.action-blue-deep}"
+    textColor: "{colors.action-blue-foreground}"
   button-outline:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.md}"
-    padding: "8px 16px"
-    height: "36px"
+    backgroundColor: "{colors.white}"
+    textColor: "{colors.slate-ink}"
+    rounded: "{rounded.control}"
+    padding: "6px 12px"
+    height: "32px"
   button-outline-hover:
-    backgroundColor: "{colors.kiln-wash}"
-    textColor: "{colors.kiln-wash-foreground}"
-  button-ghost-hover:
-    backgroundColor: "{colors.kiln-wash}"
-    textColor: "{colors.kiln-wash-foreground}"
-  nav-link:
-    textColor: "{colors.slate-muted}"
-    typography: "{typography.body}"
-    rounded: "{rounded.md}"
-    padding: "8px 12px"
-  nav-link-active:
-    backgroundColor: "{colors.kiln}"
-    textColor: "{colors.kiln-foreground}"
+    backgroundColor: "{colors.blue-wash}"
+    textColor: "{colors.action-blue-deep}"
+  button-icon:
+    backgroundColor: "{colors.white}"
+    textColor: "{colors.slate-ink}"
+    rounded: "{rounded.control}"
+    size: "32px"
   input:
-    backgroundColor: "{colors.card}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.md}"
+    backgroundColor: "{colors.white}"
+    textColor: "{colors.slate-ink}"
+    typography: "{typography.body}"
+    rounded: "{rounded.control}"
     padding: "4px 12px"
-    height: "36px"
-  card:
-    backgroundColor: "{colors.card}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.xl}"
+    height: "32px"
+  sidebar-item:
+    textColor: "{colors.slate-ink}"
+    typography: "{typography.body}"
+    rounded: "{rounded.control}"
+    padding: "0 10px"
+    height: "32px"
+  sidebar-item-active:
+    backgroundColor: "{colors.sidebar-selected}"
+    textColor: "{colors.action-blue-deep}"
+  panel:
+    backgroundColor: "{colors.white}"
+    textColor: "{colors.slate-ink}"
+    rounded: "{rounded.panel}"
     padding: "24px"
-  badge-success:
+  table-header:
+    backgroundColor: "{colors.cool-gray-surface}"
+    textColor: "{colors.slate-secondary}"
+    typography: "{typography.table-head}"
+    height: "36px"
+  tag-neutral:
+    backgroundColor: "{colors.white}"
+    textColor: "{colors.slate-ink}"
+    typography: "{typography.label}"
+    rounded: "{rounded.tag}"
+    padding: "2px 8px"
+  tag-quiet:
+    backgroundColor: "{colors.cool-gray-surface}"
+    textColor: "{colors.slate-ink}"
+    rounded: "{rounded.tag}"
+    padding: "2px 8px"
+  tag-info:
+    backgroundColor: "{colors.info-violet-soft}"
+    textColor: "{colors.info-violet}"
+    rounded: "{rounded.tag}"
+    padding: "2px 8px"
+  tag-success:
     backgroundColor: "{colors.success-soft}"
     textColor: "{colors.success}"
-    typography: "{typography.label}"
-    rounded: "{rounded.full}"
+    rounded: "{rounded.tag}"
     padding: "2px 8px"
-  badge-warning:
+  tag-warning:
     backgroundColor: "{colors.warning-soft}"
     textColor: "{colors.warning}"
-    rounded: "{rounded.full}"
+    rounded: "{rounded.tag}"
     padding: "2px 8px"
-  badge-info:
-    backgroundColor: "{colors.info-soft}"
-    textColor: "{colors.info}"
-    rounded: "{rounded.full}"
-    padding: "2px 8px"
-  badge-danger:
+  tag-danger:
     backgroundColor: "{colors.danger-soft}"
     textColor: "{colors.danger}"
-    rounded: "{rounded.full}"
-    padding: "2px 8px"
-  badge-quiet:
-    backgroundColor: "{colors.mortar}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.full}"
+    rounded: "{rounded.tag}"
     padding: "2px 8px"
 ---
 
@@ -147,251 +175,291 @@ components:
 
 ## Overview
 
-**Creative North Star: "The Curator's Workbench"**
+**Creative North Star: "Native to the Workspace"**
 
-BrickFill is a workbench, not a showroom. The curator works the day's queue at a desk, and every screen is laid out
-so a value sits next to its proof: the source page, the screenshot, the crop, the rule it passed or failed. The
-surface stays calm and warm, with paper-toned backgrounds, Ink text and thin outlines, so the evidence and the few
-decisions that matter stand out. Its character is **sober and precise**: tool density, thin borders, softly rounded
-corners, and color only where it says something.
+BrickFill is the Databricks workspace product UI, played straight. The curator opens the app from the workspace and
+finds no seam: the left sidebar, the gray table headers, the 4px status tags, the underline tabs and the one blue
+button act like the rest of Databricks. Attention goes to the values and their proof. The next decision is always the
+blue button.
 
-The system is built on Databricks AppKit UI (shadcn components on Tailwind v4) and themed through its CSS variables
-in `app/brickfill/client/src/index.css`. The brand lives in precise details:
+The system is Databricks AppKit UI (shadcn components on Tailwind v4), themed through its CSS variables in
+`app/brickfill/client/src/index.css`. An unlayered convention layer keyed on each component's `data-slot` applies the
+workspace conventions to the AppKit components themselves:
+- borders instead of card shadows;
+- rectangular tags;
+- 32px controls;
+- gray table headers;
+- underline tabs.
 
-- the terracotta Kiln on the one action that moves the work forward;
-- the brick-course mark that fills from the bottom up;
-- warm Mortar neutrals instead of cold grays.
+New screens inherit all of this by using the AppKit components and do not restyle them locally. The world is cool and
+exact: white surfaces, a cool gray secondary surface, near-black slate text, 1px cool-gray borders, and workspace
+density. The one warm note is the brick fill of the BrickFill mark.
 
-It has two confirmed anti-references:
-
-- the "AI magic" panel, whose glows, gradients and sparkles sell the model instead of showing the evidence;
-- the dense gray ERP, where every row and label has the same weight and nothing breathes.
+It replaces an earlier warm workbench world (cream paper, terracotta action color, soft pill badges, top navigation).
+None of those devices carry over.
 
 **Key Characteristics:**
-- Paper and Ink with warm Mortar neutrals; Kiln (terracotta) is used only for actions and the current selection.
-- Four status tones (success, warning, info, danger), each a soft surface with same-hue text, always shown with an
-  icon and a label.
-- Flat surfaces separated by hairlines; shadows are minimal and grow only on what floats.
-- The system sans in a clear, short scale; tabular numerals in every figure.
-- Light and dark themes with their own values (the dark theme is not the light one inverted), and an optional
-  customer accent that replaces only Kiln.
+- White and cool gray surfaces, slate text, 1px cool borders; flat panels with no shadow at rest.
+- Databricks action blue for the primary action, the current place, links, selection and focus, and nothing else.
+- Status tags are 4px rectangles: a soft tone surface, same-hue text, an icon and a label.
+- The system sans at workspace density: 14px controls and tables, 32px controls with a mouse, 44px on touch.
+- A fixed 240px left sidebar on desktop; a top bar with a sheet on phones.
+- Light and dark themes with their own values (dark is Databricks' navy-slate, not an inversion), and an optional
+  customer accent that replaces only the blue.
 
 ## Colors
 
-A warm neutral workspace (Paper, Mortar, Ink) with one terracotta action color and four restrained status tones.
+A cool, near-monochrome workspace palette with one action blue, four status tones and a single warm brand note.
 
 ### Primary
-- **Kiln** (`kiln`): a burnt terracotta, taken from the fired brick of the mark. It is used for the primary button
-  ("Próximo para revisar", "Salvar configurações", "Abrir fila de revisão"), the active navigation item, focus rings
-  (`focus-ring`, a lighter Kiln) and selection. Text on Kiln is white in the light theme and Ink in the dark one. A
-  customer accent (`BRAND_ACCENT_COLOR`) replaces Kiln at runtime and picks white or Ink for contrast. The brick fill
-  of the mark (`--brand-fill`) always stays Kiln.
-- **Kiln Wash** (`kiln-wash`, with `kiln-wash-foreground`): a pale terracotta tint, the hover surface of outline and
-  ghost buttons and of selected rows.
+- **Action Blue** (`action-blue`): the Databricks primary. It is used for the filled primary button ("Open review
+  queue", "Save settings", "Next to review"), the active tab's underline, links, focus rings, native checkboxes, the
+  caret and text selection (at 22%). In dark it is `#4299e0` with near-black text.
+- **Deep Action Blue** (`action-blue-deep`): the hover and press step of the primary button, and the text color on the
+  blue washes. In dark it is the lighter `#8acaff`.
+- **Blue Wash** (`blue-wash`): the hover surface of outline and ghost controls and of selected rows.
+- **Sidebar Selected** (`sidebar-selected`): the surface of the current sidebar item, under Deep Action Blue text.
+- **Customer accent:** `BRAND_ACCENT_COLOR` (applied by `lib/branding.ts`) replaces the primary, the ring, the
+  sidebar primary and ring, and chart-1. It picks white or slate text by contrast and derives its own hover step
+  (the accent mixed 78% with black or white). It never touches the status tones or the brick.
 
 ### Neutral
-- **Ink** (`ink`): a deep slate navy for all body text and headings, about 14.6:1 on white. It is also the theme
-  color of the browser chrome.
-- **Paper** (`paper`): the warm off-white of the page and of dialogs.
-- **Card White** (`card`): pure white for cards, popovers and fields, a step brighter than Paper so a card lifts
-  without a shadow.
-- **Mortar** (`mortar`): the warm secondary surface used for quiet badges ("Em revisão"), stage chips and secondary
-  buttons.
-- **Muted Surface** (`muted-surface`): the tabs track and subtle inset panels.
-- **Slate Muted** (`slate-muted`): secondary text, help text, metadata and inactive navigation, about 5.8:1 on white.
-- **Hairline** (`hairline`): the decorative border of cards, table rows and dividers. It is deliberately faint
-  (1.3:1) because it only separates things.
-- **Field Outline** (`field-outline`): the border of inputs, selects and textareas, at least 3:1 against the card and
-  the page (WCAG 1.4.11). Fields are controls, so their edge has to be visible.
+- **Slate Ink** (`slate-ink`): all text and headings; also the dark theme's page background.
+- **Slate Secondary** (`slate-secondary`): descriptions, metadata, help text, table header text, inactive tabs and
+  placeholders.
+- **White** (`white`): the page, panels, popovers and fields.
+- **Cool Gray Surface** (`cool-gray-surface`): the sidebar, the mobile top bar, table header rows, quiet tags and
+  inset panels.
+- **Cool Border** (`cool-border`): every decorative 1px line (panel edges, row dividers, the tab baseline, the sidebar
+  edge, the dividers of the summary panel).
+- **Field Outline** (`field-outline`): the border of inputs, selects and textareas. It is at least 3:1 against white
+  and the gray surface (WCAG 1.4.11), unlike the decorative Cool Border.
 
 ### Status tones
-Each tone is a soft surface (`*-soft`) carrying text of the same hue. Text on its soft surface measures 5.5–6.9:1
-in light and 6.9–7.7:1 in dark.
-- **Teal Success** (`success`, `success-soft`): approved, official source, complete capture. It sits at hue 170,
-  away from warning and danger, so it stays distinct under deuteranopia.
-- **Mustard Warning** (`warning`, `warning-soft`): review required, unpublished candidate, incomplete capture,
-  validation warnings. It sits well away from Kiln so a warning never reads as an action.
-- **Slate Info** (`info`, `info-soft`): enriched, human edit. It is Ink's hue in a lighter step.
-- **Brick Red Danger** (`danger`, `danger-soft`): rejected, missing reference, errors. In the dark theme it becomes
-  AppKit's lighter red, `oklch(0.704 0.191 22.216)`.
-- **Quiet** (Mortar surface, Ink text) is for in-progress states such as "Em revisão". **Neutral** (outline only) is
-  for pending.
+Each tone is a soft surface carrying text of the same hue, always with an icon and a word.
+- **Success Green** (`success`, `success-soft`): approved, official source, complete capture.
+- **Warning Amber** (`warning`, `warning-soft`): review required, incomplete capture, validation warnings.
+- **Info Violet** (`info-violet`, `info-violet-soft`): enriched, human edit. It is violet rather than blue so that no
+  status is ever drawn in the action color.
+- **Danger Red** (`danger`, `danger-soft`): rejected, missing reference, errors, and the destructive confirm button.
+- **Quiet** (Cool Gray Surface, Slate Ink) is for in-progress states (in review). **Neutral** (outline only) is for
+  pending.
+
+### Tertiary
+- **Brick** (`brick`, `--brand-fill`): the filled courses of the BrickFill mark, and nowhere else. In dark it is
+  `oklch(0.681 0.178 40.6)`.
 
 ### Named Rules
-**The Kiln Is for Doing Rule.** Kiln marks the action that moves the work forward and the user's current place.
-Nothing that only describes state is drawn in Kiln, so a reviewer always knows where to click.
+**The One Blue Rule.** Blue means "act here", "you are here" or "go there": the primary action, the current tab and
+sidebar item, links, focus and selection. Nothing that only describes a state is blue. One filled blue button per
+area.
 
-**The Never Color Alone Rule.** Every status carries an icon and a word next to its tone: CircleCheck for approved,
-TriangleAlert for review, CircleX for rejected, and so on. A grayscale screenshot must still be readable.
+**The Never Color Alone Rule.** Every status carries an icon and a label next to its tone:
+- CircleDashed for pending;
+- Sparkles for enriched;
+- TriangleAlert for review required;
+- Eye for in review;
+- CircleCheck for approved;
+- CircleX for rejected.
 
-**The Twin Dark Rule.** The dark palette is written twice in `index.css`, once for a `.dark` class and once for the
-system setting. `theme.test.ts` fails if the two differ, so change both together.
+A grayscale screenshot must still be readable.
+
+**The One Warm Note Rule.** The mark's brick is the only warm brand color on the page. The sanctioned exceptions are
+amber as the warning tone and in charts, and Firecrawl's own orange inside the "How it works" dialog as partner
+credit.
+
+**The Twin Dark Rule.** The dark palette is written twice in `index.css`, once for a `.dark` class and once for
+`prefers-color-scheme: dark`. `theme.test.ts` fails if the two differ, so change both together.
 
 ## Typography
 
-**Display Font:** the system sans (`ui-sans-serif, system-ui, sans-serif`); there is no webfont.
+**Display Font:** the system sans (`ui-sans-serif, system-ui, sans-serif`), Tailwind's default stack.
 **Body Font:** the same system sans.
 
-**Character:** a single native sans with weight doing the work. It loads instantly, matches the operating system
-the curator already reads all day, and keeps the brand in the wordmark's extra-bold weight rather than in a costume
-face.
+**Character:** the workspace's own voice: one native sans at product density, with weight and the gray secondary
+color doing the hierarchy. AppKit's base gives real heading elements -0.025em tracking (the kit default), which the
+build keeps.
 
 ### Hierarchy
-- **Display** (600, 1.875rem, line-height 1.2, -0.025em): one page title (h1) per screen, such as "Produtos e
-  qualidade do enriquecimento" or the product's generated title. There is no label above it.
-- **Headline** (600, 1.125rem): section headings inside dialogs and long panels ("Fluxo principal", "Garantias").
-- **Title** (600, 1rem, line-height 1): card titles ("Filtros", "Descrição abreviada"), exposed to assistive
-  technology as level-2 headings.
-- **Body** (400, 0.875rem, line-height 1.5): controls, tables and most reading text. Generated content paragraphs use
-  1rem with a 1.75rem line height.
-- **Label** (400, 0.75rem): field help, metadata ("GTIN 789… · Marca"), table and card labels, in Slate Muted.
-  Uppercase with tracking is allowed only for a label/value pair inside a panel ("ONDE RODA"), never above a heading.
-- **Metric** (600, 1.875rem, tabular numerals): the overview counts. The product's quality and coverage figures use
-  the same face at 1.5rem.
+- **Page title** (600, 1.375rem / 1.75rem): one h1 per page, at the start of the title row, followed by a one-line
+  description in body Slate Secondary. On the product page the h1 is the product's generated title.
+- **Dialog title** (600, 1.25rem): titles of dialogs and of the evidence audit sheet. Section headings inside the "How
+  it works" dialog use 1.125rem.
+- **Metric** (600, 1.5rem, tabular numerals): the figures of the summary panel and the product's quality and
+  coverage.
+- **Panel title** (600, 1rem, line-height 1): panel headings ("Short description", "Key Features"), exposed to
+  assistive technology as level-2 headings. Small in-panel headings ("Next step", rule groups) use 14px semibold.
+- **Body** (400, 0.875rem): controls, tables, sidebar items, descriptions. Fields are 14px with a mouse and keep 16px
+  on touch so iOS does not zoom into them.
+- **Reading** (400, 1rem / 1.75rem): generated content paragraphs only.
+- **Table head** (600, 0.8125rem, Slate Secondary): column headers on the gray header row.
+- **Label** (400, 0.75rem, Slate Secondary): metadata, field help, the labels of label/value pairs, stacked-table
+  cell labels and sidebar credits.
 - **Wordmark** (800, 1.125rem, -0.025em): "BrickFill" next to the mark, in the text color.
 
 ### Named Rules
-**The No Eyebrow Rule.** A heading speaks for itself; no small colored kicker sits above it. The page eyebrows were
-removed in the polish pass and must not come back.
+**The Inherited Line Rule.** Paragraphs inherit the line height of their context. AppKit's 1.75rem prose line height
+is reset in `@layer base` so table rows and lists stay single-height; reading text sets its own (1.75rem).
 
-**The Tabular Figures Rule.** Percentages, counts, page numbers and step numbers use tabular numerals so columns and
-neighboring metrics line up.
+**The Tabular Figures Rule.** Percentages, counts, page numbers and step numbers use tabular numerals.
 
 ## Layout
 
-- **Page frame:**
-  - content is centered in a 1280px column (`max-w-7xl`) inside a 1600px header and footer frame;
-  - side padding is 16px, or 24px from 768px up;
-  - vertical padding is 24px, or 32px from 768px up.
+- **Shell:** a two-column grid from 768px up:
+  - a fixed 240px left sidebar on the Cool Gray Surface, with a right border and contents that stick to the
+    viewport. It holds the mark and wordmark, optional co-branding, then Overview / Catalog / Settings, and at the
+    bottom "How it works", the language select and the credits.
+  - the content column holds the page, centered in a 1280px maximum (`max-w-7xl`). It pads 16px × 24px, or
+    32px × 28px from 768px up.
+- **Phones (below 768px):** a sticky 56px top bar on the gray surface (menu button, mark, language) and a 288px
+  left sheet with the same sidebar contents.
+- **Title row:** every page opens with the title and description on the left, and the page's actions right-aligned
+  on the same row (they wrap below on phones). Sections of a page stack 24px apart.
 - **Rhythm:**
-  - sections of a page stack 24px apart;
-  - cards pad 24px, and compact metric cards pad 16px;
-  - a field's label, control and help are grouped 6px apart, and field groups sit 16–24px apart;
-  - there is more space above a heading than below it.
-- **Density:** desktop keeps tool density, with 36px controls and 14px text. On touch screens
-  (`@media (pointer: coarse)`), every button, trigger, tab, field and select item grows to 44px. Small icon controls
-  keep their size and gain an invisible 12px hit area instead.
+  - panels pad 24px (summary figures 16px, or 20px from 640px up);
+  - a panel's heading sits 12px from its content;
+  - a field's label, control and help are 6px apart;
+  - toolbar controls sit 8px apart.
+- **Density:** 32px controls and 14px text with a mouse. With a coarse pointer, every button, trigger, tab, field,
+  select item and sidebar item grows to 44px. Small custom controls keep their size and grow an invisible 12px hit
+  area.
 - **Breakpoints (Tailwind defaults):**
-  - **below 768px:** navigation moves into a sheet and the language switcher is icon-only;
-  - **below 1024px:** product lists and attribute tables become stacked cards, and action tables become labeled
-    blocks (`.stack-table`), so actions never hide behind a horizontal scroll;
-  - **1280px and up:** the catalog filters fit in a single row.
-- **Header:** sticky, 64px tall, with Paper at 95% opacity, a backdrop blur and a hairline bottom border.
+  - **768px:** sidebar versus top bar and sheet. The catalog filters collapse behind a "Filters" toggle below it.
+  - **1024px:** the catalog table becomes a divided list, and action tables become labeled stacked blocks
+    (`.stack-table`), so actions never hide behind a horizontal scroll.
+  - **1280px:** the overview's summary panel shows four figures in one row (two by two below).
 
 ## Elevation & Depth
 
-The system is flat and outlined. Surfaces are separated by tone (white cards on Paper) and by a hairline. Shadows
-stay at AppKit's minimum and grow only for things that float above the page.
+Flat and bordered. Panels, tables and tags sit in the page and are separated by a 1px Cool Border or a step to the
+gray surface. Shadows exist only on layers that float above the page. The convention layer strips AppKit's rest
+shadows from cards, buttons, inputs, textareas and select triggers.
 
 ### Shadow Vocabulary
-- **Rest** (`box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05)`): outline buttons and fields; it is barely there.
-- **Card** (`box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)`): cards at rest.
 - **Floating** (`box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)`): popovers, select
-  menus and dropdowns.
-- **Overlay** (`box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)`): dialogs and the
-  audit sheet, over a dimmed backdrop.
+  menus, dropdowns.
+- **Overlay** (`box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)`): dialogs and sheets,
+  over a dimmed backdrop.
 
 ### Named Rules
-**The Hairline First Rule.** Separate with a 1px Hairline or a tone step before reaching for a shadow. A shadow means
-"this floats", and nothing that sits in the page floats.
+**The Border, Not Shadow Rule.** Anything that sits in the page is separated by a border or a tone step, never a
+shadow. A shadow means "this floats".
 
 ## Shapes
 
-- **Corners:** softly rounded, scaled to the size of the object:
-  - fields, buttons and nav items are 8px (`md`);
-  - tab tracks and evidence tiles are 10px (`lg`, the base `--radius`);
-  - cards, dialogs and large panels are 14px (`xl`);
-  - badges are fully rounded pills.
-- **Borders:** always 1px. Neutral timeline rails in history lists are 2px in Hairline. Nothing has a colored side
-  stripe.
+- **Corners:** small and scaled to the object, as in the workspace:
+  - status and identifier tags are 4px rectangles (`tag`);
+  - buttons, fields, select triggers and sidebar items are 6px (`control`, the base `--radius`);
+  - panels, the summary panel, dialogs, inset tiles and evidence images are 8px (`panel`).
+- The contract's 4px controls landed at 6px, AppKit's `rounded-md` over the 6px base radius; the build wins.
+- Full circles appear only for small round objects: numbered pipeline steps in the "How it works" dialog and the
+  icon-only info trigger.
+- **Borders:** always 1px, except the active tab's 2px blue underline. Nothing has a colored side stripe.
 - **The mark:** three rounded brick courses (3px corners in a 64px grid), with the empty courses at 18% of the text
-  color and the filled ones in `--brand-fill`. It is the one recurring geometric motif.
+  color and the filled ones in Brick.
 
 ## Components
 
 ### Buttons
-Quiet until they matter: one filled Kiln button per area, and outlines everywhere else.
-- **Shape:** gently rounded (8px), 36px tall (32px small, 40px large), 14px medium text, a 16px icon with an 8px gap.
-- **Primary:** a Kiln fill with white text, used for the next step, saving and opening the queue. It reaches 90%
-  opacity on hover.
-- **Outline:** a Paper fill with a Hairline border and the Rest shadow, used for secondary actions ("Atualizar
-  dados", "Limpar", icon-only refresh). On hover it takes the Kiln Wash surface and text.
-- **Ghost:** no chrome until hover (Kiln Wash), used for "Voltar ao catálogo" and in-row actions.
-- **Destructive:** a danger fill, used only to confirm a deletion inside an alert dialog.
-- **Focus:** a 3px ring in Kiln at 50% opacity, with the border taking the ring color. Disabled buttons drop to 50%
-  opacity and do not react.
+Workspace buttons: one blue fill per area, and outlines everywhere else.
+- **Shape:** 6px corners, 32px tall (icon buttons 32px square), 14px medium text, a 16px icon with an 8px gap.
+- **Primary:** an Action Blue fill with white text. On hover it steps to Deep Action Blue rather than fading, and in
+  dark it lightens instead. A primary link (the overview's "Open review queue") uses the same treatment.
+- **Outline:** white with a Cool Border and Slate Ink text. On hover it takes the Blue Wash with Deep Action Blue text.
+- **Ghost:** no chrome until the Blue Wash hover. It is used for "Back to the catalog" and in-row actions.
+- **Destructive:** a Danger Red fill, used only to confirm a deletion inside an alert dialog.
+- **Focus:** the border takes the ring color plus a 3px Action Blue ring at 50%. Custom items use a 2px ring.
+  Disabled controls drop to 50% opacity.
+- **Refresh:** every page has one refresh control on its title row: an outline icon button with a RefreshCw icon that
+  spins while it reloads and is disabled while busy. A short status line ("Updated …") may sit beside it in 12px Slate
+  Secondary.
 
-### Chips (status badges)
-- **Style:** a pill with 2px × 8px padding and 12px medium text with a 12px icon. Tone badges have no border and use
-  the soft surface with same-hue text. Plain badges (GTIN, SKU, category) are outline pills in Ink.
+### Chips (status tags)
+- **Style:** a 4px rectangle with 2px × 8px padding, 12px medium text and a 12px icon. Tone tags have no border and
+  use the soft surface with same-hue text. Identifier tags (GTIN, ID, category, content language) are outline
+  rectangles in Slate Ink.
 - **Mapping:**
-  - PENDING is neutral (CircleDashed);
-  - ENRICHED is info (Sparkles);
-  - REVIEW_REQUIRED is warning (TriangleAlert);
-  - IN_REVIEW is quiet (Eye);
-  - APPROVED is success (CircleCheck);
-  - REJECTED is danger (CircleX).
-  The enrichment status and the review decision appear as two badges side by side.
+  - PENDING is neutral;
+  - ENRICHED is info violet;
+  - REVIEW_REQUIRED is warning;
+  - IN_REVIEW is quiet;
+  - APPROVED is success;
+  - REJECTED is danger.
+- **Placement:** the enrichment status is always shown. A second review-decision tag appears only for IN_REVIEW,
+  APPROVED or REJECTED.
 
-### Cards / Containers
-- **Corner Style:** 14px.
-- **Background:** Card White on Paper.
-- **Shadow Strategy:** the Card shadow (see Elevation & Depth).
-- **Border:** a 1px Hairline.
-- **Internal Padding:** 24px with 24px between header and content. Metric cards use 16px with 8px between label and
-  figure. A card holding a table or list drops its padding so rows run edge to edge.
-- Cards never nest inside cards. A grouping inside a card is a column with a heading, or a tone-step panel.
+### Cards / Containers (panels)
+- **Corner Style:** 8px.
+- **Background:** white on the white page.
+- **Shadow Strategy:** none (see Elevation & Depth).
+- **Border:** 1px Cool Border.
+- **Internal Padding:** 24px, with the heading 12px from the content. A panel holding a table or list drops its
+  padding so rows run edge to edge. Inset groups inside a panel are 8px tiles with a border or the gray surface at
+  50%, never another card.
+- **Summary panel:** the overview's four figures live in one bordered panel, split by 1px dividers (a 1px gap over the
+  border color) rather than in four cards. Each figure has a 14px medium Slate Secondary label with a 16px icon (the
+  icon takes the tone of the status it counts), the 24px metric, and a 12px line saying what it means.
+
+### Tables
+- **Header row:** the gray surface, 36px tall, 13px semibold Slate Secondary.
+- **Rows:** divided by Cool Border.
+- **Product name:** the product name is the row link. The whole row is its hit area, and the name turns blue and
+  underlined on hover. There is no arrow column.
+- **Numbers:** numeric columns (quality, coverage) are right-aligned with tabular numerals. A product that was never
+  enriched shows "—", not "0%".
+- **Small screens:** below 1024px the catalog becomes a divided list. Action tables become stacked blocks with each
+  cell labeled by its header.
 
 ### Inputs / Fields
-- **Style:** Card White (in dark, a 36% white outline over a faint white wash), a 1px Field Outline border, 8px
-  corners, 36px tall, 14px text and Slate Muted placeholders. A search field has a leading 16px icon inset 12px.
-- **Focus:** the border turns Kiln and gains a 3px Kiln ring at 50%.
-- **Error / Disabled:** an invalid field takes a danger border and ring, with the message right next to the field or
-  the action that failed. Disabled fields sit at 50% opacity.
-- **Selection:** selected text is Ink on Kiln at 24%, never white on a pale tint.
+- **Style:** white (in dark, a faint wash of the field color), a 1px Field Outline, 6px corners, 32px tall, 14px text,
+  Slate Secondary placeholder. A search field has a leading 16px icon inset 12px.
+- **Focus:** the border turns Action Blue with a 3px blue ring at 50%.
+- **Error / Disabled:** an invalid field takes a danger border and ring, with the message next to it. Disabled fields
+  sit at 50% opacity.
+- **Toolbar:** catalog filters are a single wrapping row: the search field first, then the select triggers, then the
+  actions.
 
 ### Navigation
-- **Style:** a horizontal row of icon-and-label links in the sticky header, 14px medium, 8px corners, 8px × 12px
-  padding.
-- **States:** inactive links are Slate Muted and turn Ink on a Muted Surface on hover. The active link is filled
-  Kiln with white text, the one place Kiln marks location rather than an action.
-- **Mobile:** below 768px the links move into a side sheet opened by a menu button. A skip link ("Pular para o
-  conteúdo") slides in on focus.
+- **Sidebar items:** 32px rows with a 16px icon and 14px label, 6px corners and 10px side padding. Inactive items are
+  Slate Ink, with Sidebar Selected at 60% on hover. The current page is Sidebar Selected with Deep Action Blue
+  semibold text.
+- **Tabs:** an underline row on a 1px baseline, 20px between triggers. Inactive tabs are Slate Secondary and turn
+  Slate Ink on hover. The active tab is Slate Ink semibold with a 2px Action Blue underline. Tabs stay on one line
+  and scroll sideways. On phones the right edge fades out (over 40px) so the hidden tabs read as "scroll for more".
+- **Skip link:** "Skip to content" slides in on the first Tab, as a 6px primary-blue button.
 
 ### Evidence audit sheet (signature)
-A side sheet that puts the AI value, the curated value and each source side by side. Each source shows:
-- its host;
-- a source-tier badge (official is success);
-- a capture badge (complete is success, incomplete is warning);
-- the screenshot crop;
-- the excerpt.
-This sheet is the workbench in miniature. Anything new that shows a value should be able to show its proof the same
-way.
+A side sheet that puts the AI value, the curated value and each source side by side. Each source shows its host, a
+source-tier tag, a capture tag, the screenshot crop in an 8px bordered frame, and the excerpt. Anything new that
+shows a value should be able to show its proof the same way.
 
-### Architecture dialog ("Como funciona")
-A wide dialog with four numbered pipeline stages. Each stage is a column, not a card, with a neutral Mortar step
-chip, and arrows sit between the stages. The steps inside a stage are selectable outline cards, and the selected one
-takes a Kiln border with a Kiln wash. Firecrawl steps carry the partner's own orange as a credit, the one sanctioned
+### "How it works" dialog
+A wide dialog with four numbered pipeline stages. The steps are selectable 8px outline tiles; the selected one takes
+the ring. Firecrawl steps and the Firecrawl band carry the partner's own orange as credit, the one sanctioned
 non-system hue.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** keep Kiln for the primary action, the active navigation item, focus and selection; one filled Kiln button
-  per area.
-- **Do** pair every status tone with its icon and label, and use the soft surface with same-hue text from the
-  status tones.
-- **Do** give fields the Field Outline (≥3:1) and keep Hairline for decoration only.
-- **Do** use tabular numerals for every figure, and the system sans at the scale above.
-- **Do** make touch targets 44px on coarse pointers, and turn tables into labeled stacked blocks below 1024px.
-- **Do** change `.dark` and the `prefers-color-scheme: dark` block together; `theme.test.ts` checks that they match.
+- **Do** use the AppKit components and let the `data-slot` convention layer in `index.css` set their workspace look.
+  Change the layer, not individual screens.
+- **Do** keep Action Blue for the primary action, the current place, links, focus and selection, with one filled blue
+  button per area.
+- **Do** draw statuses as 4px tone tags with an icon and a label.
+- **Do** put the page title, a one-line description and the page's actions (including the one RefreshButton) on the
+  title row.
+- **Do** right-align numeric columns, use tabular numerals, and show "—" for a value that was never measured.
+- **Do** separate panels with a 1px Cool Border, give fields the 3:1 Field Outline, and keep shadows for floating
+  layers.
+- **Do** keep 32px controls for a mouse and 44px targets for touch, and turn action tables into labeled stacked
+  blocks below 1024px.
+- **Do** change `.dark` and the `prefers-color-scheme: dark` block together.
 
 ### Don't:
-- **Don't** add glows, gradients, sparkle effects or gradient text to sell the AI. Show the evidence instead. The
-  "AI magic" panel is a confirmed anti-reference.
-- **Don't** flatten every row, label and figure to the same gray weight; the dense gray ERP is a confirmed
-  anti-reference.
-- **Don't** put an eyebrow or kicker above a heading.
-- **Don't** draw a status in Kiln, or use a new hue for a status outside the four tones.
-- **Don't** nest cards, add colored side or top stripes, or use a shadow on anything that does not float.
-- **Don't** add a webfont or a display face; the brand lives in the wordmark's weight and the mark.
+- **Don't** draw a status in Action Blue, or add a status hue outside the four tones.
+- **Don't** use pills for status or identifier tags; tags are 4px rectangles.
+- **Don't** add shadows to panels, buttons or fields, nest cards, or add colored side or top stripes.
+- **Don't** use segmented-track tabs or wrap the tab row.
+- **Don't** introduce warm surfaces or a warm accent; the brick of the mark stays the only warm brand note.
+- **Don't** add an arrow or "open" column to a table whose row is already a link.
+- **Don't** add glows, gradients or gradient text to sell the AI. Show the evidence instead.

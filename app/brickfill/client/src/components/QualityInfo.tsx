@@ -35,7 +35,7 @@ export function QualityInfo({ averaged = false }: { averaged?: boolean }) {
         <ul className="space-y-1">
           {WEIGHTS.map(({ key, weight }) => (
             <li className="flex gap-2" key={key}>
-              <span className="w-8 shrink-0 font-semibold tabular-nums text-primary">{weight}%</span>
+              <span className="w-8 shrink-0 font-semibold tabular-nums text-foreground">{weight}%</span>
               <span>{t(`common:qualityInfo.weights.${key}`)}</span>
             </li>
           ))}

@@ -12,13 +12,13 @@ export function luminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-/** White or BrickFill Ink, whichever contrasts more with the accent. */
+/** White or the near-black text color, whichever contrasts more with the accent. */
 export function foregroundFor(hex: string): string {
   const light = luminance(hex);
-  const ink = luminance('#1B2A3A');
+  const ink = luminance('#11171C');
   const contrastWhite = 1.05 / (light + 0.05);
   const contrastInk = (Math.max(light, ink) + 0.05) / (Math.min(light, ink) + 0.05);
-  return contrastWhite >= contrastInk ? '#FFFFFF' : '#1B2A3A';
+  return contrastWhite >= contrastInk ? '#FFFFFF' : '#11171C';
 }
 
 const ACCENT_TOKENS = ['--primary', '--ring', '--sidebar-primary', '--sidebar-ring', '--chart-1'];
@@ -26,7 +26,7 @@ const ACCENT_TOKENS = ['--primary', '--ring', '--sidebar-primary', '--sidebar-ri
 export function applyAccentColor(hex: string | null | undefined) {
   const root = document.documentElement;
   if (!isHexColor(hex)) {
-    for (const token of [...ACCENT_TOKENS, '--primary-foreground', '--sidebar-primary-foreground']) {
+    for (const token of [...ACCENT_TOKENS, '--primary-foreground', '--sidebar-primary-foreground', '--primary-hover']) {
       root.style.removeProperty(token);
     }
     return;
@@ -35,4 +35,9 @@ export function applyAccentColor(hex: string | null | undefined) {
   const foreground = foregroundFor(hex);
   root.style.setProperty('--primary-foreground', foreground);
   root.style.setProperty('--sidebar-primary-foreground', foreground);
+  // the hover step of the accent, darker for a light text color and lighter for a dark one
+  root.style.setProperty(
+    '--primary-hover',
+    `color-mix(in oklch, ${hex} 78%, ${foreground === '#FFFFFF' ? 'black' : 'white'})`
+  );
 }

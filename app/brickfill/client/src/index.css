@@ -1,163 +1,274 @@
 @import '@databricks/appkit-ui/styles.css';
 
 /*
- * BrickFill theme. Brand palette:
- *   Kiln   #C2410C  terracotta, primary actions and the filled courses of the mark
- *   Ink    #1B2A3A  text and dark surfaces
- *   Mortar #F4EDE4  warm neutral for secondary surfaces
- * Values are oklch so AppKit UI components pick them up through the same tokens.
- * A customer accent (BRAND_ACCENT_COLOR) overrides --primary at runtime (see lib/branding.ts).
+ * BrickFill theme: the Databricks product language, so the app reads as part of the workspace it runs in.
+ *   Action blue  #2272B4  the one primary action, selection and focus (a customer accent replaces it, lib/branding.ts)
+ *   Text         #11171C  near-black slate; secondary text #5F7281
+ *   Surfaces     white, with the cool gray #F6F7F9 for the sidebar, table headers and inset panels
+ *   Borders      #D1D9E1 for decoration; fields use a darker outline (3:1, WCAG 1.4.11)
+ * The BrickFill mark keeps its own brick color (--brand-fill); nothing else on the page is warm.
  */
 :root {
   color-scheme: light;
-  --brand-kiln: oklch(0.553 0.174 38.4);
-  --brand-ink: oklch(0.279 0.036 250.8);
-  --brand-mortar: oklch(0.949 0.014 74.4);
-  /* The filled courses of the mark; unlike --primary, a customer accent never replaces it. */
-  --brand-fill: var(--brand-kiln);
+  --brand-fill: oklch(0.553 0.174 38.4);
 
-  --radius: 0.625rem;
-  --background: oklch(0.98 0.006 75.4);
-  --foreground: var(--brand-ink);
-  --card: oklch(1 0 0);
-  --card-foreground: var(--brand-ink);
-  --popover: oklch(1 0 0);
-  --popover-foreground: var(--brand-ink);
-  --primary: var(--brand-kiln);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: var(--brand-mortar);
-  --secondary-foreground: var(--brand-ink);
-  --muted: oklch(0.955 0.011 74.4);
-  --muted-foreground: oklch(0.506 0.027 256.2);
-  --accent: oklch(0.939 0.024 55.3);
-  --accent-foreground: oklch(0.408 0.116 38.2);
-  --destructive: oklch(0.505 0.19 27.5);
-  --destructive-foreground: oklch(1 0 0);
+  --radius: 0.375rem;
+  --background: #ffffff;
+  --foreground: #11171c;
+  --card: #ffffff;
+  --card-foreground: #11171c;
+  --popover: #ffffff;
+  --popover-foreground: #11171c;
+  --primary: #2272b4;
+  --primary-foreground: #ffffff;
+  /* Hover and press of the primary action, a step darker (lighter in dark), as in the workspace. */
+  --primary-hover: #0e538b;
+  --secondary: #f6f7f9;
+  --secondary-foreground: #11171c;
+  --muted: #f6f7f9;
+  --muted-foreground: #5f7281;
+  /* Hover of outline and ghost controls and of selected rows: the action blue as a wash. */
+  --accent: #edf3f9;
+  --accent-foreground: #0e538b;
+  --destructive: #c82d4c;
+  --destructive-foreground: #ffffff;
   /*
-   * Status tones: a soft surface with text of the same hue, always next to an icon and a label. Teal for success (it
-   * stays apart from warning and error for red-green color blindness), mustard for warning (well apart from Kiln,
-   * which stays for actions), Ink's slate for information.
+   * Status tones: a soft surface with text of the same hue, always next to an icon and a label. Green, amber and red
+   * as in the workspace; "enriched" is violet so no status is ever drawn in the action blue.
    */
-  --success: oklch(0.44 0.08 170);
-  --success-soft: oklch(0.95 0.035 170);
-  --warning: oklch(0.45 0.095 80);
-  --warning-soft: oklch(0.94 0.075 92);
-  --info: oklch(0.43 0.07 250);
-  --info-soft: oklch(0.945 0.022 250);
-  --danger-soft: oklch(0.95 0.03 25);
-  --border: oklch(0.907 0.016 73.7);
-  /* Field outlines: 3:1 against the card and the page (WCAG 1.4.11), unlike the decorative --border. */
-  --input: oklch(0.64 0.02 73.7);
-  --ring: oklch(0.635 0.164 42.8);
-  --chart-1: var(--brand-kiln);
-  --chart-2: oklch(0.467 0.089 249.8);
-  --chart-3: oklch(0.578 0.09 178.4);
-  --chart-4: oklch(0.729 0.145 77.7);
-  --chart-5: oklch(0.664 0.029 262.3);
-  --sidebar: oklch(0.98 0.006 75.4);
-  --sidebar-foreground: var(--brand-ink);
-  --sidebar-primary: var(--brand-kiln);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: var(--brand-mortar);
-  --sidebar-accent-foreground: var(--brand-ink);
-  --sidebar-border: oklch(0.907 0.016 73.7);
-  --sidebar-ring: oklch(0.635 0.164 42.8);
+  --success: #277c43;
+  --success-soft: #e9f6ec;
+  --warning: #8a5100;
+  --warning-soft: #fff4d6;
+  --info: #5b4fb8;
+  --info-soft: #f1effb;
+  --danger-soft: #fcebee;
+  --border: #d1d9e1;
+  /* Field outlines: 3:1 against white and the gray surface (WCAG 1.4.11), unlike the decorative --border. */
+  --input: #7a8c9b;
+  --ring: #2272b4;
+  --chart-1: #2272b4;
+  --chart-2: #077a9d;
+  --chart-3: #ffab00;
+  --chart-4: #00a972;
+  --chart-5: #8396a5;
+  --sidebar: #f6f7f9;
+  --sidebar-foreground: #11171c;
+  --sidebar-primary: #2272b4;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e4ecf4;
+  --sidebar-accent-foreground: #0e538b;
+  --sidebar-border: #d1d9e1;
+  --sidebar-ring: #2272b4;
 }
 
 /* The two dark blocks must stay identical (theme.test.ts): one for a .dark class, one for the system setting. */
 .dark {
   color-scheme: dark;
   --brand-fill: oklch(0.681 0.178 40.6);
-  --background: oklch(0.213 0.025 249);
-  --foreground: var(--brand-mortar);
-  --card: oklch(0.251 0.032 251);
-  --card-foreground: var(--brand-mortar);
-  --popover: oklch(0.251 0.032 251);
-  --popover-foreground: var(--brand-mortar);
-  --primary: oklch(0.681 0.178 40.6);
-  --primary-foreground: var(--brand-ink);
-  --secondary: oklch(0.312 0.039 252);
-  --secondary-foreground: var(--brand-mortar);
-  --muted: oklch(0.288 0.034 250.7);
-  --muted-foreground: oklch(0.744 0.022 254.9);
-  --accent: oklch(0.303 0.029 46.3);
-  --accent-foreground: oklch(0.906 0.043 53.5);
-  /* AppKit's dark red: the light one is under 3:1 as error text on the dark card. */
-  --destructive: oklch(0.704 0.191 22.216);
-  --success: oklch(0.84 0.09 170);
-  --success-soft: oklch(0.33 0.045 170);
-  --warning: oklch(0.86 0.12 90);
-  --warning-soft: oklch(0.34 0.06 80);
-  --info: oklch(0.84 0.06 250);
-  --info-soft: oklch(0.33 0.045 250);
-  --danger-soft: oklch(0.33 0.07 25);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 36%);
-  --ring: oklch(0.681 0.178 40.6);
-  --chart-1: oklch(0.681 0.178 40.6);
-  --chart-2: oklch(0.7 0.09 249.8);
-  --chart-3: oklch(0.7 0.09 178.4);
-  --chart-4: oklch(0.79 0.14 77.7);
-  --chart-5: oklch(0.744 0.022 254.9);
-  --sidebar: oklch(0.251 0.032 251);
-  --sidebar-foreground: var(--brand-mortar);
-  --sidebar-primary: oklch(0.681 0.178 40.6);
-  --sidebar-primary-foreground: var(--brand-ink);
-  --sidebar-accent: oklch(0.312 0.039 252);
-  --sidebar-accent-foreground: var(--brand-mortar);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.681 0.178 40.6);
+  --background: #11171c;
+  --foreground: #e8ecf0;
+  --card: #1a2228;
+  --card-foreground: #e8ecf0;
+  --popover: #1f282f;
+  --popover-foreground: #e8ecf0;
+  --primary: #4299e0;
+  --primary-foreground: #11171c;
+  --primary-hover: #8acaff;
+  --secondary: #253038;
+  --secondary-foreground: #e8ecf0;
+  --muted: #1f282f;
+  --muted-foreground: #92a4b3;
+  --accent: #1c3448;
+  --accent-foreground: #8acaff;
+  --destructive: #f07a92;
+  --success: #74d69a;
+  --success-soft: #173a2a;
+  --warning: #f2c14e;
+  --warning-soft: #3b2e10;
+  --info: #b9aef7;
+  --info-soft: #2c2850;
+  --danger-soft: #3e1d25;
+  --border: #303c46;
+  --input: #6b7d8c;
+  --ring: #4299e0;
+  --chart-1: #4299e0;
+  --chart-2: #3fc1d3;
+  --chart-3: #f2c14e;
+  --chart-4: #4cc38a;
+  --chart-5: #92a4b3;
+  --sidebar: #161d22;
+  --sidebar-foreground: #e8ecf0;
+  --sidebar-primary: #4299e0;
+  --sidebar-primary-foreground: #11171c;
+  --sidebar-accent: #1c3448;
+  --sidebar-accent-foreground: #8acaff;
+  --sidebar-border: #2a343c;
+  --sidebar-ring: #4299e0;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
     color-scheme: dark;
     --brand-fill: oklch(0.681 0.178 40.6);
-    --background: oklch(0.213 0.025 249);
-    --foreground: var(--brand-mortar);
-    --card: oklch(0.251 0.032 251);
-    --card-foreground: var(--brand-mortar);
-    --popover: oklch(0.251 0.032 251);
-    --popover-foreground: var(--brand-mortar);
-    --primary: oklch(0.681 0.178 40.6);
-    --primary-foreground: var(--brand-ink);
-    --secondary: oklch(0.312 0.039 252);
-    --secondary-foreground: var(--brand-mortar);
-    --muted: oklch(0.288 0.034 250.7);
-    --muted-foreground: oklch(0.744 0.022 254.9);
-    --accent: oklch(0.303 0.029 46.3);
-    --accent-foreground: oklch(0.906 0.043 53.5);
-    --destructive: oklch(0.704 0.191 22.216);
-    --success: oklch(0.84 0.09 170);
-    --success-soft: oklch(0.33 0.045 170);
-    --warning: oklch(0.86 0.12 90);
-    --warning-soft: oklch(0.34 0.06 80);
-    --info: oklch(0.84 0.06 250);
-    --info-soft: oklch(0.33 0.045 250);
-    --danger-soft: oklch(0.33 0.07 25);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 36%);
-    --ring: oklch(0.681 0.178 40.6);
-    --chart-1: oklch(0.681 0.178 40.6);
-    --chart-2: oklch(0.7 0.09 249.8);
-    --chart-3: oklch(0.7 0.09 178.4);
-    --chart-4: oklch(0.79 0.14 77.7);
-    --chart-5: oklch(0.744 0.022 254.9);
-    --sidebar: oklch(0.251 0.032 251);
-    --sidebar-foreground: var(--brand-mortar);
-    --sidebar-primary: oklch(0.681 0.178 40.6);
-    --sidebar-primary-foreground: var(--brand-ink);
-    --sidebar-accent: oklch(0.312 0.039 252);
-    --sidebar-accent-foreground: var(--brand-mortar);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.681 0.178 40.6);
+    --background: #11171c;
+    --foreground: #e8ecf0;
+    --card: #1a2228;
+    --card-foreground: #e8ecf0;
+    --popover: #1f282f;
+    --popover-foreground: #e8ecf0;
+    --primary: #4299e0;
+    --primary-foreground: #11171c;
+    --primary-hover: #8acaff;
+    --secondary: #253038;
+    --secondary-foreground: #e8ecf0;
+    --muted: #1f282f;
+    --muted-foreground: #92a4b3;
+    --accent: #1c3448;
+    --accent-foreground: #8acaff;
+    --destructive: #f07a92;
+    --success: #74d69a;
+    --success-soft: #173a2a;
+    --warning: #f2c14e;
+    --warning-soft: #3b2e10;
+    --info: #b9aef7;
+    --info-soft: #2c2850;
+    --danger-soft: #3e1d25;
+    --border: #303c46;
+    --input: #6b7d8c;
+    --ring: #4299e0;
+    --chart-1: #4299e0;
+    --chart-2: #3fc1d3;
+    --chart-3: #f2c14e;
+    --chart-4: #4cc38a;
+    --chart-5: #92a4b3;
+    --sidebar: #161d22;
+    --sidebar-foreground: #e8ecf0;
+    --sidebar-primary: #4299e0;
+    --sidebar-primary-foreground: #11171c;
+    --sidebar-accent: #1c3448;
+    --sidebar-accent-foreground: #8acaff;
+    --sidebar-border: #2a343c;
+    --sidebar-ring: #4299e0;
   }
 }
 
-/* AppKit draws selected text in --primary-foreground, white on a pale Kiln in the light theme. */
+/*
+ * AppKit's base layer gives every paragraph a 1.75rem (prose) line height, which doubles the rows of tables and
+ * lists; paragraphs inherit the line height of their context instead. Reading text sets its own (leading-7).
+ */
+@layer base {
+  p {
+    line-height: inherit;
+  }
+}
+
+/* Browser surfaces in the same palette: selection, caret, native checkboxes and scrollbars. */
 ::selection {
-  background-color: color-mix(in oklch, var(--primary) 24%, transparent);
+  background-color: color-mix(in oklch, var(--primary) 22%, transparent);
   color: var(--foreground);
+}
+:root {
+  accent-color: var(--primary);
+  caret-color: var(--primary);
+  scrollbar-color: color-mix(in oklch, var(--muted-foreground) 45%, transparent) transparent;
+}
+
+/*
+ * Workspace conventions applied to the AppKit components themselves (unlayered, so they win over the components'
+ * own utility classes): panels are separated by a border, never a shadow; status tags are 4px rectangles, not pills;
+ * tables have a gray header row in secondary text; tabs are underlined, not a segmented track.
+ */
+[data-slot='card'] {
+  box-shadow: none;
+}
+/* A panel's heading sits closer to its content than to the panel's edge (only cards keeping AppKit's default gap). */
+[data-slot='card'].gap-6 {
+  gap: 0.75rem;
+}
+[data-slot='badge'] {
+  border-radius: 4px;
+}
+[data-slot='button'],
+[data-slot='input'],
+[data-slot='textarea'],
+[data-slot='select-trigger'] {
+  box-shadow: none;
+}
+/* Workspace density: default controls are 32px (touch screens still grow them to 44px, below). */
+[data-slot='button'].h-9,
+[data-slot='input'].h-9,
+[data-slot='select-trigger'][data-size='default'] {
+  height: 2rem;
+}
+[data-slot='button'].size-9 {
+  width: 2rem;
+  height: 2rem;
+}
+/* 14px field text with a mouse; touch screens keep AppKit's 16px so iOS does not zoom into a focused field. */
+@media (pointer: fine) {
+  [data-slot='input'],
+  [data-slot='textarea'] {
+    font-size: 0.875rem;
+  }
+}
+
+/* The primary action darkens on hover (lightens in dark), instead of fading to 90%. */
+[data-slot='button'].bg-primary:hover,
+a.bg-primary:hover {
+  background-color: var(--primary-hover);
+}
+[data-slot='table-header'] {
+  background-color: var(--muted);
+}
+[data-slot='table-head'] {
+  height: 2.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+[data-slot='tabs-list'] {
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+  gap: 1.25rem;
+  padding: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  /* one line that scrolls sideways on narrow screens, as in the workspace, instead of wrapping */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+/* On phones the tabs that do not fit fade out at the right edge, so the hidden ones read as "scroll for more". */
+@media (max-width: 767.98px) {
+  [data-slot='tabs-list'] {
+    padding-right: 2rem;
+    mask-image: linear-gradient(to right, black calc(100% - 2.5rem), transparent);
+  }
+}
+[data-slot='tabs-trigger'] {
+  flex: none;
+  height: auto;
+  margin-bottom: -1px;
+  padding: 0.5rem 0.125rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted-foreground);
+}
+[data-slot='tabs-trigger']:hover {
+  color: var(--foreground);
+}
+[data-slot='tabs-trigger'][data-state='active'] {
+  border-bottom-color: var(--primary);
+  background: transparent;
+  box-shadow: none;
+  color: var(--foreground);
+  font-weight: 600;
 }
 
 /* Spinners and transitions stop for people who ask the system for less motion; state still shows in text. */
@@ -238,8 +349,10 @@
   }
 }
 
-/* Tailwind colors for the status tones: bg-success-soft, text-warning, … */
+/* Tailwind colors for the status tones (bg-success-soft, text-warning, …); panels and dialogs round to 8px. */
 @theme inline {
+  --radius-xl: calc(var(--radius) + 2px);
+  --color-primary-hover: var(--primary-hover);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);

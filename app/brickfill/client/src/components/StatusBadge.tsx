@@ -3,7 +3,7 @@ import { Badge } from '@databricks/appkit-ui/react';
 import { CircleCheck, CircleDashed, CircleX, Eye, Sparkles, TriangleAlert, type LucideIcon } from 'lucide-react';
 import { useTranslation } from '../i18n/react';
 
-/** Status tones of index.css. Kiln (primary) is kept for actions, so no status is drawn in it. */
+/** Status tones of index.css. The action blue (primary) is kept for actions, so no status is drawn in it. */
 export type Tone = 'neutral' | 'quiet' | 'info' | 'success' | 'warning' | 'danger';
 
 const TONE_CLASSES: Record<Tone, string> = {

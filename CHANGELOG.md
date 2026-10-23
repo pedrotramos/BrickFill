@@ -7,6 +7,16 @@ versions the canonical data contract separately.
 
 ## [Unreleased]
 
+### Changed
+
+- Review app redesigned in the Databricks workspace's own product language, so it reads as part of the workspace it
+  runs in: white and cool-gray surfaces, the action blue only for the primary action, selection and focus, a left
+  sidebar, 32px controls with a mouse (44px on touch), 4px status tags, underline tabs and gray table headers. The
+  overview shows one summary panel, the catalog filters are a toolbar above the table, the product name is the row's
+  link, numbers are right-aligned and products never enriched show "—" instead of 0%.
+- The product page shows the same status as the catalog (the enrichment status, plus the review decision once there is
+  one).
+
 ## [0.1.0] - 2026-10-23
 
 First public release.
