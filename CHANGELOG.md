@@ -7,6 +7,8 @@ versions the canonical data contract separately.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-23
+
 ### Changed
 
 - Review app redesigned in the Databricks workspace's own product language, so it reads as part of the workspace it
@@ -16,6 +18,7 @@ versions the canonical data contract separately.
   link, numbers are right-aligned and products never enriched show "—" instead of 0%.
 - The product page shows the same status as the catalog (the enrichment status, plus the review decision once there is
   one).
+- A plain `vX.Y.Z` tag is published as the latest release; only a suffixed tag (`v1.0.0-rc.1`) is a pre-release.
 
 ## [0.1.0] - 2026-10-23
 
@@ -52,5 +55,6 @@ First public release.
 - `scripts/replay_capture.py`: replays the evidence crops of a past run from its archived text maps, without credits.
 - CI on GitHub Actions (Python, app, bundles, secret scanning) and a tag-driven release workflow.
 
-[Unreleased]: https://github.com/pedrotramos/BrickFill/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/pedrotramos/BrickFill/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/pedrotramos/BrickFill/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pedrotramos/BrickFill/releases/tag/v0.1.0
