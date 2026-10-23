@@ -31,9 +31,9 @@
   "license": "Apache-2.0",
   "description": "BrickFill: evidence-first catalog enrichment with AI, verifiable sources and human review, on Databricks",
   "dependencies": {
-    "@databricks/appkit": "0.38.1",
-    "@databricks/appkit-ui": "0.38.1",
-    "@databricks/sdk-experimental": "0.17.0",
+    "@databricks/appkit": "0.89.0",
+    "@databricks/appkit-ui": "0.89.0",
+    "@databricks/sdk-experimental": "0.18.0",
     "clsx": "2.1.1",
     "embla-carousel-react": "8.6.0",
     "lucide-react": "0.546.0",
