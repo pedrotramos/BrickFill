@@ -1,0 +1,33 @@
+{
+  "title": "Calidad lista para decidir",
+  "subtitle": "Sigue la cobertura, las evidencias y la cola que necesita revisión humana.",
+  "updatedAt": "Actualizado el {{date}}",
+  "refresh": "Actualizar resumen",
+  "loadError": "No se pudo cargar el resumen",
+  "metrics": {
+    "products": {
+      "title": "Productos",
+      "detail": "SKU en el catálogo"
+    },
+    "enriched": {
+      "title": "Listos",
+      "detail": "Enriquecidos sin errores bloqueantes"
+    },
+    "review": {
+      "title": "Por revisar",
+      "detail": "Conflicto, dato ausente o regla incumplida"
+    },
+    "quality": {
+      "title": "Calidad media",
+      "detail_one": "De {{products}} producto enriquecido · cobertura obligatoria {{coverage}}",
+      "detail_other": "De {{products}} productos enriquecidos · cobertura obligatoria {{coverage}}",
+      "empty": "Ningún producto enriquecido todavía"
+    }
+  },
+  "nextAction": {
+    "title": "Siguiente paso",
+    "heading": "Empieza por los productos que requieren revisión",
+    "description": "Abre el catálogo, revisa las fuentes y registra cada corrección con su evidencia.",
+    "cta": "Abrir la cola de revisión"
+  }
+}

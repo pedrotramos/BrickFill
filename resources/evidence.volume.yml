@@ -1,0 +1,20 @@
+resources:
+  volumes:
+    brickfill_evidence:
+      name: ${var.evidence_volume}
+      catalog_name: ${var.catalog}
+      schema_name: ${var.schema}
+      volume_type: MANAGED
+      comment: Source screenshots and attribute-specific evidence crops captured by the jobs (Firecrawl); no automatic deletion. project=brickfill
+      lifecycle:
+        prevent_destroy: true
+
+    # The only Volume the app can write: screenshots attached by reviewers to an attribute (manual evidence).
+    brickfill_manual_evidence:
+      name: ${var.manual_evidence_volume}
+      catalog_name: ${var.catalog}
+      schema_name: ${var.schema}
+      volume_type: MANAGED
+      comment: Screenshots uploaded by reviewers as manual evidence of product attributes; never deleted (audit trail). project=brickfill
+      lifecycle:
+        prevent_destroy: true

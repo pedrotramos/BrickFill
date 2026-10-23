@@ -1,0 +1,170 @@
+{
+  "severity": {
+    "ERROR": "Error",
+    "WARNING": "Advertencia",
+    "INFO": "Información"
+  },
+  "fields": {
+    "generated_title": "Título",
+    "short_description": "Descripción breve",
+    "meta_description": "Meta description",
+    "fact_sheet": "Ficha técnica",
+    "faq": "FAQ",
+    "content": "Contenido",
+    "ean": "GTIN",
+    "gtin": "GTIN",
+    "brand": "Marca",
+    "images": "Imágenes",
+    "image": "Imagen",
+    "attributes": "Atributos",
+    "agent": "Agente de investigación",
+    "visual_evidence": "Evidencia visual",
+    "review": {
+      "status": "Estado de la revisión"
+    },
+    "fact": "Hecho «{{name}}»",
+    "attribute": "Atributo «{{name}}»"
+  },
+  "codes": {
+    "INVALID_GTIN": {
+      "title": "GTIN no válido",
+      "message": "El GTIN del producto no es válido (longitud o dígito de control incorrectos)."
+    },
+    "BRAND_TITLE_CONFLICT": {
+      "title": "La marca no está en el título de origen",
+      "message": "La marca registrada no aparece en el título de origen; una fuente debe confirmarla."
+    },
+    "INVALID_LENGTH": {
+      "title": "Longitud fuera de rango",
+      "message": "{{field}} debe tener entre {{min}} y {{max}} caracteres; tiene {{actual}}."
+    },
+    "FACT_SHEET_MISSING_GTIN": {
+      "title": "Falta el GTIN en la ficha técnica",
+      "message": "La ficha técnica debe incluir el GTIN del producto."
+    },
+    "INVALID_ENRICHED_GTIN": {
+      "title": "GTIN no válido en el contenido",
+      "message": "Un GTIN citado en el contenido tiene un dígito de control no válido: {{candidate}}."
+    },
+    "GTIN_LOGISTIC_RELATION_CONFLICT": {
+      "title": "El GTIN de caja no corresponde a la unidad",
+      "message": "El GTIN de caja {{candidate}} no deriva del GTIN unitario {{unit}}; se esperaba {{expected}} para el indicador {{indicator}}."
+    },
+    "GTIN_PACKAGING_LEVEL_CONFLICT": {
+      "title": "GTIN en un nivel de embalaje incorrecto",
+      "message": "El GTIN {{candidate}} aparece en un nivel de embalaje incorrecto ({{level}})."
+    },
+    "CATEGORY_REQUIRED_FACT": {
+      "title": "Falta un dato obligatorio",
+      "message": "Esta categoría exige «{{label}}» en la ficha técnica."
+    },
+    "TITLE_MISSING_BRAND": {
+      "title": "Falta la marca en el título",
+      "message": "El título generado debe contener la marca verificada."
+    },
+    "DESCRIPTION_LINK": {
+      "title": "Enlace en la descripción",
+      "message": "La descripción breve no puede contener enlaces."
+    },
+    "META_SUFFIX": {
+      "title": "Falta el final obligatorio de la meta",
+      "message": "La meta description debe terminar con: {{suffixes}}."
+    },
+    "FAQ_COUNT": {
+      "title": "Número de FAQ fuera de rango",
+      "message": "La FAQ debe tener entre {{min}} y {{max}} preguntas cuando hay información suficiente; tiene {{actual}}."
+    },
+    "UNRESOLVED_SOURCE_CONFLICT": {
+      "title": "Conflicto de fuentes sin resolver",
+      "message": "Fuentes no oficiales discrepan sobre «{{fact}}»; un revisor debe decidir."
+    },
+    "EMOJI": {
+      "title": "Emoji en el contenido",
+      "message": "El contenido no puede usar emojis."
+    },
+    "PROMOTIONAL_LANGUAGE": {
+      "title": "Lenguaje promocional",
+      "message": "Se encontró una expresión promocional prohibida: «{{term}}»."
+    },
+    "DUPLICATE_ATTRIBUTE": {
+      "title": "Atributo duplicado",
+      "message": "El atributo {{attribute}} se devolvió más de una vez."
+    },
+    "MISSING_ATTRIBUTE_DEFINITION": {
+      "title": "Atributo sin definición",
+      "message": "El atributo {{attribute}} no tiene definición en la matriz del catálogo."
+    },
+    "UNKNOWN_ATTRIBUTE": {
+      "title": "Atributo desconocido",
+      "message": "El atributo {{attribute}} no está en la matriz de esta subcategoría."
+    },
+    "VOCABULARY_VALUE_NOT_ALLOWED": {
+      "title": "Valor fuera del vocabulario",
+      "message": "«{{value}}» no es un valor permitido para {{attribute}}."
+    },
+    "VOCABULARY_VALUE_PREAPPROVED": {
+      "title": "Valor fuera del vocabulario preaprobado",
+      "message": "«{{value}}» está fuera del vocabulario de {{attribute}}, pero se preaprobó con un {{confidence}} % de confianza; revísalo."
+    },
+    "VOCABULARY_VALUE_PENDING": {
+      "title": "Valor pendiente de validar en el vocabulario",
+      "message": "«{{value}}» para {{attribute}} está fuera del vocabulario y requiere revisión."
+    },
+    "MISSING_REQUIRED_ATTRIBUTE": {
+      "title": "Falta un atributo obligatorio",
+      "message": "El atributo obligatorio {{attribute}} no tiene un valor con evidencia."
+    },
+    "UNCITED_ATTRIBUTE": {
+      "title": "Atributo sin cita",
+      "message": "El atributo {{attribute}} tiene valor, pero ninguna evidencia citada."
+    },
+    "MISSING_ATTRIBUTE_OBSERVATION": {
+      "title": "Falta la explicación",
+      "message": "El atributo {{attribute}} se marcó como no aplicable sin explicación."
+    },
+    "GENERIC_ATTRIBUTE_VALUE": {
+      "title": "Valor genérico",
+      "message": "«{{value}}» es demasiado genérico para {{attribute}}."
+    },
+    "NON_OFFICIAL_FAQ_SOURCE": {
+      "title": "FAQ con fuente no oficial",
+      "message": "Las FAQ solo pueden citar fuentes oficiales: {{url}}."
+    },
+    "IMAGE_DIMENSIONS_UNKNOWN": {
+      "title": "Tamaño de imagen desconocido",
+      "message": "No se pudieron confirmar las dimensiones de la imagen: {{url}}."
+    },
+    "IMAGE_RESOLUTION": {
+      "title": "Resolución de imagen baja",
+      "message": "La imagen mide {{width}}×{{height}}; se requiere al menos {{min_width}}×{{min_height}}."
+    },
+    "IMAGE_BACKGROUND_UNVERIFIED": {
+      "title": "Fondo de imagen sin verificar",
+      "message": "No fue posible confirmar el fondo blanco de la imagen."
+    },
+    "NO_IMAGE_CANDIDATE": {
+      "title": "Sin imagen",
+      "message": "No se encontró ninguna imagen en las páginas del producto."
+    },
+    "VISUAL_EVIDENCE_INCOMPLETE": {
+      "title": "Evidencia visual incompleta",
+      "message": "La evidencia visual de {{attribute}} está incompleta; revisa la captura."
+    },
+    "AGENT_FAILURE": {
+      "title": "La investigación falló",
+      "message": "El agente de investigación falló para este producto: {{error}}"
+    },
+    "META_ENDING": {
+      "title": "Final de la meta description (regla anterior)",
+      "message": "La meta description no terminaba con la llamada a la acción exigida por el perfil anterior."
+    },
+    "ELECTRO_REQUIRED_FIELD": {
+      "title": "Campo obligatorio de electrodomésticos (regla anterior)",
+      "message": "Falta en la ficha técnica un campo obligatorio para electrodomésticos."
+    },
+    "FACT_SHEET_MISSING_EAN": {
+      "title": "Falta el GTIN en la ficha técnica",
+      "message": "La ficha técnica debe incluir el GTIN del producto."
+    }
+  }
+}

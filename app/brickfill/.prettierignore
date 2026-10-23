@@ -1,0 +1,9 @@
+node_modules
+client/dist
+dist
+package-lock.json
+appkit.plugins.json
+databricks.yml
+resources
+*.md
+config/content-manifest.json

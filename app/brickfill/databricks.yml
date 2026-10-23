@@ -1,0 +1,226 @@
+bundle:
+  name: brickfill-app
+  databricks_cli_version: ">= 1.19.0"
+
+# As in the platform bundle: schemas keep their names in dev, so the app, the grants script and the jobs agree on the
+# Postgres schema of the synced table (scripts can't reference resources.*).
+experimental:
+  skip_name_prefix_for_schema: true
+
+# BrickFill review app. It serves every screen from Lakebase: resources/lakebase_sync.yml syncs the canonical products
+# view (v_products) into Postgres, next to the latest enrichment results that the enrichment job loads.
+include:
+  - resources/*.yml
+
+variables:
+  app_name:
+    description: Name of the Databricks App (lowercase letters, digits and hyphens, at most 26 characters)
+    default: brickfill
+  # Working area written by the Lakeflow Jobs; must match the platform bundle's catalog/schema variables.
+  catalog:
+    description: Catalog of the enrichment tables, views and evidence Volumes; must match the platform bundle
+  schema:
+    description: Schema of the enrichment tables, views and evidence Volumes; must match the platform bundle
+    default: brickfill
+  evidence_volume:
+    description: Volume with the screenshots and crops captured by the jobs (the app only reads it); must match the platform bundle
+    default: brickfill_evidence
+  manual_evidence_volume:
+    description: Volume where the app stores screenshots uploaded by reviewers (the only Volume it writes); must match the platform bundle
+    default: brickfill_manual_evidence
+
+  # --- Canonical products view (data contract v1), synced to Lakebase ---
+  source_catalog:
+    description: Catalog holding the canonical source views; must match the platform bundle's source_catalog
+    default: ${var.catalog}
+  source_schema:
+    description: Schema holding the canonical source views; must match the platform bundle's source_schema
+    default: ${var.schema}
+  source_products_table:
+    description: Canonical products view; must match the platform bundle's source_products_table
+    default: v_products
+
+  # --- Lakebase schemas ---
+  lakebase_results_schema:
+    description: Postgres schema where the enrichment job loads the latest result of each product; must match the platform bundle
+    default: enrichment
+  lakebase_app_schema:
+    description: Postgres schema the app creates and owns (reviews, edits, manual evidence, settings, audit); must match the platform bundle's lakebase_schema
+    default: brickfill_app
+  serving_schema:
+    description: Schema (a Unity Catalog schema in `catalog` and, equally, a Postgres schema) that receives the synced products table
+    default: brickfill_serving
+  postgres_database_name:
+    description: Name of the Postgres database inside the Lakebase branch (the last segment of postgres_database, with underscores if the id uses hyphens)
+    default: databricks_postgres
+
+  # --- Lakebase: the same project the platform bundle creates ---
+  lakebase_project_id:
+    description: Lakebase project id; must match the platform bundle
+  lakebase_branch_id:
+    description: Lakebase branch; must match the platform bundle
+    default: production
+  postgres_database_id:
+    description: Resource id of the Postgres database inside the branch (databricks postgres list-databases <branch>)
+    default: databricks-postgres
+  postgres_project:
+    description: Full Lakebase project resource name (derived)
+    default: projects/${var.lakebase_project_id}
+  postgres_branch:
+    description: Full Lakebase branch resource name (derived)
+    default: projects/${var.lakebase_project_id}/branches/${var.lakebase_branch_id}
+  postgres_database:
+    description: Full Lakebase database resource name (derived)
+    default: projects/${var.lakebase_project_id}/branches/${var.lakebase_branch_id}/databases/${var.postgres_database_id}
+
+  # --- Enrichment defaults shown in Settings until app-level settings are saved (same values as the platform bundle) ---
+  content_language:
+    description: Language of the generated content (en, pt-BR, es); must match the platform bundle
+    default: en
+  catalog_language:
+    description: Language of the attribute names and vocabularies in the source catalog (en, pt-BR, es); none = content_language
+    # Not empty: Databricks Apps rejects an env entry without a value.
+    default: none
+  content_profile:
+    description: Editorial content profile (src/brickfill/content/profiles)
+    default: default
+  market:
+    description: Optional market pack (BR, ES, MX, US); none = no market-specific rules
+    default: none
+  settings_editors:
+    description: Comma-separated e-mails allowed to change Settings; none = every app user (changes are always audited)
+    default: none
+
+  # --- UI and co-branding ---
+  ui_default_language:
+    description: UI language used when the browser language is not supported (en, pt-BR, es)
+    default: en
+  brand_customer_name:
+    description: Optional customer name shown next to the BrickFill logo ("BrickFill · for <name>"); none = no co-branding
+    default: none
+  brand_customer_logo_url:
+    description: Optional customer logo (https:// URL or a path served by the app); none = no logo
+    default: none
+  brand_accent_color:
+    description: Optional accent color (#RRGGBB) that replaces the BrickFill primary color; none = BrickFill colors
+    default: none
+
+  # --- Access and FinOps (same values as the platform bundle) ---
+  admins_group:
+    description: Workspace group that manages the app
+    default: ""
+  reviewers_group:
+    description: Workspace group of catalog reviewers; the only users allowed to open the app (CAN_USE)
+    default: ""
+  budget_policy_id:
+    description: Serverless budget (usage) policy that tags the app and the synced-table pipeline. Empty = workspace default
+    default: ""
+
+resources:
+  apps:
+    app:
+      name: ${var.app_name}
+      description: 'BrickFill: evidence-first product catalog enrichment with human review'
+      source_code_path: ./
+      budget_policy_id: ${var.budget_policy_id}
+      config:
+        command: ['npm', 'run', 'start']
+        env:
+          - name: DATABRICKS_VOLUME_EVIDENCE
+            value_from: evidence
+          - name: DATABRICKS_VOLUME_MANUAL_EVIDENCE
+            value_from: manual-evidence
+          - name: LAKEBASE_ENDPOINT
+            value_from: postgres
+          - name: LAKEBASE_RESULTS_SCHEMA
+            value: ${var.lakebase_results_schema}
+          - name: LAKEBASE_SYNC_SCHEMA
+            value: ${var.serving_schema}
+          - name: LAKEBASE_APP_SCHEMA
+            value: ${var.lakebase_app_schema}
+          - name: CONTENT_LANGUAGE_DEFAULT
+            value: ${var.content_language}
+          - name: CATALOG_LANGUAGE_DEFAULT
+            value: ${var.catalog_language}
+          - name: CONTENT_PROFILE_DEFAULT
+            value: ${var.content_profile}
+          - name: MARKET_DEFAULT
+            value: ${var.market}
+          - name: SETTINGS_EDITORS
+            value: ${var.settings_editors}
+          - name: UI_DEFAULT_LANGUAGE
+            value: ${var.ui_default_language}
+          - name: BRAND_CUSTOMER_NAME
+            value: ${var.brand_customer_name}
+          - name: BRAND_CUSTOMER_LOGO_URL
+            value: ${var.brand_customer_logo_url}
+          - name: BRAND_ACCENT_COLOR
+            value: ${var.brand_accent_color}
+
+      # The resources which this app has access to.
+      resources:
+        - name: evidence
+          uc_securable:
+            securable_type: VOLUME
+            securable_full_name: ${var.catalog}.${var.schema}.${var.evidence_volume}
+            permission: READ_VOLUME
+        # Reviewers' uploaded screenshots: the only place the app writes files.
+        - name: manual-evidence
+          uc_securable:
+            securable_type: VOLUME
+            securable_full_name: ${var.catalog}.${var.schema}.${var.manual_evidence_volume}
+            permission: WRITE_VOLUME
+        - name: postgres
+          postgres:
+            branch: ${var.postgres_branch}
+            database: ${var.postgres_database}
+            permission: CAN_CONNECT_AND_CREATE
+
+# Grants the app's service principal read access to the Lakebase schemas it serves the catalog from.
+# Run after the app exists:  databricks bundle run grant_access -t <target> --profile <PROFILE>
+scripts:
+  grant_access:
+    env:
+      APP_NAME: ${var.app_name}
+      LAKEBASE_ENDPOINT: ${var.postgres_branch}/endpoints/primary
+      LAKEBASE_DATABASE: ${var.postgres_database_name}
+      LAKEBASE_SCHEMAS: ${var.lakebase_results_schema},${var.serving_schema}
+    content: uv run --project ../.. python ../../scripts/grant_app_access.py
+
+targets:
+  # Development. No workspace is pinned here: pass --profile <PROFILE> and set the workspace-specific values with
+  # --var or in .databricks/bundle/dev/variable-overrides.json (gitignored), e.g.
+  #   {"catalog": "<catalog>", "lakebase_project_id": "<project_id>"}
+  dev:
+    default: true
+    mode: development
+
+  # Production: use the same values as the platform bundle's prod target.
+  #   databricks bundle deploy -t prod --profile <PROFILE>
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    permissions:
+      - level: CAN_MANAGE
+        group_name: ${var.admins_group}
+      - level: CAN_MANAGE
+        user_name: ${workspace.current_user.userName}
+    resources:
+      apps:
+        app:
+          permissions:
+            - level: CAN_USE
+              group_name: ${var.reviewers_group}
+    variables:
+      # Required — fill for your workspace (same values as the platform bundle):
+      # catalog: <working_catalog>
+      # lakebase_project_id: <lakebase_project_id>
+      # admins_group: <admins_group>
+      # reviewers_group: <reviewers_group>
+      # budget_policy_id: <budget_policy_id>
+      # Optional:
+      # content_language: en
+      # market: US
+      # settings_editors: catalog-lead@example.com
+      # brand_customer_name: <customer>

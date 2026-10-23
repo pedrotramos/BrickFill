@@ -1,0 +1,250 @@
+{
+  "recapture": {
+    "title": "Recaptura de evidencias",
+    "invalidId": "Identificador de recaptura de evidencias no válido.",
+    "loadFailed": "No se pudo cargar la recaptura de evidencias.",
+    "mismatch": "La recaptura de evidencias no corresponde a este producto.",
+    "loading": "Cargando las capturas de la recaptura…",
+    "notice": "Estas capturas no publican ni sustituyen el enriquecimiento del producto.",
+    "olderRun": "La recaptura se hizo sobre un enriquecimiento anterior; verifica los valores en la fuente antes de comparar."
+  },
+  "notFound": {
+    "title": "Producto no encontrado",
+    "description": "Este GTIN no está en el catálogo actual."
+  },
+  "backToCatalog": "Volver al catálogo",
+  "refresh": "Actualizar datos",
+  "queue": {
+    "next": "Siguiente para revisar",
+    "remaining_one": "(queda {{count}})",
+    "remaining_other": "(quedan {{count}})",
+    "empty": "La cola de revisión está vacía",
+    "afterDecision": "Al aprobar o rechazar se abre el siguiente producto de la cola de revisión."
+  },
+  "gtin": "GTIN {{gtin}}",
+  "productId": "ID {{id}}",
+  "contentLanguage": {
+    "badge": "Contenido en {{language}}",
+    "tooltip": "Idioma en que se escribió el enriquecimiento. Cambiar la configuración no reescribe los productos existentes; vuelve a enriquecerlos de forma explícita."
+  },
+  "updatedAt": "actualizado el {{date}}",
+  "quality": "Calidad",
+  "coverage": "Cobertura",
+  "unavailableData": "Hay datos no disponibles",
+  "tabs": {
+    "content": "Contenido",
+    "attributes": "Atributos",
+    "evidence": "Evidencias",
+    "issues": "Validaciones ({{count}})",
+    "review": "Revisión"
+  },
+  "content": {
+    "shortDescription": "Descripción breve",
+    "metaDescription": "Meta description",
+    "notGenerated": "Aún no generada.",
+    "faq": "Preguntas frecuentes"
+  },
+  "attributes": {
+    "title": "Atributos técnicos",
+    "subtitle": "Compara el valor propuesto con la fuente original antes de aprobar o editar.",
+    "auditTitle": "Auditoría por atributo",
+    "auditDescription": "«Ver auditoría» muestra la página de origen, el fragmento capturado y el tipo de fuente, y permite adjuntar evidencias manuales (URL y fragmento, o una captura de pantalla). Cada edición necesita su propia evidencia.",
+    "filterLabel": "Filtrar atributos",
+    "filters": {
+      "relevant": "Relevantes",
+      "filled": "Completados",
+      "candidates": "Candidatos",
+      "required": "Obligatorios pendientes",
+      "notApplicable": "No aplicables"
+    },
+    "empty": {
+      "title": "Sin atributos",
+      "description": "La matriz no tiene atributos para esta subcategoría."
+    },
+    "edit": {
+      "newValue": "Nuevo valor",
+      "reason": "Justificación",
+      "reasonPlaceholder": "Explica por qué cambias el valor",
+      "evidenceRequired": "Obligatoria: demuestra el nuevo valor con una captura o con la URL y el fragmento de la fuente."
+    },
+    "effectiveValue": "Valor efectivo",
+    "confidence": "Confianza",
+    "valueOrigin": "Origen del valor",
+    "table": {
+      "attribute": "Atributo",
+      "origin": "Origen",
+      "audit": "Auditoría"
+    },
+    "notPublished": "No publicado",
+    "notFound": "No encontrado",
+    "candidateValue": "Candidato: {{value}}",
+    "required": "Obligatorio",
+    "notApplicable": "No aplicable",
+    "curated": "Revisado",
+    "edited": "Editado",
+    "agent": "Agente de IA",
+    "editAttribute": "Editar atributo",
+    "candidate": {
+      "outOfVocabulary": "Fuera del vocabulario",
+      "outOfVocabularyPreapproved": "Fuera del vocabulario · Preaprobado",
+      "conflict": "Conflicto",
+      "noEvidence": "Evidencia insuficiente"
+    },
+    "rejection": {
+      "NO_EVIDENCE_FOR_CANDIDATE": "Se conservó un candidato, pero ninguna evidencia extraída respalda el valor.",
+      "EVIDENCE_VALUE_MISMATCH": "El candidato difiere del valor que indica su propia fuente; revise ambos antes de publicar.",
+      "NOT_IN_VOCABULARY": "El valor encontrado en la fuente no está en el vocabulario del atributo.",
+      "TAXONOMY_MISMATCH": "Eliminado: un atributo taxonómico debe coincidir exactamente con la categoría o subcategoría del producto."
+    },
+    "applicability": {
+      "CANDIDATE_NEEDS_REVIEW": "Hay un candidato que necesita validación humana.",
+      "EVIDENCE_FOUND": "La investigación encontró evidencia para este atributo.",
+      "REQUIRED_NO_EVIDENCE": "Atributo obligatorio sin evidencia suficiente.",
+      "OPTIONAL_NO_CANDIDATE": "Atributo opcional sin candidato ni evidencia para este producto.",
+      "NOT_IN_MATRIX": "El atributo no pertenece a la matriz aplicable o se marcó como no aplicable."
+    }
+  },
+  "evidence": {
+    "title": "Hechos y fuentes",
+    "confidence": "Confianza {{value}}",
+    "empty": "Todavía no se investigaron hechos para este producto."
+  },
+  "issues": {
+    "title": "Validaciones deterministas",
+    "none": {
+      "title": "No se encontraron problemas",
+      "description": "El resultado superó todas las validaciones."
+    }
+  },
+  "review": {
+    "title": "Decisión de revisión",
+    "status": "Estado",
+    "assignee": "Responsable",
+    "notes": "Notas",
+    "save": "Guardar revisión",
+    "staleDecision": "La decisión anterior ({{status}}) se tomó sobre un resultado de enriquecimiento más antiguo. Revisa este resultado y decide de nuevo.",
+    "saved": "Revisión guardada."
+  },
+  "history": {
+    "title": "Historial",
+    "empty": "Aún no hay cambios humanos.",
+    "events": {
+      "REVIEW_UPDATED": "Revisión actualizada",
+      "ATTRIBUTE_OVERRIDDEN": "Atributo editado",
+      "ATTRIBUTE_OVERRIDE_REMOVED": "Edición eliminada, valor de la IA restaurado",
+      "ATTRIBUTE_OVERRIDE_SUPERSEDED": "Edición reemplazada por otra más reciente",
+      "EVIDENCE_ADDED": "Evidencia añadida",
+      "EVIDENCE_REMOVED": "Evidencia eliminada",
+      "REVIEW_REOPENED": "Aprobación reabierta"
+    },
+    "reopenedReason": "Una edición o evidencia cambió después de la aprobación, así que el producto necesita una nueva decisión."
+  },
+  "evidenceForm": {
+    "legend": "Evidencia",
+    "sourceUrl": "URL de la fuente",
+    "sourceUrlPlaceholder": "https://fabricante.ejemplo/producto",
+    "excerpt": "Fragmento que demuestra el valor",
+    "excerptPlaceholder": "Copia el texto de la página que muestra el valor",
+    "screenshot": "Captura de pantalla",
+    "previewAlt": "Vista previa de la captura de pantalla",
+    "removeScreenshot": "Quitar captura",
+    "fileHint": "PNG, JPEG o WebP de hasta 10 MB. También puedes pegar con Ctrl+V.",
+    "note": "Nota (opcional)",
+    "notePlaceholder": "Contexto para quien audite después",
+    "problems": {
+      "imageType": "Usa una imagen PNG, JPEG o WebP.",
+      "imageSize": "La captura debe pesar como máximo 10 MB.",
+      "https": "La URL de la fuente debe empezar por https://.",
+      "missing": "Adjunta una captura de pantalla o indica la URL de la fuente y el fragmento que demuestra el valor."
+    }
+  },
+  "audit": {
+    "image": {
+      "crop": {
+        "failed": "No se pudo cargar el recorte. Puede que el archivo no esté disponible o que no tengas acceso.",
+        "loading": "Cargando el recorte…",
+        "alt": "Recorte de la evidencia de {{attribute}}"
+      },
+      "page": {
+        "failed": "No se pudo cargar la captura de la página. Puede que el archivo no esté disponible o que no tengas acceso.",
+        "loading": "Cargando la captura de la página…",
+        "alt": "Captura de la página de {{attribute}}"
+      },
+      "manual": {
+        "failed": "No se pudo cargar la captura subida. Puede que el archivo no esté disponible o que no tengas acceso.",
+        "loading": "Cargando la captura subida…",
+        "alt": "Captura subida para {{attribute}}"
+      }
+    },
+    "references_one": "{{count}} referencia",
+    "references_many": "{{count}} referencias",
+    "references_other": "{{count}} referencias",
+    "noReference": "Sin referencia",
+    "manualCount_one": "{{count}} manual",
+    "manualCount_many": "{{count}} manuales",
+    "manualCount_other": "{{count}} manuales",
+    "open": "Ver auditoría",
+    "humanOverride": "Edición humana",
+    "title": "Auditoría de {{attribute}}",
+    "description": "Revisa el valor propuesto y las fuentes que lo respaldan antes de aprobar o editar.",
+    "candidateFound": "Candidato encontrado",
+    "aiValue": "Valor original de la IA",
+    "curatedValue": "Valor tras la revisión",
+    "reasonLabel": "Justificación:",
+    "overrideNote": "Las fuentes consultadas respaldan el valor original de la IA; las evidencias manuales respaldan esta edición.",
+    "removeEdit": "Quitar edición",
+    "restoreDialog": {
+      "title": "¿Restaurar el valor original de la IA?",
+      "description": "Se eliminará la edición «{{edited}}» y el atributo volverá a mostrar «{{original}}». El historial seguirá disponible en la auditoría del producto.",
+      "restoring": "Restaurando…",
+      "confirm": "Restaurar valor de la IA"
+    },
+    "sources": {
+      "title": "Fuentes consultadas",
+      "description": "Revisa la captura conservada. La página original puede haber cambiado desde la consulta."
+    },
+    "sourceTier": {
+      "official": "Fuente oficial",
+      "authorized_distributor": "Distribuidor autorizado",
+      "recognized_retailer": "Minorista reconocido",
+      "other": "Otra fuente"
+    },
+    "externalReference": "Referencia externa",
+    "capture": {
+      "COMPLETE": "Evidencia visual completa",
+      "LEGACY": "Evidencia solo textual (heredada)",
+      "INCOMPLETE": "Captura incompleta — requiere revisión",
+      "NOT_VISIBLE": "La página no muestra el valor — requiere revisión",
+      "NO_MATCH": "Valor no encontrado en la captura — requiere revisión",
+      "AMBIGUOUS": "El valor aparece en más de un lugar — requiere revisión",
+      "SCREENSHOT_ONLY": "La página cambió durante la captura — revisa la captura completa",
+      "UNSUPPORTED": "Fuente sin captura visual (PDF) — requiere revisión",
+      "NOT_CAPTURED": "Fuente no capturada — requiere revisión",
+      "FAILED": "La captura falló — requiere revisión"
+    },
+    "capturedAt": "Capturada el {{date}}",
+    "sourceValue": "Valor en la fuente: {{value}}",
+    "noExcerpt": "La URL está vinculada al atributo, pero no se capturó ningún fragmento para esta referencia.",
+    "noCropSeePage": "No hay un recorte legible e inequívoco de este valor. Revisa el valor en la captura de la página.",
+    "noCropTextKept": "No hay un recorte legible e inequívoco de este valor. Se conservó la evidencia textual.",
+    "technicalDetail": "Detalle técnico: {{detail}}",
+    "openScreenshot": "Abrir captura completa",
+    "openReference": "Abrir referencia",
+    "noUrls": "Ninguna URL está vinculada a este atributo. No apruebes un valor completado sin validar una fuente externa.",
+    "manual": {
+      "title": "Evidencias manuales",
+      "forEdit": "Prueba adjuntada por los revisores para el valor editado.",
+      "forAi": "Prueba adjuntada por los revisores para el valor de la IA.",
+      "badge": "Manual",
+      "none": "No hay evidencias manuales.",
+      "save": "Guardar evidencia",
+      "add": "Añadir evidencia"
+    },
+    "researchNote": "Nota de la investigación"
+  },
+  "loadFailed": {
+    "title": "No se pudo cargar este producto",
+    "description": "El catálogo no respondió. Inténtalo de nuevo en un momento."
+  },
+  "loading": "Cargando el producto…"
+}

@@ -1,0 +1,11 @@
+{
+  "code": "BR",
+  "name": "Brazil",
+  "country": "BR",
+  "languages": ["pt-BR"],
+  "search_location": "Brazil",
+  "regulatory_bodies": ["ANVISA", "INMETRO", "MAPA"],
+  "deprioritized_domains": ["mercadolivre", "amazon.", "shopee", "magazineluiza", "aliexpress"],
+  "preferred_domains": [],
+  "value_equivalences": [["110V", "127V"]]
+}

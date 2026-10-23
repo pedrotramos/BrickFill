@@ -1,0 +1,250 @@
+@import '@databricks/appkit-ui/styles.css';
+
+/*
+ * BrickFill theme. Brand palette:
+ *   Kiln   #C2410C  terracotta, primary actions and the filled courses of the mark
+ *   Ink    #1B2A3A  text and dark surfaces
+ *   Mortar #F4EDE4  warm neutral for secondary surfaces
+ * Values are oklch so AppKit UI components pick them up through the same tokens.
+ * A customer accent (BRAND_ACCENT_COLOR) overrides --primary at runtime (see lib/branding.ts).
+ */
+:root {
+  color-scheme: light;
+  --brand-kiln: oklch(0.553 0.174 38.4);
+  --brand-ink: oklch(0.279 0.036 250.8);
+  --brand-mortar: oklch(0.949 0.014 74.4);
+  /* The filled courses of the mark; unlike --primary, a customer accent never replaces it. */
+  --brand-fill: var(--brand-kiln);
+
+  --radius: 0.625rem;
+  --background: oklch(0.98 0.006 75.4);
+  --foreground: var(--brand-ink);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--brand-ink);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--brand-ink);
+  --primary: var(--brand-kiln);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: var(--brand-mortar);
+  --secondary-foreground: var(--brand-ink);
+  --muted: oklch(0.955 0.011 74.4);
+  --muted-foreground: oklch(0.506 0.027 256.2);
+  --accent: oklch(0.939 0.024 55.3);
+  --accent-foreground: oklch(0.408 0.116 38.2);
+  --destructive: oklch(0.505 0.19 27.5);
+  --destructive-foreground: oklch(1 0 0);
+  /*
+   * Status tones: a soft surface with text of the same hue, always next to an icon and a label. Teal for success (it
+   * stays apart from warning and error for red-green color blindness), mustard for warning (well apart from Kiln,
+   * which stays for actions), Ink's slate for information.
+   */
+  --success: oklch(0.44 0.08 170);
+  --success-soft: oklch(0.95 0.035 170);
+  --warning: oklch(0.45 0.095 80);
+  --warning-soft: oklch(0.94 0.075 92);
+  --info: oklch(0.43 0.07 250);
+  --info-soft: oklch(0.945 0.022 250);
+  --danger-soft: oklch(0.95 0.03 25);
+  --border: oklch(0.907 0.016 73.7);
+  /* Field outlines: 3:1 against the card and the page (WCAG 1.4.11), unlike the decorative --border. */
+  --input: oklch(0.64 0.02 73.7);
+  --ring: oklch(0.635 0.164 42.8);
+  --chart-1: var(--brand-kiln);
+  --chart-2: oklch(0.467 0.089 249.8);
+  --chart-3: oklch(0.578 0.09 178.4);
+  --chart-4: oklch(0.729 0.145 77.7);
+  --chart-5: oklch(0.664 0.029 262.3);
+  --sidebar: oklch(0.98 0.006 75.4);
+  --sidebar-foreground: var(--brand-ink);
+  --sidebar-primary: var(--brand-kiln);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: var(--brand-mortar);
+  --sidebar-accent-foreground: var(--brand-ink);
+  --sidebar-border: oklch(0.907 0.016 73.7);
+  --sidebar-ring: oklch(0.635 0.164 42.8);
+}
+
+/* The two dark blocks must stay identical (theme.test.ts): one for a .dark class, one for the system setting. */
+.dark {
+  color-scheme: dark;
+  --brand-fill: oklch(0.681 0.178 40.6);
+  --background: oklch(0.213 0.025 249);
+  --foreground: var(--brand-mortar);
+  --card: oklch(0.251 0.032 251);
+  --card-foreground: var(--brand-mortar);
+  --popover: oklch(0.251 0.032 251);
+  --popover-foreground: var(--brand-mortar);
+  --primary: oklch(0.681 0.178 40.6);
+  --primary-foreground: var(--brand-ink);
+  --secondary: oklch(0.312 0.039 252);
+  --secondary-foreground: var(--brand-mortar);
+  --muted: oklch(0.288 0.034 250.7);
+  --muted-foreground: oklch(0.744 0.022 254.9);
+  --accent: oklch(0.303 0.029 46.3);
+  --accent-foreground: oklch(0.906 0.043 53.5);
+  /* AppKit's dark red: the light one is under 3:1 as error text on the dark card. */
+  --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.84 0.09 170);
+  --success-soft: oklch(0.33 0.045 170);
+  --warning: oklch(0.86 0.12 90);
+  --warning-soft: oklch(0.34 0.06 80);
+  --info: oklch(0.84 0.06 250);
+  --info-soft: oklch(0.33 0.045 250);
+  --danger-soft: oklch(0.33 0.07 25);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 36%);
+  --ring: oklch(0.681 0.178 40.6);
+  --chart-1: oklch(0.681 0.178 40.6);
+  --chart-2: oklch(0.7 0.09 249.8);
+  --chart-3: oklch(0.7 0.09 178.4);
+  --chart-4: oklch(0.79 0.14 77.7);
+  --chart-5: oklch(0.744 0.022 254.9);
+  --sidebar: oklch(0.251 0.032 251);
+  --sidebar-foreground: var(--brand-mortar);
+  --sidebar-primary: oklch(0.681 0.178 40.6);
+  --sidebar-primary-foreground: var(--brand-ink);
+  --sidebar-accent: oklch(0.312 0.039 252);
+  --sidebar-accent-foreground: var(--brand-mortar);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.681 0.178 40.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+    --brand-fill: oklch(0.681 0.178 40.6);
+    --background: oklch(0.213 0.025 249);
+    --foreground: var(--brand-mortar);
+    --card: oklch(0.251 0.032 251);
+    --card-foreground: var(--brand-mortar);
+    --popover: oklch(0.251 0.032 251);
+    --popover-foreground: var(--brand-mortar);
+    --primary: oklch(0.681 0.178 40.6);
+    --primary-foreground: var(--brand-ink);
+    --secondary: oklch(0.312 0.039 252);
+    --secondary-foreground: var(--brand-mortar);
+    --muted: oklch(0.288 0.034 250.7);
+    --muted-foreground: oklch(0.744 0.022 254.9);
+    --accent: oklch(0.303 0.029 46.3);
+    --accent-foreground: oklch(0.906 0.043 53.5);
+    --destructive: oklch(0.704 0.191 22.216);
+    --success: oklch(0.84 0.09 170);
+    --success-soft: oklch(0.33 0.045 170);
+    --warning: oklch(0.86 0.12 90);
+    --warning-soft: oklch(0.34 0.06 80);
+    --info: oklch(0.84 0.06 250);
+    --info-soft: oklch(0.33 0.045 250);
+    --danger-soft: oklch(0.33 0.07 25);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 36%);
+    --ring: oklch(0.681 0.178 40.6);
+    --chart-1: oklch(0.681 0.178 40.6);
+    --chart-2: oklch(0.7 0.09 249.8);
+    --chart-3: oklch(0.7 0.09 178.4);
+    --chart-4: oklch(0.79 0.14 77.7);
+    --chart-5: oklch(0.744 0.022 254.9);
+    --sidebar: oklch(0.251 0.032 251);
+    --sidebar-foreground: var(--brand-mortar);
+    --sidebar-primary: oklch(0.681 0.178 40.6);
+    --sidebar-primary-foreground: var(--brand-ink);
+    --sidebar-accent: oklch(0.312 0.039 252);
+    --sidebar-accent-foreground: var(--brand-mortar);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.681 0.178 40.6);
+  }
+}
+
+/* AppKit draws selected text in --primary-foreground, white on a pale Kiln in the light theme. */
+::selection {
+  background-color: color-mix(in oklch, var(--primary) 24%, transparent);
+  color: var(--foreground);
+}
+
+/* Spinners and transitions stop for people who ask the system for less motion; state still shows in text. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * Touch screens get 44px targets (WCAG 2.5.5); a mouse keeps the compact desktop density. Small custom controls
+ * (`.touch-target`) keep their size and grow an invisible hit area instead.
+ */
+@media (pointer: coarse) {
+  [data-slot='button'],
+  /* a Radix trigger rendered asChild over a Button replaces its data-slot */
+  [data-slot='dialog-trigger'],
+  [data-slot='sheet-trigger'],
+  [data-slot='alert-dialog-trigger'],
+  .touch-min,
+  [data-slot='select-trigger'],
+  [data-slot='tabs-trigger'],
+  [data-slot='input'],
+  [data-slot='select-item'] {
+    min-height: 44px;
+  }
+  [data-slot='button'].size-9,
+  [data-slot='dialog-trigger'] {
+    min-width: 44px;
+  }
+  .touch-target {
+    position: relative;
+  }
+  .touch-target::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+  }
+}
+
+/*
+ * Tables whose last columns hold actions: below 1024px each row becomes a stacked block, every cell labeled by its
+ * header (`data-label`), so the actions stay on screen instead of behind a horizontal scroll.
+ */
+@media (max-width: 1023.98px) {
+  .stack-table,
+  .stack-table tbody {
+    display: block;
+  }
+  .stack-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .stack-table tr {
+    display: grid;
+    gap: 0.5rem;
+    padding: 1rem 0;
+  }
+  .stack-table td {
+    display: block;
+    padding: 0;
+    white-space: normal;
+  }
+  .stack-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.125rem;
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+  }
+}
+
+/* Tailwind colors for the status tones: bg-success-soft, text-warning, … */
+@theme inline {
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-danger-soft: var(--danger-soft);
+}

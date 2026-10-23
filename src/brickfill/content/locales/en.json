@@ -1,0 +1,44 @@
+{
+  "code": "en",
+  "name": "English",
+  "english_name": "English",
+  "fact_sheet_sections": {
+    "key_features": "Key Features",
+    "additional_features": "Additional Features",
+    "dimensions_weight": "Dimensions and Weight",
+    "package_contents": "Package Contents"
+  },
+  "fact_labels": {
+    "brand": ["brand"],
+    "supplier": ["supplier", "manufacturer", "vendor"],
+    "model": ["model"],
+    "gtin": ["gtin", "ean", "upc", "barcode"],
+    "warranty": ["warranty", "guarantee"],
+    "height": ["height"],
+    "width": ["width"],
+    "depth": ["depth", "length"],
+    "weight": ["weight"],
+    "color": ["color", "colour"]
+  },
+  "promotional_terms": ["best on the market", "best in the market", "unbeatable", "guaranteed results", "must have", "buy now", "limited offer"],
+  "generic_values": ["standard", "default", "various colors", "various colours", "assorted colors", "multiple sizes", "various sizes", "not informed", "not available", "n/a", "na", "unknown"],
+  "packaging_terms": {
+    "logistic": ["case", "carton", "master", "pallet", "logistic", "outer", "inner pack", "itf", "dun"],
+    "unit": ["unit", "each", "single", "consumer unit"]
+  },
+  "attribute_fact_aliases": {
+    "brand": ["brand"],
+    "supplier": ["supplier", "manufacturer", "vendor"],
+    "manufacturer": ["manufacturer", "supplier"],
+    "scent": ["scent", "fragrance", "variant"],
+    "fragrance": ["scent", "fragrance", "variant"],
+    "weight": ["weight", "net weight", "gross weight", "unit weight"],
+    "packaging": ["packaging", "package type", "pack type"],
+    "storage": ["storage", "internal storage", "storage capacity", "internal memory"],
+    "quantity": ["quantity", "units per pack", "pack size", "package contents"]
+  },
+  "brand_attribute_names": ["brand", "manufacturer", "supplier", "vendor"],
+  "taxonomy_attribute_names": ["department", "section", "category", "subcategory"],
+  "unit_aliases": {"kilo": "kg", "kilos": "kg", "kilogram": "kg", "kilograms": "kg", "gram": "g", "grams": "g", "liter": "l", "liters": "l", "litre": "l", "litres": "l", "inch": "", "inches": "", "in": "", "pound": "lb", "pounds": "lb", "lbs": "lb", "ounce": "oz", "ounces": "oz"},
+  "declared_unit_patterns": ["\\(\\s*in\\s+([a-zA-Z]+)\\s*\\)", "\\(\\s*([a-zA-Z]{1,4})\\s*\\)\\s*$"]
+}

@@ -1,0 +1,35 @@
+-- Empty stand-in for {{results}}.product_enrichment, used until the enrichment job creates its results schema (a fresh
+-- install): the catalog then lists every product as PENDING. Same columns and types as lakebase_load.ENRICHMENT_COLUMNS
+-- (tests/test_lakebase_sql.py keeps them in sync), plus loaded_at.
+SELECT
+  NULL::text AS ean,
+  NULL::text AS product_id,
+  NULL::text AS source_title,
+  NULL::text AS source_brand,
+  NULL::text AS department_id,
+  NULL::text AS department,
+  NULL::text AS category_id,
+  NULL::text AS category,
+  NULL::text AS subcategory_id,
+  NULL::text AS subcategory,
+  NULL::text AS run_id,
+  NULL::text AS generated_title,
+  NULL::text AS short_description,
+  NULL::text AS meta_description,
+  NULL::text AS verified_brand,
+  NULL::text AS model,
+  NULL::text AS supplier,
+  NULL::double precision AS quality_score,
+  NULL::text AS status,
+  NULL::text AS result_json,
+  NULL::timestamp AS created_at,
+  NULL::text AS content_language,
+  NULL::text AS content_profile,
+  NULL::text AS settings_hash,
+  NULL::int AS error_count,
+  NULL::int AS warning_count,
+  NULL::int AS required_count,
+  NULL::int AS filled_required_count,
+  NULL::double precision AS required_coverage,
+  NULL::timestamptz AS loaded_at
+WHERE FALSE

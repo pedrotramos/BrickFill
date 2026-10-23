@@ -1,0 +1,22 @@
+name: Feature request
+description: Propose an improvement to enrichment quality, the review app, cost or setup.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard or impossible today, and for whom (catalog reviewer, data engineer, FinOps)?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+    validations:
+      required: true
+  - type: textarea
+    id: cost
+    attributes:
+      label: Cost and evidence impact
+      description: Does it change Firecrawl credits, model tokens or how evidence is checked?

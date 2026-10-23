@@ -1,0 +1,210 @@
+{
+  "trigger": "Como funciona",
+  "title": "Como o BrickFill funciona",
+  "description": "Do produto incompleto ao produto aprovado: pesquisa na web com evidência, regras fixas e revisão humana auditada — tudo rodando na Databricks.",
+  "flow": {
+    "title": "Fluxo principal",
+    "hint": "Selecione uma etapa para ver o que ela faz e quais produtos Databricks ela usa."
+  },
+  "stages": {
+    "input": {
+      "title": "Seu catálogo",
+      "subtitle": "Contrato canônico, configurações e lote diário"
+    },
+    "research": {
+      "title": "Pesquisa na web",
+      "subtitle": "Descoberta, extração e estruturação"
+    },
+    "governance": {
+      "title": "Validação",
+      "subtitle": "Regras fixas antes de qualquer revisão"
+    },
+    "curation": {
+      "title": "Revisão e publicação",
+      "subtitle": "Decisão humana com trilha de auditoria"
+    }
+  },
+  "nodes": {
+    "source-contract": {
+      "title": "Contrato canônico de dados",
+      "summary": "Três views documentadas mapeiam seus produtos, atributos e valores permitidos.",
+      "detail": "O BrickFill lê três views canônicas — v_products, v_attributes e v_attribute_options — criadas por um adapter sobre as suas tabelas existentes, somente leitura. Cada coluna é documentada no Unity Catalog, e uma verificação do contrato valida chaves, dígitos verificadores de GTIN e vocabulários antes de qualquer enriquecimento. Nada é carregado manualmente.",
+      "technology": "Views no Unity Catalog · Lakeflow Jobs (verificação do contrato)"
+    },
+    "settings": {
+      "title": "Idioma e regras",
+      "summary": "Idioma do conteúdo, mercado e perfil editorial, global ou por categoria.",
+      "detail": "Na tela de Configurações, os administradores escolhem em que idioma o conteúdo é escrito, o mercado (para indicações regulatórias e localização da busca) e o perfil editorial (tamanhos, finais obrigatórios, FAQ, unidades). Overrides por categoria têm precedência. O Job lê essas configurações no início de cada lote e registra quais usou.",
+      "technology": "Databricks Apps · Lakebase (configurações e auditoria)"
+    },
+    "daily-batch": {
+      "title": "Lote diário",
+      "summary": "Os produtos ainda não enriquecidos que cabem na fila de revisão.",
+      "detail": "Todo dia útil, o Job enriquece produtos que nunca foram enriquecidos, agrupados por categoria e subcategoria. O tamanho do lote é revisores × produtos por revisor, menos os produtos que ainda aguardam revisão: se a fila estiver cheia, nenhum produto novo entra. Um produto só é enriquecido de novo quando a operação pede.",
+      "technology": "Lakeflow Jobs · serverless, agendado"
+    },
+    "web-search": {
+      "title": "Descoberta de fontes",
+      "summary": "Busca páginas do fabricante e de varejistas pelo GTIN e pelo título.",
+      "detail": "Para cada produto, o Firecrawl Search procura páginas pelo GTIN e pelas palavras do título, localizado para o mercado configurado. Se as páginas encontradas não servirem, o agente busca de novo. Um resultado de busca serve só para achar a página: ele nunca é evidência. Na AWS, o system.ai.web_search pode substituir esta etapa.",
+      "technology": "Firecrawl Search (opcional: system.ai.web_search)"
+    },
+    "firecrawl-capture": {
+      "title": "Extração e captura",
+      "summary": "Abre as páginas e guarda o texto, o screenshot e o recorte de cada valor.",
+      "detail": "O Firecrawl extrai cada página usada como fonte, executa scripts que fecham banners e revelam abas ocultas e tira um screenshot da página inteira junto com o mapa de posições do texto. O BrickFill recorta o lugar exato onde cada valor aparece e o guarda, com hash, num Volume do Unity Catalog. Páginas com erro (por exemplo, 404) nunca são citadas.",
+      "technology": "Firecrawl Scrape + Actions · Volume do Unity Catalog"
+    },
+    "foundation-model": {
+      "title": "Estruturação por IA",
+      "summary": "Transforma o texto das páginas em atributos e conteúdo no idioma configurado.",
+      "detail": "O modelo recebe os atributos da subcategoria e o texto das páginas extraídas e escreve o conteúdo no idioma configurado. Todo valor precisa citar a página e o trecho literal de onde veio; sem citação, o atributo fica vazio.",
+      "technology": "Foundation Model APIs (pay-per-token)"
+    },
+    "deterministic-rules": {
+      "title": "Regras e qualidade",
+      "summary": "Confere evidência, vocabulário, GTIN, tamanho e consistência.",
+      "detail": "Código fixo confere cada valor: a evidência, o vocabulário do atributo, o dígito verificador do GTIN, os limites do perfil editorial e a consistência entre campos. Um valor fora do vocabulário, mas com evidência e confiança de pelo menos 80%, chega pré-aprovado e sinalizado para a revisão.",
+      "technology": "Validações determinísticas · Lakeflow Jobs"
+    },
+    "history": {
+      "title": "Histórico imutável",
+      "summary": "Guarda cada resultado, fato, evidência e problema encontrado.",
+      "detail": "O resultado original da IA e suas validações ficam guardados sem sobrescrita. Toda execução pode ser auditada depois, com controle de acesso e linhagem.",
+      "technology": "Unity Catalog · tabelas Delta"
+    },
+    "review-app": {
+      "title": "Revisão",
+      "summary": "Confere cada atributo com a fonte, edita com evidência e aprova.",
+      "detail": "O revisor confere cada valor no recorte da página, completa ou corrige valores com uma evidência própria (URL e trecho, ou captura de tela) e aprova ou rejeita o produto. O valor original da IA pode ser restaurado a qualquer momento.",
+      "technology": "Databricks Apps"
+    },
+    "decisions": {
+      "title": "Decisões e auditoria",
+      "summary": "Registra decisões, edições, autor, motivo e histórico.",
+      "detail": "As decisões e edições dos revisores ficam separadas do resultado da IA. Cada mudança registra quem fez, quando e por quê, e pode ser revertida.",
+      "technology": "Lakebase (Postgres)"
+    },
+    "fast-reads": {
+      "title": "Leitura rápida",
+      "summary": "O catálogo e o último resultado de cada produto, prontos para as telas.",
+      "detail": "A view canônica de produtos é sincronizada com o Lakebase, e o último enriquecimento de cada produto é carregado logo depois de cada lote, para que as telas respondam com latência de Postgres.",
+      "technology": "Lakebase · tabelas sincronizadas"
+    },
+    "publish": {
+      "title": "Publicação dos aprovados",
+      "summary": "Os produtos aprovados vão para a tabela de destino de forma agendada.",
+      "detail": "Um Job publica os produtos aprovados na tabela Delta de destino, com a origem de cada valor (IA, edição humana ou ausente), suas evidências e o idioma do conteúdo. Um produto rejeitado sai da tabela na publicação seguinte; um produto alterado depois da aprovação mantém a última versão aprovada até ser aprovado de novo.",
+      "technology": "Lakeflow Jobs · Delta"
+    }
+  },
+  "selected": {
+    "runsOn": "Onde roda",
+    "traceable": "Todo valor publicado tem evidência rastreável até a página de origem."
+  },
+  "firecrawl": {
+    "title": "Firecrawl: busca na web, extração e captura visual",
+    "description": "O Firecrawl é a camada web do BrickFill. Ele encontra páginas candidatas, renderiza cada uma como um navegador e devolve texto limpo e os screenshots que o BrickFill transforma em evidência verificável.",
+    "creditsLabel": "Uso típico",
+    "credits": "5–10 créditos por produto",
+    "creditsDetail": "Mediana de 8: duas buscas de descoberta mais 1 a 6 extrações e capturas",
+    "capabilities": {
+      "search": {
+        "title": "Search",
+        "description": "Descobre páginas do fabricante e de varejistas pelo GTIN e pelo título, localizado para o mercado configurado."
+      },
+      "scrape": {
+        "title": "Scrape",
+        "description": "Devolve cada página em markdown e HTML bruto, o texto que o modelo pode citar."
+      },
+      "actions": {
+        "title": "Actions",
+        "description": "Executa scripts que fecham banners de cookies, expandem seções, revelam abas ocultas e rolam conteúdo sob demanda (executeJavascript)."
+      },
+      "screenshot": {
+        "title": "Screenshot da página inteira",
+        "description": "Captura a página renderizada, arquivada num Volume do Unity Catalog com o SHA-256."
+      },
+      "domMap": {
+        "title": "Mapa de texto do DOM",
+        "description": "O javascriptReturns traz a posição de cada bloco de texto, para recortar cada valor exatamente onde ele aparece."
+      },
+      "mcp": {
+        "title": "Integração por MCP",
+        "description": "Chamado pelo servidor MCP do Firecrawl via HTTP streamable; a chave fica num secret do Unity Catalog."
+      },
+      "limits": {
+        "title": "Concorrência e teto de créditos",
+        "description": "As requisições simultâneas seguem o seu plano do Firecrawl, e as recapturas de evidência rodam com teto explícito de créditos."
+      }
+    },
+    "untrusted": "Tudo o que o Firecrawl devolve é tratado como conteúdo não confiável: o modelo usa apenas como fonte de fatos, nunca como instrução."
+  },
+  "skuPanel": {
+    "title": "SKUs Databricks nesta solução",
+    "description": "Cada cartão mostra como o produto é cobrado, onde o BrickFill o usa e o que move o custo. Selecione um cartão para destacar as etapas que o usam. Os nomes seguem o billing_origin_product de system.billing.usage.",
+    "billing": "Unidade de cobrança",
+    "usedFor": "Uso",
+    "costDriver": "O que move o custo",
+    "clear": "Limpar destaque: {{sku}}",
+    "footnote": "Nenhum preço é exibido: as tarifas dependem da cloud, da região e do contrato. Veja docs/finops.md para estimar e medir o custo real."
+  },
+  "skus": {
+    "JOBS": {
+      "name": "Lakeflow Jobs (serverless)",
+      "short": "Jobs",
+      "billing": "DBU — Automated Serverless Compute (performance target STANDARD)",
+      "usedFor": "Verificação do contrato, preparo, enriquecimento, carga no Lakebase, publicação e recaptura de evidências",
+      "costDriver": "Um valor fixo pequeno por execução mais um valor pequeno por produto enriquecido"
+    },
+    "MODEL_SERVING": {
+      "name": "Foundation Model APIs",
+      "short": "Foundation Models",
+      "billing": "Pay-per-token (tokens de entrada e saída)",
+      "usedFor": "Estruturar os fatos e escrever o conteúdo no idioma configurado; opcionalmente system.ai.web_search na AWS",
+      "costDriver": "Tokens por produto (cerca de 75–215 mil de entrada e 6–19 mil de saída, com prompt caching) — o principal custo variável"
+    },
+    "LAKEBASE": {
+      "name": "Lakebase Postgres",
+      "short": "Lakebase",
+      "billing": "DBU — Database Serverless Compute (unidades de capacidade por hora) mais armazenamento",
+      "usedFor": "Servir o catálogo ao app, revisões, edições, configurações e auditoria",
+      "costDriver": "Horas com o compute ativo e o tamanho dele: cerca de 0,21 DBU/h por CU, entre 0,5 e 16 CU conforme a carga; escala a zero após 30 minutos ocioso"
+    },
+    "LAKEFLOW_CONNECT": {
+      "name": "Tabelas sincronizadas do Lakebase",
+      "short": "Tabelas sincronizadas",
+      "billing": "DBU — pipelines serverless do Lakeflow (LAKEFLOW_CONNECT / DLT)",
+      "usedFor": "Manter a view canônica de produtos sincronizada no Postgres (modo SNAPSHOT)",
+      "costDriver": "Só as atualizações; nada enquanto a origem não muda"
+    },
+    "APPS": {
+      "name": "Databricks Apps",
+      "short": "Apps",
+      "billing": "DBU — Interactive Serverless Compute (0,5 DBU/h enquanto roda)",
+      "usedFor": "Este app de revisão e a tela de Configurações",
+      "costDriver": "Horas em que o app fica ligado; pare-o fora do horário comercial para economizar"
+    },
+    "UNITY_CATALOG": {
+      "name": "Unity Catalog",
+      "short": "Unity Catalog",
+      "billing": "Sem SKU próprio",
+      "usedFor": "Governança, views documentadas, secrets (chave do Firecrawl), linhagem e controle de acesso",
+      "costDriver": "Sem custo direto"
+    },
+    "VOLUMES": {
+      "name": "Volumes do Unity Catalog",
+      "short": "Volumes",
+      "billing": "Armazenamento de objetos da cloud",
+      "usedFor": "Screenshots das páginas, recortes dos valores e capturas enviadas pelos revisores",
+      "costDriver": "Cerca de 3–5 GB por 1.000 produtos"
+    }
+  },
+  "guarantees": {
+    "title": "Garantias",
+    "noEvidenceNoValue": "Valor sem evidência fica vazio",
+    "secrets": "Chaves guardadas no Unity Catalog",
+    "immutable": "Histórico imutável da IA",
+    "editsNeedEvidence": "Toda edição exige evidência"
+  }
+}

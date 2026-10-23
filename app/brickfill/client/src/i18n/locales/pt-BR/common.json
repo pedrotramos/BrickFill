@@ -1,0 +1,65 @@
+{
+  "app": {
+    "name": "BrickFill",
+    "home": "Início do BrickFill",
+    "tagline": "Enriquecimento de catálogo com evidências",
+    "forCustomer": "para {{name}}"
+  },
+  "nav": {
+    "label": "Navegação principal",
+    "overview": "Visão geral",
+    "catalog": "Catálogo",
+    "settings": "Configurações",
+    "open": "Abrir navegação",
+    "skip": "Pular para o conteúdo"
+  },
+  "footer": {
+    "product": "BrickFill · acelerador de enriquecimento de catálogo",
+    "builtOn": "Feito sobre a Databricks",
+    "webData": "Dados da web via Firecrawl"
+  },
+  "language": {
+    "choose": "Idioma da interface"
+  },
+  "actions": {
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "saving": "Salvando…",
+    "clear": "Limpar",
+    "remove": "Remover",
+    "edit": "Editar",
+    "reload": "Recarregar",
+    "retry": "Tentar de novo"
+  },
+  "notUpdatedYet": "Ainda não atualizado",
+  "status": {
+    "ENRICHED": "Enriquecido",
+    "REVIEW_REQUIRED": "Revisão necessária",
+    "PENDING": "Pendente",
+    "IN_REVIEW": "Em revisão",
+    "APPROVED": "Aprovado",
+    "REJECTED": "Rejeitado"
+  },
+  "errorBoundary": {
+    "title": "Algo deu errado",
+    "description": "A página encontrou um erro inesperado. Recarregue para tentar de novo; se persistir, envie os detalhes abaixo ao administrador.",
+    "reload": "Recarregar a página",
+    "message": "Mensagem de erro",
+    "componentStack": "Pilha de componentes",
+    "stackTrace": "Stack trace"
+  },
+  "qualityInfo": {
+    "label": "Como a qualidade é calculada",
+    "title": "Como a qualidade é calculada",
+    "intro": "Nota de 0 a 100% para o resultado atual de cada produto. Um valor só conta quando cita uma fonte.",
+    "weights": {
+      "required": "Atributos obrigatórios preenchidos com evidência (a cobertura obrigatória)",
+      "published": "Atributos relevantes (obrigatórios ou com valor proposto) publicados com evidência",
+      "sources": "Qualidade das fontes: a melhor fonte de cada fato (oficial 100%, distribuidor autorizado 90%, varejista reconhecido 75%, outras 50%)",
+      "confidence": "Confiança média dos valores publicados"
+    },
+    "penalties": "Descontos: 10 pontos por erro crítico, como GTIN inválido, atributo obrigatório ausente ou valor sem fonte (até 40); 3 por outro erro (até 12); 0,5 por alerta (até 5). Valores fora do vocabulário pré-aprovados não descontam.",
+    "coverage": "A cobertura obrigatória é a fração dos atributos obrigatórios que têm valor com evidência.",
+    "averaged": "Aqui os dois números são a média dos produtos já enriquecidos; os ainda não enriquecidos não entram na conta."
+  }
+}

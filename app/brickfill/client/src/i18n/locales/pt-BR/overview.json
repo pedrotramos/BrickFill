@@ -1,0 +1,33 @@
+{
+  "title": "Qualidade pronta para decisão",
+  "subtitle": "Acompanhe cobertura, evidências e a fila que precisa de curadoria humana.",
+  "updatedAt": "Atualizado em {{date}}",
+  "refresh": "Atualizar resumo",
+  "loadError": "Não foi possível carregar o resumo",
+  "metrics": {
+    "products": {
+      "title": "Produtos",
+      "detail": "SKUs no catálogo"
+    },
+    "enriched": {
+      "title": "Prontos",
+      "detail": "Enriquecidos sem erro bloqueante"
+    },
+    "review": {
+      "title": "Para revisão",
+      "detail": "Conflito, ausência ou regra violada"
+    },
+    "quality": {
+      "title": "Qualidade média",
+      "detail_one": "De {{products}} produto enriquecido · cobertura obrigatória {{coverage}}",
+      "detail_other": "De {{products}} produtos enriquecidos · cobertura obrigatória {{coverage}}",
+      "empty": "Nenhum produto enriquecido ainda"
+    }
+  },
+  "nextAction": {
+    "title": "Próxima ação",
+    "heading": "Priorize produtos com revisão necessária",
+    "description": "Abra o catálogo, confira as fontes e registre qualquer correção com a sua evidência.",
+    "cta": "Abrir fila de revisão"
+  }
+}

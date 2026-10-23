@@ -1,0 +1,10 @@
+{
+  "code": "US",
+  "name": "United States",
+  "country": "US",
+  "languages": ["en-US"],
+  "search_location": "United States",
+  "regulatory_bodies": ["FDA", "FCC", "UL", "CPSC", "EPA"],
+  "deprioritized_domains": ["amazon.", "ebay.", "walmart.com/ip", "aliexpress", "temu."],
+  "preferred_domains": []
+}

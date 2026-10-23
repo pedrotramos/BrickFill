@@ -1,0 +1,10 @@
+{
+  "code": "MX",
+  "name": "Mexico",
+  "country": "MX",
+  "languages": ["es-MX"],
+  "search_location": "Mexico",
+  "regulatory_bodies": ["COFEPRIS", "NOM", "PROFECO"],
+  "deprioritized_domains": ["mercadolibre", "amazon.", "aliexpress", "temu."],
+  "preferred_domains": []
+}

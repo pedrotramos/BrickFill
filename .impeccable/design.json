@@ -1,0 +1,546 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-23T04:56:13+00:00",
+  "title": "Design System: BrickFill",
+  "extensions": {
+    "colorMeta": {
+      "kiln": {
+        "role": "primary",
+        "displayName": "Kiln",
+        "canonical": "oklch(0.553 0.174 38.4)",
+        "tonalRamp": [
+          "oklch(0.15 0.174 38.4)",
+          "oklch(0.26 0.174 38.4)",
+          "oklch(0.37 0.174 38.4)",
+          "oklch(0.48 0.174 38.4)",
+          "oklch(0.60 0.174 38.4)",
+          "oklch(0.72 0.174 38.4)",
+          "oklch(0.84 0.174 38.4)",
+          "oklch(0.95 0.174 38.4)"
+        ],
+        "dark": "oklch(0.681 0.178 40.6)"
+      },
+      "kiln-foreground": {
+        "role": "primary",
+        "displayName": "Kiln Foreground",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.000 0)",
+          "oklch(0.26 0.000 0)",
+          "oklch(0.37 0.000 0)",
+          "oklch(0.48 0.000 0)",
+          "oklch(0.60 0.000 0)",
+          "oklch(0.72 0.000 0)",
+          "oklch(0.84 0.000 0)",
+          "oklch(0.95 0.000 0)"
+        ],
+        "dark": "oklch(0.279 0.036 250.8)"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(0.279 0.036 250.8)",
+        "tonalRamp": [
+          "oklch(0.15 0.036 250.8)",
+          "oklch(0.26 0.036 250.8)",
+          "oklch(0.37 0.036 250.8)",
+          "oklch(0.48 0.036 250.8)",
+          "oklch(0.60 0.036 250.8)",
+          "oklch(0.72 0.036 250.8)",
+          "oklch(0.84 0.036 250.8)",
+          "oklch(0.95 0.036 250.8)"
+        ],
+        "darkRole": "text on Kiln in the dark theme"
+      },
+      "mortar": {
+        "role": "neutral",
+        "displayName": "Mortar",
+        "canonical": "oklch(0.949 0.014 74.4)",
+        "tonalRamp": [
+          "oklch(0.15 0.014 74.4)",
+          "oklch(0.26 0.014 74.4)",
+          "oklch(0.37 0.014 74.4)",
+          "oklch(0.48 0.014 74.4)",
+          "oklch(0.60 0.014 74.4)",
+          "oklch(0.72 0.014 74.4)",
+          "oklch(0.84 0.014 74.4)",
+          "oklch(0.95 0.014 74.4)"
+        ],
+        "dark": "oklch(0.949 0.014 74.4)",
+        "darkRole": "text color in the dark theme"
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(0.98 0.006 75.4)",
+        "tonalRamp": [
+          "oklch(0.15 0.006 75.4)",
+          "oklch(0.26 0.006 75.4)",
+          "oklch(0.37 0.006 75.4)",
+          "oklch(0.48 0.006 75.4)",
+          "oklch(0.60 0.006 75.4)",
+          "oklch(0.72 0.006 75.4)",
+          "oklch(0.84 0.006 75.4)",
+          "oklch(0.95 0.006 75.4)"
+        ],
+        "dark": "oklch(0.213 0.025 249)"
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Card White",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.000 0)",
+          "oklch(0.26 0.000 0)",
+          "oklch(0.37 0.000 0)",
+          "oklch(0.48 0.000 0)",
+          "oklch(0.60 0.000 0)",
+          "oklch(0.72 0.000 0)",
+          "oklch(0.84 0.000 0)",
+          "oklch(0.95 0.000 0)"
+        ],
+        "dark": "oklch(0.251 0.032 251)"
+      },
+      "slate-muted": {
+        "role": "neutral",
+        "displayName": "Slate Muted",
+        "canonical": "oklch(0.506 0.027 256.2)",
+        "tonalRamp": [
+          "oklch(0.15 0.027 256.2)",
+          "oklch(0.26 0.027 256.2)",
+          "oklch(0.37 0.027 256.2)",
+          "oklch(0.48 0.027 256.2)",
+          "oklch(0.60 0.027 256.2)",
+          "oklch(0.72 0.027 256.2)",
+          "oklch(0.84 0.027 256.2)",
+          "oklch(0.95 0.027 256.2)"
+        ],
+        "dark": "oklch(0.744 0.022 254.9)"
+      },
+      "muted-surface": {
+        "role": "neutral",
+        "displayName": "Muted Surface",
+        "canonical": "oklch(0.955 0.011 74.4)",
+        "tonalRamp": [
+          "oklch(0.15 0.011 74.4)",
+          "oklch(0.26 0.011 74.4)",
+          "oklch(0.37 0.011 74.4)",
+          "oklch(0.48 0.011 74.4)",
+          "oklch(0.60 0.011 74.4)",
+          "oklch(0.72 0.011 74.4)",
+          "oklch(0.84 0.011 74.4)",
+          "oklch(0.95 0.011 74.4)"
+        ],
+        "dark": "oklch(0.288 0.034 250.7)"
+      },
+      "kiln-wash": {
+        "role": "primary",
+        "displayName": "Kiln Wash",
+        "canonical": "oklch(0.939 0.024 55.3)",
+        "tonalRamp": [
+          "oklch(0.15 0.024 55.3)",
+          "oklch(0.26 0.024 55.3)",
+          "oklch(0.37 0.024 55.3)",
+          "oklch(0.48 0.024 55.3)",
+          "oklch(0.60 0.024 55.3)",
+          "oklch(0.72 0.024 55.3)",
+          "oklch(0.84 0.024 55.3)",
+          "oklch(0.95 0.024 55.3)"
+        ],
+        "dark": "oklch(0.303 0.029 46.3)"
+      },
+      "kiln-wash-foreground": {
+        "role": "primary",
+        "displayName": "Kiln Wash Foreground",
+        "canonical": "oklch(0.408 0.116 38.2)",
+        "tonalRamp": [
+          "oklch(0.15 0.116 38.2)",
+          "oklch(0.26 0.116 38.2)",
+          "oklch(0.37 0.116 38.2)",
+          "oklch(0.48 0.116 38.2)",
+          "oklch(0.60 0.116 38.2)",
+          "oklch(0.72 0.116 38.2)",
+          "oklch(0.84 0.116 38.2)",
+          "oklch(0.95 0.116 38.2)"
+        ],
+        "dark": "oklch(0.906 0.043 53.5)"
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(0.907 0.016 73.7)",
+        "tonalRamp": [
+          "oklch(0.15 0.016 73.7)",
+          "oklch(0.26 0.016 73.7)",
+          "oklch(0.37 0.016 73.7)",
+          "oklch(0.48 0.016 73.7)",
+          "oklch(0.60 0.016 73.7)",
+          "oklch(0.72 0.016 73.7)",
+          "oklch(0.84 0.016 73.7)",
+          "oklch(0.95 0.016 73.7)"
+        ],
+        "dark": "oklch(1 0 0 / 10%)"
+      },
+      "field-outline": {
+        "role": "neutral",
+        "displayName": "Field Outline",
+        "canonical": "oklch(0.64 0.02 73.7)",
+        "tonalRamp": [
+          "oklch(0.15 0.020 73.7)",
+          "oklch(0.26 0.020 73.7)",
+          "oklch(0.37 0.020 73.7)",
+          "oklch(0.48 0.020 73.7)",
+          "oklch(0.60 0.020 73.7)",
+          "oklch(0.72 0.020 73.7)",
+          "oklch(0.84 0.020 73.7)",
+          "oklch(0.95 0.020 73.7)"
+        ],
+        "dark": "oklch(1 0 0 / 36%)"
+      },
+      "focus-ring": {
+        "role": "primary",
+        "displayName": "Focus Ring",
+        "canonical": "oklch(0.635 0.164 42.8)",
+        "tonalRamp": [
+          "oklch(0.15 0.164 42.8)",
+          "oklch(0.26 0.164 42.8)",
+          "oklch(0.37 0.164 42.8)",
+          "oklch(0.48 0.164 42.8)",
+          "oklch(0.60 0.164 42.8)",
+          "oklch(0.72 0.164 42.8)",
+          "oklch(0.84 0.164 42.8)",
+          "oklch(0.95 0.164 42.8)"
+        ],
+        "dark": "oklch(0.681 0.178 40.6)"
+      },
+      "success": {
+        "role": "status",
+        "displayName": "Teal Success",
+        "canonical": "oklch(0.44 0.08 170)",
+        "tonalRamp": [
+          "oklch(0.15 0.080 170)",
+          "oklch(0.26 0.080 170)",
+          "oklch(0.37 0.080 170)",
+          "oklch(0.48 0.080 170)",
+          "oklch(0.60 0.080 170)",
+          "oklch(0.72 0.080 170)",
+          "oklch(0.84 0.080 170)",
+          "oklch(0.95 0.080 170)"
+        ],
+        "dark": "oklch(0.84 0.09 170)"
+      },
+      "success-soft": {
+        "role": "status",
+        "displayName": "Teal Success Soft",
+        "canonical": "oklch(0.95 0.035 170)",
+        "tonalRamp": [
+          "oklch(0.15 0.035 170)",
+          "oklch(0.26 0.035 170)",
+          "oklch(0.37 0.035 170)",
+          "oklch(0.48 0.035 170)",
+          "oklch(0.60 0.035 170)",
+          "oklch(0.72 0.035 170)",
+          "oklch(0.84 0.035 170)",
+          "oklch(0.95 0.035 170)"
+        ],
+        "dark": "oklch(0.33 0.045 170)"
+      },
+      "warning": {
+        "role": "status",
+        "displayName": "Mustard Warning",
+        "canonical": "oklch(0.45 0.095 80)",
+        "tonalRamp": [
+          "oklch(0.15 0.095 80)",
+          "oklch(0.26 0.095 80)",
+          "oklch(0.37 0.095 80)",
+          "oklch(0.48 0.095 80)",
+          "oklch(0.60 0.095 80)",
+          "oklch(0.72 0.095 80)",
+          "oklch(0.84 0.095 80)",
+          "oklch(0.95 0.095 80)"
+        ],
+        "dark": "oklch(0.86 0.12 90)"
+      },
+      "warning-soft": {
+        "role": "status",
+        "displayName": "Mustard Warning Soft",
+        "canonical": "oklch(0.94 0.075 92)",
+        "tonalRamp": [
+          "oklch(0.15 0.075 92)",
+          "oklch(0.26 0.075 92)",
+          "oklch(0.37 0.075 92)",
+          "oklch(0.48 0.075 92)",
+          "oklch(0.60 0.075 92)",
+          "oklch(0.72 0.075 92)",
+          "oklch(0.84 0.075 92)",
+          "oklch(0.95 0.075 92)"
+        ],
+        "dark": "oklch(0.34 0.06 80)"
+      },
+      "info": {
+        "role": "status",
+        "displayName": "Slate Info",
+        "canonical": "oklch(0.43 0.07 250)",
+        "tonalRamp": [
+          "oklch(0.15 0.070 250)",
+          "oklch(0.26 0.070 250)",
+          "oklch(0.37 0.070 250)",
+          "oklch(0.48 0.070 250)",
+          "oklch(0.60 0.070 250)",
+          "oklch(0.72 0.070 250)",
+          "oklch(0.84 0.070 250)",
+          "oklch(0.95 0.070 250)"
+        ],
+        "dark": "oklch(0.84 0.06 250)"
+      },
+      "info-soft": {
+        "role": "status",
+        "displayName": "Slate Info Soft",
+        "canonical": "oklch(0.945 0.022 250)",
+        "tonalRamp": [
+          "oklch(0.15 0.022 250)",
+          "oklch(0.26 0.022 250)",
+          "oklch(0.37 0.022 250)",
+          "oklch(0.48 0.022 250)",
+          "oklch(0.60 0.022 250)",
+          "oklch(0.72 0.022 250)",
+          "oklch(0.84 0.022 250)",
+          "oklch(0.95 0.022 250)"
+        ],
+        "dark": "oklch(0.33 0.045 250)"
+      },
+      "danger": {
+        "role": "status",
+        "displayName": "Brick Red Danger",
+        "canonical": "oklch(0.505 0.19 27.5)",
+        "tonalRamp": [
+          "oklch(0.15 0.190 27.5)",
+          "oklch(0.26 0.190 27.5)",
+          "oklch(0.37 0.190 27.5)",
+          "oklch(0.48 0.190 27.5)",
+          "oklch(0.60 0.190 27.5)",
+          "oklch(0.72 0.190 27.5)",
+          "oklch(0.84 0.190 27.5)",
+          "oklch(0.95 0.190 27.5)"
+        ],
+        "dark": "oklch(0.704 0.191 22.216)"
+      },
+      "danger-soft": {
+        "role": "status",
+        "displayName": "Brick Red Danger Soft",
+        "canonical": "oklch(0.95 0.03 25)",
+        "tonalRamp": [
+          "oklch(0.15 0.030 25)",
+          "oklch(0.26 0.030 25)",
+          "oklch(0.37 0.030 25)",
+          "oklch(0.48 0.030 25)",
+          "oklch(0.60 0.030 25)",
+          "oklch(0.72 0.030 25)",
+          "oklch(0.84 0.030 25)",
+          "oklch(0.95 0.030 25)"
+        ],
+        "dark": "oklch(0.33 0.07 25)"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The single page title (h1) of each screen."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings inside dialogs and long panels."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles, exposed as level-2 headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Controls, tables and most reading text; generated paragraphs use 1rem / 1.75rem."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Help text, metadata and field labels in Slate Muted."
+      },
+      "metric": {
+        "displayName": "Metric",
+        "purpose": "Overview counts and percentages, tabular numerals."
+      },
+      "wordmark": {
+        "displayName": "Wordmark",
+        "purpose": "\"BrickFill\" next to the brick-course mark."
+      }
+    },
+    "shadows": [
+      {
+        "name": "rest",
+        "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        "purpose": "Outline buttons and fields."
+      },
+      {
+        "name": "card",
+        "value": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+        "purpose": "Cards at rest."
+      },
+      {
+        "name": "floating",
+        "value": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+        "purpose": "Popovers, select menus, dropdowns."
+      },
+      {
+        "name": "overlay",
+        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        "purpose": "Dialogs and the audit sheet."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-change",
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Color and shadow transitions on hover and focus (Tailwind transition default)."
+      },
+      {
+        "name": "overlay-enter",
+        "value": "fade + zoom-in-95, 150–200ms",
+        "purpose": "Dialogs, popovers and sheets (AppKit/Radix); all motion collapses under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ],
+    "touch": {
+      "query": "(pointer: coarse)",
+      "minTarget": "44px",
+      "hitAreaInset": "12px"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one action that moves the work forward in an area: next to review, save, open the queue.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Próximo para revisar <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button>",
+      "css": ".ds-btn-primary { font-family: ui-sans-serif, system-ui, sans-serif; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 8px 16px; border: 0; border-radius: 8px; background: var(--primary, oklch(0.553 0.174 38.4)); color: var(--primary-foreground, #fff); font-size: 14px; font-weight: 500; cursor: pointer; transition: background-color .15s, box-shadow .15s; } .ds-btn-primary:hover { background: color-mix(in oklch, var(--primary, oklch(0.553 0.174 38.4)) 90%, transparent); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring, oklch(0.635 0.164 42.8)) 50%, transparent); } .ds-btn-primary:active { background: color-mix(in oklch, var(--primary, oklch(0.553 0.174 38.4)) 82%, black); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary actions: refresh, clear, back; Kiln Wash on hover.",
+      "html": "<button class=\"ds-btn-outline\" type=\"button\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8\"/><path d=\"M21 3v5h-5\"/><path d=\"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16\"/><path d=\"M8 16H3v5\"/></svg> Atualizar dados</button>",
+      "css": ".ds-btn-outline { font-family: ui-sans-serif, system-ui, sans-serif; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 8px 12px; border: 1px solid var(--border, oklch(0.907 0.016 73.7)); border-radius: 8px; background: var(--background, oklch(0.98 0.006 75.4)); color: var(--foreground, oklch(0.279 0.036 250.8)); font-size: 14px; font-weight: 500; box-shadow: 0 1px 2px 0 rgb(0 0 0 / .05); cursor: pointer; transition: background-color .15s, color .15s; } .ds-btn-outline:hover { background: var(--accent, oklch(0.939 0.024 55.3)); color: var(--accent-foreground, oklch(0.408 0.116 38.2)); } .ds-btn-outline:focus-visible { border-color: var(--ring, oklch(0.635 0.164 42.8)); outline: none; box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring, oklch(0.635 0.164 42.8)) 50%, transparent); }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Field with a 3:1 outline and a leading icon; Kiln border and ring on focus.",
+      "html": "<label class=\"ds-input-wrap\"><svg class=\"ds-input-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg><input class=\"ds-input\" aria-label=\"Buscar produtos\" placeholder=\"GTIN, produto, marca ou categoria\"></label>",
+      "css": ".ds-input-wrap { position: relative; display: block; width: 320px; color: var(--muted-foreground, oklch(0.506 0.027 256.2)); } .ds-input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; } .ds-input { font-family: ui-sans-serif, system-ui, sans-serif; width: 100%; height: 36px; padding: 4px 12px 4px 36px; border: 1px solid var(--input, oklch(0.64 0.02 73.7)); border-radius: 8px; background: var(--card, #fff); color: var(--foreground, oklch(0.279 0.036 250.8)); font-size: 14px; box-shadow: 0 1px 2px 0 rgb(0 0 0 / .05); transition: border-color .15s, box-shadow .15s; } .ds-input::placeholder { color: var(--muted-foreground, oklch(0.506 0.027 256.2)); } .ds-input:focus-visible { border-color: var(--ring, oklch(0.635 0.164 42.8)); outline: none; box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring, oklch(0.635 0.164 42.8)) 50%, transparent); } .ds-input::selection { background: color-mix(in oklch, var(--primary, oklch(0.553 0.174 38.4)) 24%, transparent); color: var(--foreground, oklch(0.279 0.036 250.8)); }"
+    },
+    {
+      "name": "Header Navigation",
+      "kind": "nav",
+      "refersTo": "nav-link-active",
+      "description": "Icon-and-label links; the active one is filled Kiln, inactive ones are Slate Muted.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Principal\"><a class=\"ds-nav-link\" href=\"#\">Visão geral</a><a class=\"ds-nav-link\" aria-current=\"page\" href=\"#\">Catálogo</a><a class=\"ds-nav-link\" href=\"#\">Configurações</a></nav>",
+      "css": ".ds-nav { font-family: ui-sans-serif, system-ui, sans-serif; display: flex; gap: 4px; } .ds-nav-link { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 8px; color: var(--muted-foreground, oklch(0.506 0.027 256.2)); font-size: 14px; font-weight: 500; text-decoration: none; transition: background-color .15s, color .15s; } .ds-nav-link:hover { background: var(--muted, oklch(0.955 0.011 74.4)); color: var(--foreground, oklch(0.279 0.036 250.8)); } .ds-nav-link[aria-current=\"page\"] { background: var(--primary, oklch(0.553 0.174 38.4)); color: var(--primary-foreground, #fff); } .ds-nav-link:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring, oklch(0.635 0.164 42.8)) 50%, transparent); }"
+    },
+    {
+      "name": "Status Badges",
+      "kind": "chip",
+      "refersTo": "badge-success",
+      "description": "Enrichment and review states: soft tone surface, same-hue text, always an icon and a label.",
+      "html": "<div class=\"ds-badges\"><span class=\"ds-badge ds-badge-neutral\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M10.1 2.182a10 10 0 0 1 3.8 0\"/><path d=\"M13.9 21.818a10 10 0 0 1-3.8 0\"/><path d=\"M17.609 3.721a10 10 0 0 1 2.69 2.7\"/><path d=\"M2.182 13.9a10 10 0 0 1 0-3.8\"/><path d=\"M20.279 17.609a10 10 0 0 1-2.7 2.69\"/><path d=\"M21.818 10.1a10 10 0 0 1 0 3.8\"/><path d=\"M3.721 6.391a10 10 0 0 1 2.7-2.69\"/><path d=\"M6.391 20.279a10 10 0 0 1-2.69-2.7\"/></svg>Pendente</span><span class=\"ds-badge ds-badge-info\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z\"/></svg>Enriquecido</span><span class=\"ds-badge ds-badge-warning\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg>Revisão necessária</span><span class=\"ds-badge ds-badge-quiet\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>Em revisão</span><span class=\"ds-badge ds-badge-success\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21.801 10A10 10 0 1 1 17 3.335\"/><path d=\"m9 11 3 3L22 4\"/></svg>Aprovado</span><span class=\"ds-badge ds-badge-danger\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m15 9-6 6\"/><path d=\"m9 9 6 6\"/></svg>Rejeitado</span></div>",
+      "css": ".ds-badge { font-family: ui-sans-serif, system-ui, sans-serif; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; border: 1px solid transparent; font-size: 12px; font-weight: 500; line-height: 16px; white-space: nowrap; } .ds-badges { display: flex; flex-wrap: wrap; gap: 8px; } .ds-badge-neutral { border-color: var(--border, oklch(0.907 0.016 73.7)); color: var(--foreground, oklch(0.279 0.036 250.8)); } .ds-badge-info { background: var(--info-soft, oklch(0.945 0.022 250)); color: var(--info, oklch(0.43 0.07 250)); } .ds-badge-warning { background: var(--warning-soft, oklch(0.94 0.075 92)); color: var(--warning, oklch(0.45 0.095 80)); } .ds-badge-quiet { background: var(--secondary, oklch(0.949 0.014 74.4)); color: var(--foreground, oklch(0.279 0.036 250.8)); } .ds-badge-success { background: var(--success-soft, oklch(0.95 0.035 170)); color: var(--success, oklch(0.44 0.08 170)); } .ds-badge-danger { background: var(--danger-soft, oklch(0.95 0.03 25)); color: var(--destructive, oklch(0.505 0.19 27.5)); }"
+    },
+    {
+      "name": "Metric Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "White card on Paper with a hairline; label to figure 8px, tabular figure, icon in the tone of the state it counts.",
+      "html": "<article class=\"ds-card\"><header class=\"ds-card-head\"><h3 class=\"ds-card-title\">Para revisão</h3><span class=\"ds-card-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M16 9v4\"/><path d=\"M16 17h.01\"/></svg></span></header><p class=\"ds-metric\">3</p><p class=\"ds-card-detail\">Conflito, ausência ou regra violada</p></article>",
+      "css": ".ds-card { font-family: ui-sans-serif, system-ui, sans-serif; width: 260px; padding: 24px; border: 1px solid var(--border, oklch(0.907 0.016 73.7)); border-radius: 14px; background: var(--card, #fff); color: var(--foreground, oklch(0.279 0.036 250.8)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / .1), 0 1px 2px -1px rgb(0 0 0 / .1); } .ds-card-head { display: flex; align-items: center; justify-content: space-between; } .ds-card-title { margin: 0; font-size: 14px; font-weight: 500; letter-spacing: normal; } .ds-card-icon { display: inline-flex; color: var(--warning, oklch(0.45 0.095 80)); } .ds-metric { margin: 8px 0 0; font-size: 30px; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; } .ds-card-detail { margin: 4px 0 0; font-size: 12px; line-height: 16px; color: var(--muted-foreground, oklch(0.506 0.027 256.2)); }"
+    },
+    {
+      "name": "Evidence Source Row",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Signature pattern of the audit sheet: a value next to its proof (host, tier, capture, excerpt).",
+      "html": "<div class=\"ds-source\"><div class=\"ds-source-head\"><span class=\"ds-source-host\">example.com</span><span class=\"ds-badge ds-badge-success\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21.801 10A10 10 0 1 1 17 3.335\"/><path d=\"m9 11 3 3L22 4\"/></svg>Fonte oficial</span><span class=\"ds-badge ds-badge-warning\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg>Captura incompleta</span></div><p class=\"ds-source-excerpt\">“Potência 750W”</p></div>",
+      "css": ".ds-badge { font-family: ui-sans-serif, system-ui, sans-serif; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; border: 1px solid transparent; font-size: 12px; font-weight: 500; line-height: 16px; white-space: nowrap; } .ds-source { font-family: ui-sans-serif, system-ui, sans-serif; width: 360px; padding: 12px; border: 1px solid var(--border, oklch(0.907 0.016 73.7)); border-radius: 10px; background: var(--card, #fff); color: var(--foreground, oklch(0.279 0.036 250.8)); } .ds-source-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; } .ds-source-host { font-size: 14px; font-weight: 500; } .ds-source-excerpt { margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: var(--muted-foreground, oklch(0.506 0.027 256.2)); } .ds-badge-success { background: var(--success-soft, oklch(0.95 0.035 170)); color: var(--success, oklch(0.44 0.08 170)); } .ds-badge-warning { background: var(--warning-soft, oklch(0.94 0.075 92)); color: var(--warning, oklch(0.45 0.095 80)); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Curator's Workbench",
+    "overview": "BrickFill is a workbench, not a showroom. The curator works the day's queue at a desk, and every screen is laid out\nso a value sits next to its proof: the source page, the screenshot, the crop, the rule it passed or failed. The\nsurface stays calm and warm, with paper-toned backgrounds, Ink text and thin outlines, so the evidence and the few\ndecisions that matter stand out. Its character is **sober and precise**: tool density, thin borders, softly rounded\ncorners, and color only where it says something.\n\nThe system is built on Databricks AppKit UI (shadcn components on Tailwind v4) and themed through its CSS variables\nin `app/brickfill/client/src/index.css`. The brand lives in precise details:\n\n- the terracotta Kiln on the one action that moves the work forward;\n- the brick-course mark that fills from the bottom up;\n- warm Mortar neutrals instead of cold grays.\n\nIt has two confirmed anti-references:\n\n- the \"AI magic\" panel, whose glows, gradients and sparkles sell the model instead of showing the evidence;\n- the dense gray ERP, where every row and label has the same weight and nothing breathes.",
+    "keyCharacteristics": [
+      "Paper and Ink with warm Mortar neutrals; Kiln (terracotta) is used only for actions and the current selection.",
+      "Four status tones (success, warning, info, danger), each a soft surface with same-hue text, always shown with an icon and a label.",
+      "Flat surfaces separated by hairlines; shadows are minimal and grow only on what floats.",
+      "The system sans in a clear, short scale; tabular numerals in every figure.",
+      "Light and dark themes with their own values (the dark theme is not the light one inverted), and an optional customer accent that replaces only Kiln."
+    ],
+    "rules": [
+      {
+        "name": "The Kiln Is for Doing Rule",
+        "body": "Kiln marks the action that moves the work forward and the user's current place. Nothing that only describes state is drawn in Kiln, so a reviewer always knows where to click.",
+        "section": "colors"
+      },
+      {
+        "name": "The Never Color Alone Rule",
+        "body": "Every status carries an icon and a word next to its tone: CircleCheck for approved, TriangleAlert for review, CircleX for rejected, and so on. A grayscale screenshot must still be readable.",
+        "section": "colors"
+      },
+      {
+        "name": "The Twin Dark Rule",
+        "body": "The dark palette is written twice in `index.css`, once for a `.dark` class and once for the system setting. `theme.test.ts` fails if the two differ, so change both together.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Eyebrow Rule",
+        "body": "A heading speaks for itself; no small colored kicker sits above it. The page eyebrows were removed in the polish pass and must not come back.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Figures Rule",
+        "body": "Percentages, counts, page numbers and step numbers use tabular numerals so columns and neighboring metrics line up.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hairline First Rule",
+        "body": "Separate with a 1px Hairline or a tone step before reaching for a shadow. A shadow means \"this floats\", and nothing that sits in the page floats.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep Kiln for the primary action, the active navigation item, focus and selection; one filled Kiln button per area.",
+      "Do pair every status tone with its icon and label, and use the soft surface with same-hue text from the status tones.",
+      "Do give fields the Field Outline (≥3:1) and keep Hairline for decoration only.",
+      "Do use tabular numerals for every figure, and the system sans at the scale above.",
+      "Do make touch targets 44px on coarse pointers, and turn tables into labeled stacked blocks below 1024px.",
+      "Do change `.dark` and the `prefers-color-scheme: dark` block together; `theme.test.ts` checks that they match."
+    ],
+    "donts": [
+      "Don't add glows, gradients, sparkle effects or gradient text to sell the AI. Show the evidence instead. The \"AI magic\" panel is a confirmed anti-reference.",
+      "Don't flatten every row, label and figure to the same gray weight; the dense gray ERP is a confirmed anti-reference.",
+      "Don't put an eyebrow or kicker above a heading.",
+      "Don't draw a status in Kiln, or use a new hue for a status outside the four tones.",
+      "Don't nest cards, add colored side or top stripes, or use a shadow on anything that does not float.",
+      "Don't add a webfont or a display face; the brand lives in the wordmark's weight and the mark."
+    ]
+  }
+}

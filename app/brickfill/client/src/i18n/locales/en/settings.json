@@ -1,0 +1,125 @@
+{
+  "title": "Language and editorial rules",
+  "subtitle": "Choose the language the content is written in and adjust the editorial profile, globally or per category. The enrichment job reads these settings at the start of every batch.",
+  "reload": "Reload settings",
+  "loadError": "The settings could not be loaded",
+  "conflict": "Your changes were not saved because someone else changed these settings first.",
+  "readOnly": {
+    "title": "Read-only",
+    "description": "You can view these settings, but only the configured editors can change them."
+  },
+  "yes": "Yes",
+  "no": "No",
+  "reason": "Reason for the change (optional)",
+  "reasonPlaceholder": "Recorded in the history",
+  "fields": {
+    "content_language": "Content language",
+    "catalog_language": "Catalog language",
+    "content_profile": "Editorial profile",
+    "market": "Market",
+    "active": "Active"
+  },
+  "scopes": {
+    "global": "Global",
+    "department": "Department",
+    "category": "Category",
+    "subcategory": "Subcategory"
+  },
+  "profiles": {
+    "default": "Default (neutral)"
+  },
+  "markets": {
+    "BR": "Brazil",
+    "ES": "Spain",
+    "MX": "Mexico",
+    "US": "United States"
+  },
+  "global": {
+    "title": "Global settings",
+    "savedBy": "Saved by {{user}} on {{date}} · version {{version}}",
+    "usingDefaults": "Not saved yet: the job uses the deployment defaults below.",
+    "contentLanguageHelp": "Titles, descriptions, fact sheet and FAQ are written in this language.",
+    "catalogLanguageHelp": "Language of your attribute names and allowed values; they are never translated.",
+    "sameAsContent": "Same as the catalog default",
+    "profileHelp": "Lengths, structure and other editorial rules.",
+    "noMarket": "No specific market",
+    "marketHelp": "Adds regulatory hints and localizes the web search.",
+    "rulesTitle": "Editorial rule overrides",
+    "rulesHelp": "Leave a field empty to keep the value of the “{{profile}}” profile.",
+    "deploymentDefaults": "Deployment defaults: {{language}} · {{profile}} · market {{market}}",
+    "save": "Save settings"
+  },
+  "overrides": {
+    "profileDefault": "Profile default ({{value}})",
+    "listPlaceholder": "One per line. Profile default: {{value}}",
+    "title_max_length": {
+      "label": "Title: maximum length",
+      "help": "Characters."
+    },
+    "short_description_min_length": {
+      "label": "Short description: minimum length",
+      "help": "Characters."
+    },
+    "short_description_max_length": {
+      "label": "Short description: maximum length",
+      "help": "Characters; longer text is cut at a word boundary."
+    },
+    "meta_description_min_length": {
+      "label": "Meta description: minimum length",
+      "help": "Characters."
+    },
+    "meta_description_max_length": {
+      "label": "Meta description: maximum length",
+      "help": "Characters."
+    },
+    "meta_description_required_suffixes": {
+      "label": "Meta description: required endings",
+      "help": "Optional calls to action; when set, the meta description must end with one of them."
+    },
+    "faq_enabled": {
+      "label": "Generate FAQ",
+      "help": "FAQs use official sources only."
+    },
+    "units": {
+      "label": "Units",
+      "help": "Measurement system used in the content.",
+      "values": {
+        "metric": "Metric (cm, kg, L)",
+        "imperial": "Imperial (in, lb, fl oz)"
+      }
+    },
+    "image_min_width": {
+      "label": "Image: minimum width",
+      "help": "Pixels."
+    },
+    "image_min_height": {
+      "label": "Image: minimum height",
+      "help": "Pixels."
+    }
+  },
+  "categories": {
+    "title": "Category overrides",
+    "description": "Use another language or profile for specific categories, for example a catalog section sold in another country.",
+    "add": "Add override",
+    "addTitle": "New category override",
+    "editTitle": "Edit category override",
+    "dialogDescription": "Only the fields you set here replace the global settings for products of this category.",
+    "category": "Category",
+    "chooseCategory": "Choose a category",
+    "inherit": "Use global ({{value}})",
+    "inherited": "Global",
+    "rules": "Rule overrides",
+    "rulesHelp": "Leave a field empty to keep the global or profile value.",
+    "updated": "Updated",
+    "actions": "Actions",
+    "empty": "No category overrides: every category uses the global settings.",
+    "removeTitle": "Remove this override?",
+    "removeDescription": "Products of {{category}} will use the global settings in the next batch. Products already enriched keep their content.",
+    "precedence": "Precedence, field by field: subcategory > category > department > global settings > job parameters > profile."
+  },
+  "history": {
+    "title": "Change history",
+    "description": "Latest 50 changes, newest first.",
+    "empty": "No changes yet."
+  }
+}

@@ -1,0 +1,47 @@
+# Pushing a tag vX.Y.Z runs the full CI, checks that the versions agree and publishes the GitHub Release with the
+# notes of that version in CHANGELOG.md. Deploying stays a `databricks bundle deploy` per workspace (setup guide).
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+      pull-requests: write
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check versions
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          python_version=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          app_version=$(node -p 'require("./app/brickfill/package.json").version')
+          echo "tag=$tag pyproject=$python_version package.json=$app_version"
+          [[ "$tag" == "$python_version" && "$tag" == "$app_version" ]] || { echo "Versions differ"; exit 1; }
+      - name: Extract release notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" { found = 1; next }
+            found && (/^## \[/ || /^\[[^]]+\]: /) { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          [[ -s notes.md ]] || { echo "CHANGELOG.md has no section for $version"; exit 1; }
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prerelease=$([[ "$GITHUB_REF_NAME" == v0.* || "$GITHUB_REF_NAME" == *-* ]] && echo --prerelease || true)
+          gh release create "$GITHUB_REF_NAME" --title "BrickFill $GITHUB_REF_NAME" --notes-file notes.md --verify-tag $prerelease

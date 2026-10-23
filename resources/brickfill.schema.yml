@@ -1,0 +1,12 @@
+resources:
+  schemas:
+    brickfill_schema:
+      name: ${var.schema}
+      catalog_name: ${var.catalog}
+      comment: BrickFill catalog enrichment data products (canonical source views, AI results, evidence index, approved products). project=brickfill
+      properties:
+        project: brickfill
+        environment: ${bundle.target}
+        cost_center: ${var.tag_cost_center}
+        owner: ${var.tag_owner}
+        business_unit: ${var.tag_business_unit}

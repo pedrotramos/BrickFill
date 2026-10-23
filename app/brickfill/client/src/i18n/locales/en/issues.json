@@ -1,0 +1,170 @@
+{
+  "severity": {
+    "ERROR": "Error",
+    "WARNING": "Warning",
+    "INFO": "Info"
+  },
+  "fields": {
+    "generated_title": "Title",
+    "short_description": "Short description",
+    "meta_description": "Meta description",
+    "fact_sheet": "Fact sheet",
+    "faq": "FAQ",
+    "content": "Content",
+    "ean": "GTIN",
+    "gtin": "GTIN",
+    "brand": "Brand",
+    "images": "Images",
+    "image": "Image",
+    "attributes": "Attributes",
+    "agent": "Research agent",
+    "visual_evidence": "Visual evidence",
+    "review": {
+      "status": "Review status"
+    },
+    "fact": "Fact “{{name}}”",
+    "attribute": "Attribute “{{name}}”"
+  },
+  "codes": {
+    "INVALID_GTIN": {
+      "title": "Invalid GTIN",
+      "message": "The product GTIN is invalid (wrong length or check digit)."
+    },
+    "BRAND_TITLE_CONFLICT": {
+      "title": "Brand not in the source title",
+      "message": "The registered brand does not appear in the source title; a source must confirm it."
+    },
+    "INVALID_LENGTH": {
+      "title": "Length out of range",
+      "message": "{{field}} must have between {{min}} and {{max}} characters; it has {{actual}}."
+    },
+    "FACT_SHEET_MISSING_GTIN": {
+      "title": "GTIN missing from the fact sheet",
+      "message": "The fact sheet must include the product GTIN."
+    },
+    "INVALID_ENRICHED_GTIN": {
+      "title": "Invalid GTIN in the content",
+      "message": "A GTIN cited in the content has an invalid check digit: {{candidate}}."
+    },
+    "GTIN_LOGISTIC_RELATION_CONFLICT": {
+      "title": "Case GTIN does not match the unit",
+      "message": "Case GTIN {{candidate}} does not derive from unit GTIN {{unit}}; expected {{expected}} for indicator {{indicator}}."
+    },
+    "GTIN_PACKAGING_LEVEL_CONFLICT": {
+      "title": "GTIN at the wrong packaging level",
+      "message": "GTIN {{candidate}} is presented at the wrong packaging level ({{level}})."
+    },
+    "CATEGORY_REQUIRED_FACT": {
+      "title": "Required fact missing",
+      "message": "This category requires “{{label}}” in the fact sheet."
+    },
+    "TITLE_MISSING_BRAND": {
+      "title": "Brand missing from the title",
+      "message": "The generated title must contain the verified brand."
+    },
+    "DESCRIPTION_LINK": {
+      "title": "Link in the description",
+      "message": "The short description cannot contain links."
+    },
+    "META_SUFFIX": {
+      "title": "Required meta ending missing",
+      "message": "The meta description must end with: {{suffixes}}."
+    },
+    "FAQ_COUNT": {
+      "title": "FAQ count out of range",
+      "message": "The FAQ should have between {{min}} and {{max}} questions when there is enough information; it has {{actual}}."
+    },
+    "UNRESOLVED_SOURCE_CONFLICT": {
+      "title": "Unresolved source conflict",
+      "message": "Non-official sources disagree about “{{fact}}”; a reviewer must decide."
+    },
+    "EMOJI": {
+      "title": "Emoji in the content",
+      "message": "The content cannot use emojis."
+    },
+    "PROMOTIONAL_LANGUAGE": {
+      "title": "Promotional language",
+      "message": "Forbidden promotional expression found: “{{term}}”."
+    },
+    "DUPLICATE_ATTRIBUTE": {
+      "title": "Duplicated attribute",
+      "message": "The attribute {{attribute}} was returned more than once."
+    },
+    "MISSING_ATTRIBUTE_DEFINITION": {
+      "title": "Attribute without definition",
+      "message": "The attribute {{attribute}} has no definition in the catalog matrix."
+    },
+    "UNKNOWN_ATTRIBUTE": {
+      "title": "Unknown attribute",
+      "message": "The attribute {{attribute}} is not in this subcategory's matrix."
+    },
+    "VOCABULARY_VALUE_NOT_ALLOWED": {
+      "title": "Value outside the vocabulary",
+      "message": "“{{value}}” is not an allowed value for {{attribute}}."
+    },
+    "VOCABULARY_VALUE_PREAPPROVED": {
+      "title": "Pre-approved value outside the vocabulary",
+      "message": "“{{value}}” is outside the vocabulary of {{attribute}} but was pre-approved with {{confidence}}% confidence; review it."
+    },
+    "VOCABULARY_VALUE_PENDING": {
+      "title": "Value pending vocabulary validation",
+      "message": "“{{value}}” for {{attribute}} is outside the vocabulary and needs review."
+    },
+    "MISSING_REQUIRED_ATTRIBUTE": {
+      "title": "Required attribute missing",
+      "message": "The required attribute {{attribute}} has no value with evidence."
+    },
+    "UNCITED_ATTRIBUTE": {
+      "title": "Attribute without citation",
+      "message": "The attribute {{attribute}} has a value but no cited evidence."
+    },
+    "MISSING_ATTRIBUTE_OBSERVATION": {
+      "title": "Missing explanation",
+      "message": "The attribute {{attribute}} was marked as not applicable without an explanation."
+    },
+    "GENERIC_ATTRIBUTE_VALUE": {
+      "title": "Generic value",
+      "message": "“{{value}}” is too generic for {{attribute}}."
+    },
+    "NON_OFFICIAL_FAQ_SOURCE": {
+      "title": "FAQ from a non-official source",
+      "message": "FAQs may only cite official sources: {{url}}."
+    },
+    "IMAGE_DIMENSIONS_UNKNOWN": {
+      "title": "Unknown image size",
+      "message": "The image dimensions could not be confirmed: {{url}}."
+    },
+    "IMAGE_RESOLUTION": {
+      "title": "Low image resolution",
+      "message": "The image is {{width}}×{{height}}; at least {{min_width}}×{{min_height}} is required."
+    },
+    "IMAGE_BACKGROUND_UNVERIFIED": {
+      "title": "Image background not verified",
+      "message": "It was not possible to confirm a white background for the image."
+    },
+    "NO_IMAGE_CANDIDATE": {
+      "title": "No image",
+      "message": "No image was found on the product pages."
+    },
+    "VISUAL_EVIDENCE_INCOMPLETE": {
+      "title": "Incomplete visual evidence",
+      "message": "The visual evidence of {{attribute}} is incomplete; check the capture."
+    },
+    "AGENT_FAILURE": {
+      "title": "Research failed",
+      "message": "The research agent failed for this product: {{error}}"
+    },
+    "META_ENDING": {
+      "title": "Meta description ending (legacy rule)",
+      "message": "The meta description did not end with the call to action required by the previous profile."
+    },
+    "ELECTRO_REQUIRED_FIELD": {
+      "title": "Required appliance field (legacy rule)",
+      "message": "A field required for appliances is missing from the fact sheet."
+    },
+    "FACT_SHEET_MISSING_EAN": {
+      "title": "GTIN missing from the fact sheet",
+      "message": "The fact sheet must include the product GTIN."
+    }
+  }
+}

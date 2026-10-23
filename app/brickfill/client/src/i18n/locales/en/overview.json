@@ -1,0 +1,33 @@
+{
+  "title": "Quality you can act on",
+  "subtitle": "Track coverage, evidence and the queue that needs human review.",
+  "updatedAt": "Updated {{date}}",
+  "refresh": "Refresh summary",
+  "loadError": "The summary could not be loaded",
+  "metrics": {
+    "products": {
+      "title": "Products",
+      "detail": "SKUs in the catalog"
+    },
+    "enriched": {
+      "title": "Ready",
+      "detail": "Enriched with no blocking errors"
+    },
+    "review": {
+      "title": "Needs review",
+      "detail": "Conflict, missing data or a failed rule"
+    },
+    "quality": {
+      "title": "Average quality",
+      "detail_one": "Of {{products}} enriched product · required coverage {{coverage}}",
+      "detail_other": "Of {{products}} enriched products · required coverage {{coverage}}",
+      "empty": "No product enriched yet"
+    }
+  },
+  "nextAction": {
+    "title": "Next step",
+    "heading": "Start with the products that need review",
+    "description": "Open the catalog, check the sources and record every correction with its evidence.",
+    "cta": "Open the review queue"
+  }
+}

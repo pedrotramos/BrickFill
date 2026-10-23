@@ -1,0 +1,26 @@
+resources:
+  # Unity Catalog schema in the working catalog; the synced table lives here and, with the same name, as a Postgres
+  # schema in the Lakebase database (no extra Unity Catalog catalog is created).
+  schemas:
+    serving_schema:
+      name: ${var.serving_schema}
+      catalog_name: ${var.catalog}
+      comment: Online (Lakebase) copy of the canonical products view, read by the BrickFill app. project=brickfill
+
+  # One synced table: the canonical products view (data contract v1). Attributes and answer options are read by the
+  # enrichment job from Delta, so they are not synced. The source is a view, which only supports SNAPSHOT: re-run the
+  # sync whenever the source catalog changes.
+  # Everything the app writes (reviews, edits, settings, audit) is created by the app itself in its own schema, and the
+  # enrichment results are loaded by the enrichment job into its own schema; none of those are synced tables.
+  postgres_synced_tables:
+    synced_products:
+      synced_table_id: ${var.catalog}.${resources.schemas.serving_schema.name}.products
+      source_table_full_name: ${var.source_catalog}.${var.source_schema}.${var.source_products_table}
+      branch: ${var.postgres_branch}
+      postgres_database: ${var.postgres_database_name}
+      primary_key_columns: [product_id]
+      scheduling_policy: SNAPSHOT
+      new_pipeline_spec:
+        storage_catalog: ${var.catalog}
+        storage_schema: ${var.schema}
+        budget_policy_id: ${var.budget_policy_id}

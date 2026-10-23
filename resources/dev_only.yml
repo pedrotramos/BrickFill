@@ -1,0 +1,59 @@
+# The mock ERP exists only in the development target. Production points adapter_source_* at the retailer's real tables,
+# writes its own adapter (adapters/README.md) and runs the source_contract job instead, so this job never reaches prod.
+targets:
+  dev:
+    resources:
+      jobs:
+        brickfill_mock_source_data:
+          name: BrickFill · Mock source data (dev)
+          description: Writes a fictional retailer's ERP tables (English, fictional brands, GS1 restricted-circulation GTINs) and builds the canonical views from them with the mock adapter, then validates the contract. Development only.
+          max_concurrent_runs: 1
+          budget_policy_id: ${var.budget_policy_id}
+          timeout_seconds: 7200
+          email_notifications:
+            on_failure: ${var.alert_emails}
+          parameters:
+            - name: adapter_source_catalog
+              default: ${var.adapter_source_catalog}
+            - name: adapter_source_schema
+              default: ${var.adapter_source_schema}
+            - name: source_catalog
+              default: ${var.source_catalog}
+            - name: source_schema
+              default: ${var.source_schema}
+            - name: product_count
+              default: ${var.mock_product_count}
+
+          tasks:
+            - task_key: generate_mock_tables
+              description: Generate the ERP tables (items, titles, departments, categories, subcategories, attributes, options).
+              notebook_task:
+                notebook_path: ../notebooks/00_mock_source_data.py
+                base_parameters:
+                  adapter_source_catalog: "{{job.parameters.adapter_source_catalog}}"
+                  adapter_source_schema: "{{job.parameters.adapter_source_schema}}"
+                  product_count: "{{job.parameters.product_count}}"
+              environment_key: default
+
+            - task_key: source_contract
+              description: Build the canonical views with the mock adapter and validate the contract.
+              depends_on:
+                - task_key: generate_mock_tables
+              notebook_task:
+                notebook_path: ../notebooks/01_source_contract.py
+                base_parameters:
+                  adapter: mock
+                  adapter_source_catalog: "{{job.parameters.adapter_source_catalog}}"
+                  adapter_source_schema: "{{job.parameters.adapter_source_schema}}"
+                  adapter_params: "{}"
+                  source_catalog: "{{job.parameters.source_catalog}}"
+                  source_schema: "{{job.parameters.source_schema}}"
+                  contract_fail_on: error
+              environment_key: default
+
+          performance_target: STANDARD
+          environments:
+            - environment_key: default
+              spec:
+                environment_version: "4"
+                dependencies: ${var.job_dependencies}

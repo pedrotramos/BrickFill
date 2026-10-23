@@ -1,0 +1,248 @@
+{
+  "recapture": {
+    "title": "Evidence recapture",
+    "invalidId": "Invalid evidence recapture id.",
+    "loadFailed": "The evidence recapture could not be loaded.",
+    "mismatch": "This evidence recapture belongs to another product.",
+    "loading": "Loading the recaptured evidence…",
+    "notice": "These captures do not publish or replace the product enrichment.",
+    "olderRun": "The recapture was made on an earlier enrichment; check the values at the source before comparing."
+  },
+  "notFound": {
+    "title": "Product not found",
+    "description": "This GTIN is not in the current catalog."
+  },
+  "backToCatalog": "Back to the catalog",
+  "refresh": "Refresh data",
+  "queue": {
+    "next": "Next to review",
+    "remaining_one": "({{count}} left)",
+    "remaining_other": "({{count}} left)",
+    "empty": "The review queue is empty",
+    "afterDecision": "Approving or rejecting opens the next product of the review queue."
+  },
+  "gtin": "GTIN {{gtin}}",
+  "productId": "ID {{id}}",
+  "contentLanguage": {
+    "badge": "Content in {{language}}",
+    "tooltip": "Language the enrichment was written in. Changing Settings does not rewrite existing products; re-enrich them explicitly."
+  },
+  "updatedAt": "updated {{date}}",
+  "quality": "Quality",
+  "coverage": "Coverage",
+  "unavailableData": "Some data is unavailable",
+  "tabs": {
+    "content": "Content",
+    "attributes": "Attributes",
+    "evidence": "Evidence",
+    "issues": "Validations ({{count}})",
+    "review": "Review"
+  },
+  "content": {
+    "shortDescription": "Short description",
+    "metaDescription": "Meta description",
+    "notGenerated": "Not generated yet.",
+    "faq": "Frequently asked questions"
+  },
+  "attributes": {
+    "title": "Technical attributes",
+    "subtitle": "Compare the proposed value with the original source before approving or editing.",
+    "auditTitle": "Per-attribute audit",
+    "auditDescription": "“View audit” shows the source page, the captured excerpt and the source type, and lets you attach manual evidence (URL and excerpt, or a screenshot). Every edit needs its own evidence.",
+    "filterLabel": "Filter attributes",
+    "filters": {
+      "relevant": "Relevant",
+      "filled": "Filled",
+      "candidates": "Candidates",
+      "required": "Required, still missing",
+      "notApplicable": "Not applicable"
+    },
+    "empty": {
+      "title": "No attributes",
+      "description": "The attribute matrix has no attributes for this subcategory."
+    },
+    "edit": {
+      "newValue": "New value",
+      "reason": "Reason",
+      "reasonPlaceholder": "Explain why the value is being changed",
+      "evidenceRequired": "Required: prove the new value with a screenshot, or with the source URL and excerpt."
+    },
+    "effectiveValue": "Effective value",
+    "confidence": "Confidence",
+    "valueOrigin": "Value origin",
+    "table": {
+      "attribute": "Attribute",
+      "origin": "Origin",
+      "audit": "Audit"
+    },
+    "notPublished": "Not published",
+    "notFound": "Not found",
+    "candidateValue": "Candidate: {{value}}",
+    "required": "Required",
+    "notApplicable": "Not applicable",
+    "curated": "Reviewed",
+    "edited": "Edited",
+    "agent": "AI agent",
+    "editAttribute": "Edit attribute",
+    "candidate": {
+      "outOfVocabulary": "Outside the vocabulary",
+      "outOfVocabularyPreapproved": "Outside the vocabulary · Pre-approved",
+      "conflict": "Conflict",
+      "noEvidence": "Not enough evidence"
+    },
+    "rejection": {
+      "NO_EVIDENCE_FOR_CANDIDATE": "A candidate was kept, but no extracted evidence supports the value.",
+      "EVIDENCE_VALUE_MISMATCH": "The candidate differs from the value its own source states; check both before publishing.",
+      "NOT_IN_VOCABULARY": "The value found at the source is not in the attribute vocabulary.",
+      "TAXONOMY_MISMATCH": "Removed: a taxonomy attribute must match the product's category or subcategory exactly."
+    },
+    "applicability": {
+      "CANDIDATE_NEEDS_REVIEW": "There is a candidate that needs human validation.",
+      "EVIDENCE_FOUND": "The research found evidence for this attribute.",
+      "REQUIRED_NO_EVIDENCE": "Required attribute without enough evidence.",
+      "OPTIONAL_NO_CANDIDATE": "Optional attribute with no candidate or evidence for this product.",
+      "NOT_IN_MATRIX": "The attribute is not in the applicable matrix or was marked as not applicable."
+    }
+  },
+  "evidence": {
+    "title": "Facts and sources",
+    "confidence": "Confidence {{value}}",
+    "empty": "No facts were researched for this product yet."
+  },
+  "issues": {
+    "title": "Deterministic validations",
+    "none": {
+      "title": "No problems found",
+      "description": "The result passed every validation."
+    }
+  },
+  "review": {
+    "title": "Review decision",
+    "status": "Status",
+    "assignee": "Assignee",
+    "notes": "Notes",
+    "save": "Save review",
+    "staleDecision": "The previous decision ({{status}}) was made on an older enrichment result. Review this result and decide again.",
+    "saved": "Review saved."
+  },
+  "history": {
+    "title": "History",
+    "empty": "No human changes yet.",
+    "events": {
+      "REVIEW_UPDATED": "Review updated",
+      "ATTRIBUTE_OVERRIDDEN": "Attribute edited",
+      "ATTRIBUTE_OVERRIDE_REMOVED": "Edit removed, AI value restored",
+      "ATTRIBUTE_OVERRIDE_SUPERSEDED": "Edit replaced by a newer one",
+      "EVIDENCE_ADDED": "Evidence added",
+      "EVIDENCE_REMOVED": "Evidence removed",
+      "REVIEW_REOPENED": "Approval reopened"
+    },
+    "reopenedReason": "An edit or evidence changed after the approval, so the product needs a new decision."
+  },
+  "evidenceForm": {
+    "legend": "Evidence",
+    "sourceUrl": "Source URL",
+    "sourceUrlPlaceholder": "https://manufacturer.example/product",
+    "excerpt": "Excerpt that proves the value",
+    "excerptPlaceholder": "Copy the text of the page that shows the value",
+    "screenshot": "Screenshot",
+    "previewAlt": "Screenshot preview",
+    "removeScreenshot": "Remove screenshot",
+    "fileHint": "PNG, JPEG or WebP up to 10 MB. You can also paste with Ctrl+V.",
+    "note": "Note (optional)",
+    "notePlaceholder": "Context for whoever audits this later",
+    "problems": {
+      "imageType": "Use a PNG, JPEG or WebP image.",
+      "imageSize": "The screenshot must be at most 10 MB.",
+      "https": "The source URL must start with https://.",
+      "missing": "Attach a screenshot, or enter the source URL and the excerpt that proves the value."
+    }
+  },
+  "audit": {
+    "image": {
+      "crop": {
+        "failed": "The crop could not be loaded. The file may be unavailable or you may not have access to it.",
+        "loading": "Loading the crop…",
+        "alt": "Evidence crop for {{attribute}}"
+      },
+      "page": {
+        "failed": "The page screenshot could not be loaded. The file may be unavailable or you may not have access to it.",
+        "loading": "Loading the page screenshot…",
+        "alt": "Page screenshot for {{attribute}}"
+      },
+      "manual": {
+        "failed": "The uploaded screenshot could not be loaded. The file may be unavailable or you may not have access to it.",
+        "loading": "Loading the uploaded screenshot…",
+        "alt": "Uploaded screenshot for {{attribute}}"
+      }
+    },
+    "references_one": "{{count}} reference",
+    "references_other": "{{count}} references",
+    "noReference": "No reference",
+    "manualCount_one": "{{count}} manual",
+    "manualCount_other": "{{count}} manual",
+    "open": "View audit",
+    "humanOverride": "Human edit",
+    "title": "Audit of {{attribute}}",
+    "description": "Check the proposed value and the sources behind it before approving or editing.",
+    "candidateFound": "Candidate found",
+    "aiValue": "Original AI value",
+    "curatedValue": "Value after review",
+    "reasonLabel": "Reason:",
+    "overrideNote": "The sources below support the original AI value; the manual evidence supports this edit.",
+    "removeEdit": "Remove edit",
+    "restoreDialog": {
+      "title": "Restore the original AI value?",
+      "description": "The edit “{{edited}}” will be removed and the attribute will show “{{original}}” again. The history stays available in the product audit.",
+      "restoring": "Restoring…",
+      "confirm": "Restore AI value"
+    },
+    "sources": {
+      "title": "Sources consulted",
+      "description": "Check the preserved capture. The original page may have changed since it was consulted."
+    },
+    "sourceTier": {
+      "official": "Official source",
+      "authorized_distributor": "Authorized distributor",
+      "recognized_retailer": "Recognized retailer",
+      "other": "Other source"
+    },
+    "externalReference": "External reference",
+    "capture": {
+      "COMPLETE": "Complete visual evidence",
+      "LEGACY": "Text-only evidence (legacy)",
+      "INCOMPLETE": "Incomplete capture — review needed",
+      "NOT_VISIBLE": "The page does not display the value — review needed",
+      "NO_MATCH": "Value not found in the capture — review needed",
+      "AMBIGUOUS": "The value appears in more than one place — review needed",
+      "SCREENSHOT_ONLY": "The page changed during the capture — check the full screenshot",
+      "UNSUPPORTED": "Source without visual capture (PDF) — review needed",
+      "NOT_CAPTURED": "Source not captured — review needed",
+      "FAILED": "Capture failed — review needed"
+    },
+    "capturedAt": "Captured {{date}}",
+    "sourceValue": "Value at the source: {{value}}",
+    "noExcerpt": "The URL is linked to the attribute, but no excerpt was captured for this reference.",
+    "noCropSeePage": "There is no clear, unambiguous crop of this value. Check the value in the page screenshot below.",
+    "noCropTextKept": "There is no clear, unambiguous crop of this value. The text evidence was preserved.",
+    "technicalDetail": "Technical detail: {{detail}}",
+    "openScreenshot": "Open full screenshot",
+    "openReference": "Open reference",
+    "noUrls": "No URL is linked to this attribute. Do not approve a filled value without validating an external source.",
+    "manual": {
+      "title": "Manual evidence",
+      "forEdit": "Proof attached by reviewers for the edited value.",
+      "forAi": "Proof attached by reviewers for the AI value.",
+      "badge": "Manual",
+      "none": "No manual evidence.",
+      "save": "Save evidence",
+      "add": "Add evidence"
+    },
+    "researchNote": "Research note"
+  },
+  "loadFailed": {
+    "title": "This product could not be loaded",
+    "description": "The catalog did not answer. Try again in a moment."
+  },
+  "loading": "Loading the product…"
+}

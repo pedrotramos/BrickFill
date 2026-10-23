@@ -1,0 +1,65 @@
+{
+  "app": {
+    "name": "BrickFill",
+    "home": "BrickFill home",
+    "tagline": "Evidence-backed catalog enrichment",
+    "forCustomer": "for {{name}}"
+  },
+  "nav": {
+    "label": "Main navigation",
+    "overview": "Overview",
+    "catalog": "Catalog",
+    "settings": "Settings",
+    "open": "Open navigation",
+    "skip": "Skip to content"
+  },
+  "footer": {
+    "product": "BrickFill · catalog enrichment accelerator",
+    "builtOn": "Built on Databricks",
+    "webData": "Web data by Firecrawl"
+  },
+  "language": {
+    "choose": "Interface language"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "clear": "Clear",
+    "remove": "Remove",
+    "edit": "Edit",
+    "reload": "Reload",
+    "retry": "Try again"
+  },
+  "notUpdatedYet": "Not updated yet",
+  "status": {
+    "ENRICHED": "Enriched",
+    "REVIEW_REQUIRED": "Needs review",
+    "PENDING": "Pending",
+    "IN_REVIEW": "In review",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "description": "The page hit an unexpected error. Reload to try again; if it persists, share the details below with your administrator.",
+    "reload": "Reload the page",
+    "message": "Error message",
+    "componentStack": "Component stack",
+    "stackTrace": "Stack trace"
+  },
+  "qualityInfo": {
+    "label": "How quality is calculated",
+    "title": "How quality is calculated",
+    "intro": "A 0–100% score of the current result of each product. A value only counts when it cites a source.",
+    "weights": {
+      "required": "Required attributes filled with evidence (the required coverage)",
+      "published": "Relevant attributes (required, or with a proposed value) published with evidence",
+      "sources": "Source quality: the best source of each fact (official 100%, authorized distributor 90%, recognized retailer 75%, other 50%)",
+      "confidence": "Average confidence of the published values"
+    },
+    "penalties": "Deductions: 10 points per critical error, such as an invalid GTIN, a missing required attribute or a value without a source (up to 40); 3 per other error (up to 12); 0.5 per warning (up to 5). Pre-approved out-of-vocabulary values cost nothing.",
+    "coverage": "Required coverage is the share of required attributes that have a value with evidence.",
+    "averaged": "Here both numbers are the average of the products already enriched; products not enriched yet are not counted."
+  }
+}

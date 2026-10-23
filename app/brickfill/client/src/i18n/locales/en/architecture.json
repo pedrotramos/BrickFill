@@ -1,0 +1,210 @@
+{
+  "trigger": "How it works",
+  "title": "How BrickFill works",
+  "description": "From an incomplete product to an approved one: web research with evidence, fixed rules and an audited human review — all running on Databricks.",
+  "flow": {
+    "title": "Main flow",
+    "hint": "Select a step to see what it does and which Databricks products it uses."
+  },
+  "stages": {
+    "input": {
+      "title": "Your catalog",
+      "subtitle": "Canonical contract, settings and the daily batch"
+    },
+    "research": {
+      "title": "Web research",
+      "subtitle": "Discovery, extraction and structuring"
+    },
+    "governance": {
+      "title": "Validation",
+      "subtitle": "Fixed rules before any review"
+    },
+    "curation": {
+      "title": "Review & publish",
+      "subtitle": "Human decision with a full audit trail"
+    }
+  },
+  "nodes": {
+    "source-contract": {
+      "title": "Canonical data contract",
+      "summary": "Three documented views map your products, attributes and allowed values.",
+      "detail": "BrickFill reads three canonical views — v_products, v_attributes and v_attribute_options — built by an adapter over your existing tables, read-only. Every column is documented in Unity Catalog, and a contract check validates keys, GTIN check digits and vocabularies before any enrichment. Nothing is loaded by hand.",
+      "technology": "Unity Catalog views · Lakeflow Jobs (contract check)"
+    },
+    "settings": {
+      "title": "Language and rules",
+      "summary": "Content language, market and editorial profile, globally or per category.",
+      "detail": "Admins choose in the Settings screen which language the content is written in, the market (for regulatory hints and search location) and the editorial profile (lengths, required suffixes, FAQ, units). Category overrides take precedence. The job reads these settings at the start of every batch and records which ones it used.",
+      "technology": "Databricks Apps · Lakebase (settings and audit)"
+    },
+    "daily-batch": {
+      "title": "Daily batch",
+      "summary": "Products never enriched that fit in the review queue.",
+      "detail": "Every business day the job enriches products that were never enriched, grouped by category and subcategory. The batch size is reviewers × products per reviewer, minus what is still waiting for review: when the queue is full, no new product enters. A product is enriched again only when operations ask for it.",
+      "technology": "Lakeflow Jobs · serverless, scheduled"
+    },
+    "web-search": {
+      "title": "Source discovery",
+      "summary": "Finds manufacturer and retailer pages by GTIN and title.",
+      "detail": "For each product, Firecrawl Search looks for pages by GTIN and by the title words, localized to the configured market. If the pages found are not useful, the agent searches again. A search result only helps find a page: it is never evidence. On AWS, system.ai.web_search can replace this step.",
+      "technology": "Firecrawl Search (optional: system.ai.web_search)"
+    },
+    "firecrawl-capture": {
+      "title": "Extraction and capture",
+      "summary": "Opens each page and keeps its text, screenshot and the crop of every value.",
+      "detail": "Firecrawl scrapes every page used as a source, runs scripts that dismiss banners and reveal hidden tabs, and takes a full-page screenshot together with a map of the text positions. BrickFill crops the exact place where each value appears and stores it, hashed, in a Unity Catalog Volume. Pages with errors (e.g. 404) are never cited.",
+      "technology": "Firecrawl Scrape + Actions · Unity Catalog Volume"
+    },
+    "foundation-model": {
+      "title": "AI structuring",
+      "summary": "Turns the page text into catalog attributes and content in the configured language.",
+      "detail": "The model receives the subcategory attributes and the extracted page text, and writes the content in the configured language. Every value must cite the page and the verbatim excerpt it came from; without a citation, the attribute stays empty.",
+      "technology": "Foundation Model APIs (pay-per-token)"
+    },
+    "deterministic-rules": {
+      "title": "Rules and quality",
+      "summary": "Checks evidence, vocabulary, GTIN, length and consistency.",
+      "detail": "Fixed code checks every value: the evidence, the attribute vocabulary, the GTIN check digit, the editorial profile limits and the consistency between fields. A value outside the vocabulary but with evidence and at least 80% confidence arrives pre-approved and flagged for review.",
+      "technology": "Deterministic validations · Lakeflow Jobs"
+    },
+    "history": {
+      "title": "Immutable history",
+      "summary": "Stores every result, fact, piece of evidence and issue found.",
+      "detail": "The original AI result and its validations are stored without overwrites. Every run can be audited later, with access control and lineage.",
+      "technology": "Unity Catalog · Delta tables"
+    },
+    "review-app": {
+      "title": "Review",
+      "summary": "Check each attribute against its source, edit with evidence and approve.",
+      "detail": "Reviewers check every value against the page crop, complete or correct values with their own evidence (URL and excerpt, or a screenshot) and approve or reject the product. The original AI value can be restored at any time.",
+      "technology": "Databricks Apps"
+    },
+    "decisions": {
+      "title": "Decisions and audit",
+      "summary": "Records decisions, edits, author, reason and history.",
+      "detail": "Reviewer decisions and edits are kept apart from the AI result. Every change records who made it, when and why, and can be reverted.",
+      "technology": "Lakebase (Postgres)"
+    },
+    "fast-reads": {
+      "title": "Fast reads",
+      "summary": "The catalog and each product's latest result, ready for the screens.",
+      "detail": "The canonical products view is synced to Lakebase, and the latest enrichment of each product is loaded right after every batch, so the screens answer with Postgres latency.",
+      "technology": "Lakebase · synced tables"
+    },
+    "publish": {
+      "title": "Publishing approved products",
+      "summary": "Approved products flow to the destination table on a schedule.",
+      "detail": "A job publishes the approved products to the destination Delta table, with the origin of every value (AI, human edit or missing), its evidence and the content language. A rejected product leaves the table on the next publish; a product changed after its approval keeps its last approved version until it is approved again.",
+      "technology": "Lakeflow Jobs · Delta"
+    }
+  },
+  "selected": {
+    "runsOn": "Runs on",
+    "traceable": "Every published value has evidence traceable to the source page."
+  },
+  "firecrawl": {
+    "title": "Firecrawl: web search, extraction and visual capture",
+    "description": "Firecrawl is the web layer of BrickFill. It finds candidate pages, renders them like a browser and returns clean text plus the screenshots BrickFill turns into verifiable evidence.",
+    "creditsLabel": "Typical usage",
+    "credits": "5–10 credits per product",
+    "creditsDetail": "Median 8: two discovery searches plus 1–6 scrapes and captures",
+    "capabilities": {
+      "search": {
+        "title": "Search",
+        "description": "Discovers manufacturer and retailer pages by GTIN and title, localized to the configured market."
+      },
+      "scrape": {
+        "title": "Scrape",
+        "description": "Returns each page as markdown and raw HTML, the text the model is allowed to cite."
+      },
+      "actions": {
+        "title": "Actions",
+        "description": "Runs scripts that dismiss cookie banners, expand sections, reveal hidden tabs and scroll lazy content (executeJavascript)."
+      },
+      "screenshot": {
+        "title": "Full-page screenshot",
+        "description": "Captures the rendered page, archived in a Unity Catalog Volume with its SHA-256."
+      },
+      "domMap": {
+        "title": "DOM text map",
+        "description": "javascriptReturns gives the position of every text block, so each value is cropped exactly where it appears."
+      },
+      "mcp": {
+        "title": "MCP integration",
+        "description": "Called through the Firecrawl MCP server over streamable HTTP; the API key stays in a Unity Catalog secret."
+      },
+      "limits": {
+        "title": "Concurrency and credit cap",
+        "description": "Concurrent requests follow your Firecrawl plan, and evidence recaptures run under an explicit credit cap."
+      }
+    },
+    "untrusted": "Everything Firecrawl returns is treated as untrusted content: the model uses it only as a source of facts, never as instructions."
+  },
+  "skuPanel": {
+    "title": "Databricks SKUs in this solution",
+    "description": "Each card shows how the product is billed, where BrickFill uses it and what drives its cost. Select a card to highlight the steps that use it. Product names match billing_origin_product in system.billing.usage.",
+    "billing": "Billing unit",
+    "usedFor": "Used for",
+    "costDriver": "Cost driver",
+    "clear": "Clear highlight: {{sku}}",
+    "footnote": "No prices are shown: rates depend on your cloud, region and contract. See docs/finops.md to estimate and measure the real cost."
+  },
+  "skus": {
+    "JOBS": {
+      "name": "Lakeflow Jobs (serverless)",
+      "short": "Jobs",
+      "billing": "DBU — Automated Serverless Compute (performance target STANDARD)",
+      "usedFor": "Contract check, prepare, enrich, Lakebase load, publish and evidence recapture",
+      "costDriver": "A small fixed amount per run plus a small amount per enriched product"
+    },
+    "MODEL_SERVING": {
+      "name": "Foundation Model APIs",
+      "short": "Foundation Models",
+      "billing": "Pay-per-token (input and output tokens)",
+      "usedFor": "Structuring facts and writing the content in the configured language; optional system.ai.web_search on AWS",
+      "costDriver": "Tokens per product (about 75–215k in and 6–19k out, with prompt caching) — the main variable cost"
+    },
+    "LAKEBASE": {
+      "name": "Lakebase Postgres",
+      "short": "Lakebase",
+      "billing": "DBU — Database Serverless Compute (capacity units per hour) plus storage",
+      "usedFor": "Serving the catalog to the app, reviews, edits, settings and audit",
+      "costDriver": "Hours with the compute awake and its size: about 0.21 DBU/h per CU, scaling between 0.5 and 16 CU with the load; scales to zero after 30 minutes idle"
+    },
+    "LAKEFLOW_CONNECT": {
+      "name": "Lakebase synced tables",
+      "short": "Synced tables",
+      "billing": "DBU — serverless Lakeflow pipelines (LAKEFLOW_CONNECT / DLT)",
+      "usedFor": "Keeping the canonical products view synced in Postgres (SNAPSHOT mode)",
+      "costDriver": "Only the refreshes; nothing while the source does not change"
+    },
+    "APPS": {
+      "name": "Databricks Apps",
+      "short": "Apps",
+      "billing": "DBU — Interactive Serverless Compute (0.5 DBU/h while running)",
+      "usedFor": "This review app and the Settings screen",
+      "costDriver": "Hours the app is running; stop it outside business hours to save"
+    },
+    "UNITY_CATALOG": {
+      "name": "Unity Catalog",
+      "short": "Unity Catalog",
+      "billing": "No separate SKU",
+      "usedFor": "Governance, documented views, secrets (Firecrawl key), lineage and access control",
+      "costDriver": "No direct cost"
+    },
+    "VOLUMES": {
+      "name": "Unity Catalog Volumes",
+      "short": "Volumes",
+      "billing": "Cloud object storage",
+      "usedFor": "Page screenshots, value crops and reviewer uploads",
+      "costDriver": "About 3–5 GB per 1,000 products"
+    }
+  },
+  "guarantees": {
+    "title": "Guarantees",
+    "noEvidenceNoValue": "No evidence, no value",
+    "secrets": "Keys kept in Unity Catalog",
+    "immutable": "Immutable AI history",
+    "editsNeedEvidence": "Every edit needs evidence"
+  }
+}

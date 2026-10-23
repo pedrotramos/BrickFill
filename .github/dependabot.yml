@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule: { interval: weekly }
+    groups:
+      python: { patterns: ["*"] }
+
+  # Databricks Apps installs from its own npm mirror, which refuses some public packages and versions: deploy an
+  # npm update to a dev workspace before merging it (CONTRIBUTING.md).
+  - package-ecosystem: npm
+    directory: /app/brickfill
+    schedule: { interval: weekly }
+    labels: [dependencies, needs-dev-deploy]
+    groups:
+      appkit:
+        patterns: ["@databricks/*"]
+      npm:
+        patterns: ["*"]
+        exclude-patterns: ["@databricks/*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+    groups:
+      actions: { patterns: ["*"] }

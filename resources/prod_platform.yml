@@ -1,0 +1,48 @@
+# Production-only platform resources: the jobs run as a service principal that needs its own Postgres role and grants.
+# The Firecrawl key is a Unity Catalog secret created by an admin, never by the bundle (a bundle-managed secret would
+# need the value at deploy time); bundle grants do not support READ_SECRET yet, so that grant is also manual.
+# To add a staging environment, copy the whole "prod:" block below under the new target name.
+targets:
+  prod:
+    resources:
+      # Postgres role of the jobs' service principal. It creates and owns the results schema (enrichment) and reads
+      # the app-owned schema (brickfill_app) when publishing and reading settings, hence databricks_superuser.
+      postgres_roles:
+        job_runner:
+          parent: ${resources.postgres_projects.brickfill.name}/branches/${var.lakebase_branch_id}
+          role_id: job-runner
+          postgres_role: ${var.job_service_principal}
+          identity_type: SERVICE_PRINCIPAL
+          membership_roles:
+            - DATABRICKS_SUPERUSER
+
+      # The jobs' service principal writes the enrichment tables, views and evidence files of this schema.
+      schemas:
+        brickfill_schema:
+          grants:
+            - principal: ${var.job_service_principal}
+              privileges:
+                - USE_SCHEMA
+                - SELECT
+                - MODIFY
+                - CREATE_TABLE
+                - READ_VOLUME
+                - WRITE_VOLUME
+            - principal: ${var.admins_group}
+              privileges:
+                - ALL_PRIVILEGES
+
+      # Reviewers follow the runs (status, logs, evidence counts) but cannot edit or trigger the jobs.
+      jobs:
+        brickfill_enrichment:
+          permissions: &reviewers_view
+            - level: CAN_VIEW
+              group_name: ${var.reviewers_group}
+        brickfill_evidence_recapture:
+          permissions: *reviewers_view
+        brickfill_load_lakebase:
+          permissions: *reviewers_view
+        brickfill_publish_approved:
+          permissions: *reviewers_view
+        brickfill_source_contract:
+          permissions: *reviewers_view

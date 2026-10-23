@@ -1,0 +1,46 @@
+{
+  "code": "pt-BR",
+  "name": "Português (Brasil)",
+  "english_name": "Brazilian Portuguese",
+  "fact_sheet_sections": {
+    "key_features": "Características Principais do Produto",
+    "additional_features": "Características Adicionais",
+    "dimensions_weight": "Dimensões e Pesos",
+    "package_contents": "Conteúdo da Embalagem"
+  },
+  "fact_labels": {
+    "brand": ["marca"],
+    "supplier": ["fornecedor", "fabricante"],
+    "model": ["modelo"],
+    "gtin": ["ean", "gtin", "código de barras"],
+    "warranty": ["garantia"],
+    "height": ["altura"],
+    "width": ["largura"],
+    "depth": ["profundidade", "comprimento"],
+    "weight": ["peso"],
+    "color": ["cor"]
+  },
+  "promotional_terms": ["melhor do mercado", "imperdível", "garantia de resultado", "compre já", "oferta imperdível"],
+  "generic_values": ["padrão", "várias cores", "vária cores", "cores variadas", "diversos tamanhos", "não informado", "n/a", "na"],
+  "packaging_terms": {
+    "logistic": ["caixa", "fardo", "master", "logíst", "dun", "embalagem coletiva"],
+    "unit": ["unidade", "unitário"]
+  },
+  "attribute_fact_aliases": {
+    "marca": ["marca"],
+    "fornecedor": ["fornecedor", "fabricante", "razão social fabricante"],
+    "fabricante": ["fabricante", "fornecedor", "razão social fabricante"],
+    "aroma": ["aroma", "fragrância", "perfume", "variante"],
+    "fragrância": ["aroma", "fragrância", "perfume", "variante"],
+    "peso": ["peso", "peso líquido", "peso líquido total", "peso unitário", "peso bruto"],
+    "embalagem": ["embalagem", "tipo de embalagem", "configuração da embalagem coletiva"],
+    "formato": ["formato", "apresentação", "tipo de embalagem", "configuração da embalagem coletiva"],
+    "armazenamento": ["armazenamento", "memória interna", "capacidade de armazenamento"],
+    "textura": ["textura", "estado físico", "forma"],
+    "quantidade": ["quantidade", "unidades por embalagem", "quantidade por caixa", "conteúdo da embalagem"]
+  },
+  "brand_attribute_names": ["marca", "fornecedor", "fabricante"],
+  "taxonomy_attribute_names": ["departamento", "seção", "sessão", "categoria", "subcategoria"],
+  "unit_aliases": {"quilo": "kg", "quilos": "kg", "quilograma": "kg", "quilogramas": "kg", "kilograma": "kg", "kilogramas": "kg", "grama": "g", "gramas": "g", "litro": "l", "litros": "l", "polegada": "", "polegadas": "", "pol": ""},
+  "declared_unit_patterns": ["\\(\\s*em\\s+([a-zA-Z]+)\\s*\\)"]
+}

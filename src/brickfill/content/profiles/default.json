@@ -1,0 +1,27 @@
+{
+  "id": "default",
+  "name": "Default (neutral)",
+  "version": 1,
+  "title": {
+    "max_length": 150,
+    "require_brand": true,
+    "order": ["product_type", "brand", "model", "key_feature", "secondary_feature", "color", "variant", "quantity"],
+    "uppercase_model": false,
+    "no_voltage_in_parent_title": false
+  },
+  "short_description": {"min_length": 120, "max_length": 300, "truncate": true, "forbid_links": true},
+  "meta_description": {"min_length": 70, "max_length": 160, "required_suffixes": []},
+  "fact_sheet": {
+    "sections": ["key_features", "additional_features", "dimensions_weight", "package_contents"],
+    "must_include_gtin": true,
+    "must_include": ["brand", "supplier"]
+  },
+  "faq": {"enabled": true, "min": 5, "max": 8, "official_sources_only": true},
+  "images": {"required": true, "min_width": 1000, "min_height": 1000, "check_white_background": true},
+  "units": "metric",
+  "forbid_emojis": true,
+  "brand_must_appear_in_source_title": false,
+  "category_rules": [],
+  "severity_overrides": {},
+  "disabled_rules": []
+}

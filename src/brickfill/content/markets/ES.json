@@ -1,0 +1,10 @@
+{
+  "code": "ES",
+  "name": "Spain",
+  "country": "ES",
+  "languages": ["es-ES"],
+  "search_location": "Spain",
+  "regulatory_bodies": ["CE", "AEMPS", "AESAN"],
+  "deprioritized_domains": ["amazon.", "ebay.", "aliexpress", "temu."],
+  "preferred_domains": []
+}

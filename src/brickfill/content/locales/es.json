@@ -1,0 +1,44 @@
+{
+  "code": "es",
+  "name": "Español",
+  "english_name": "Spanish",
+  "fact_sheet_sections": {
+    "key_features": "Características Principales",
+    "additional_features": "Características Adicionales",
+    "dimensions_weight": "Dimensiones y Peso",
+    "package_contents": "Contenido del Empaque"
+  },
+  "fact_labels": {
+    "brand": ["marca"],
+    "supplier": ["proveedor", "fabricante"],
+    "model": ["modelo"],
+    "gtin": ["ean", "gtin", "upc", "código de barras"],
+    "warranty": ["garantía"],
+    "height": ["altura", "alto"],
+    "width": ["ancho", "anchura"],
+    "depth": ["profundidad", "fondo", "largo"],
+    "weight": ["peso"],
+    "color": ["color"]
+  },
+  "promotional_terms": ["el mejor del mercado", "imperdible", "resultados garantizados", "compra ya", "oferta imperdible"],
+  "generic_values": ["estándar", "varios colores", "colores variados", "surtido", "varias tallas", "no informado", "no disponible", "n/a", "na"],
+  "packaging_terms": {
+    "logistic": ["caja", "bulto", "master", "logíst", "pallet", "dun", "corrugado"],
+    "unit": ["unidad", "unitario"]
+  },
+  "attribute_fact_aliases": {
+    "marca": ["marca"],
+    "proveedor": ["proveedor", "fabricante"],
+    "fabricante": ["fabricante", "proveedor"],
+    "aroma": ["aroma", "fragancia", "perfume", "variante"],
+    "fragancia": ["aroma", "fragancia", "perfume", "variante"],
+    "peso": ["peso", "peso neto", "peso bruto", "peso unitario"],
+    "empaque": ["empaque", "tipo de empaque", "envase"],
+    "almacenamiento": ["almacenamiento", "memoria interna", "capacidad de almacenamiento"],
+    "cantidad": ["cantidad", "unidades por paquete", "contenido del empaque"]
+  },
+  "brand_attribute_names": ["marca", "proveedor", "fabricante"],
+  "taxonomy_attribute_names": ["departamento", "sección", "categoría", "subcategoría"],
+  "unit_aliases": {"kilo": "kg", "kilos": "kg", "kilogramo": "kg", "kilogramos": "kg", "gramo": "g", "gramos": "g", "litro": "l", "litros": "l", "pulgada": "", "pulgadas": "", "pulg": ""},
+  "declared_unit_patterns": ["\\(\\s*en\\s+([a-zA-Z]+)\\s*\\)"]
+}

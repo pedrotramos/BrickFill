@@ -1,0 +1,19 @@
+# Optional local hooks (uvx pre-commit install); CI runs the same checks (.github/workflows/ci.yml).
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+      - id: prettier
+        name: prettier (review app)
+        entry: bash -c 'cd app/brickfill && npx prettier --write --ignore-unknown "${@#app/brickfill/}"' --
+        language: system
+        files: ^app/brickfill/

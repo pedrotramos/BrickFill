@@ -1,0 +1,38 @@
+name: Bug report
+description: Something in the jobs, the review app or the bundles does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Never paste customer data, secrets, workspace hosts or IDs. Use a public GTIN or the mock catalog.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Enrichment job, Evidence capture, Review app, Data contract / adapter, Bundles / setup, Docs]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: Commands, job parameters, a public GTIN. For enrichment, the run's research_trace and issue codes help.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: BrickFill version or commit
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Cloud, Databricks CLI version, model endpoint, content language and market.

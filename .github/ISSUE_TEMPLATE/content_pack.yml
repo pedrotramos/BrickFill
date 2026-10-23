@@ -1,0 +1,26 @@
+name: Adapter, locale or market
+description: Ask for (or offer) an adapter for a common source layout, a new UI/content language or a new market pack.
+labels: [content]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options: [Adapter, Locale (content language), Market]
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: >-
+        Adapter: the source tables and columns (names only, no data). Locale: the language code. Market: the country,
+        regulators, marketplaces to deprioritize and value equivalences (e.g. 110V = 127V).
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I can open the pull request

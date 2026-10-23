@@ -1,0 +1,39 @@
+resources:
+  jobs:
+    brickfill_evidence_recapture:
+      name: BrickFill · Evidence recapture
+      description: Recaptures source screenshots and attribute crops with Firecrawl for one explicit SKU and up to three attributes from its latest enrichment, without re-running the AI or publishing; max_credits caps the Firecrawl spend.
+      max_concurrent_runs: 1
+      budget_policy_id: ${var.budget_policy_id}
+      timeout_seconds: 3600
+      email_notifications:
+        on_failure: ${var.alert_emails}
+      parameters:
+        - name: ean
+          default: ""
+        - name: attribute_codes
+          default: ""
+        - name: max_credits
+          default: "3"
+      tasks:
+        - task_key: capture_evidence
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../notebooks/30_evidence_recapture.py
+            base_parameters:
+              catalog: "${var.catalog}"
+              schema: "${var.schema}"
+              evidence_volume: "${var.evidence_volume}"
+              secret_catalog: "${var.secret_catalog}"
+              secret_schema: "${var.secret_schema}"
+              firecrawl_secret_key: "${var.firecrawl_secret_key}"
+              ean: "{{job.parameters.ean}}"
+              attribute_codes: "{{job.parameters.attribute_codes}}"
+              max_credits: "{{job.parameters.max_credits}}"
+          environment_key: default
+      performance_target: STANDARD
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies: ${var.job_dependencies}

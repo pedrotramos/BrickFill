@@ -1,0 +1,54 @@
+{
+  "title": "Products and enrichment quality",
+  "subtitle": "Search by GTIN, title, brand or category and open a product to review its evidence.",
+  "filters": {
+    "title": "Filters",
+    "searchLabel": "Search products",
+    "searchPlaceholder": "GTIN, product, brand or category",
+    "statusLabel": "Filter by status",
+    "allStatuses": "All statuses",
+    "categoryLabel": "Filter by category",
+    "allCategories": "All categories",
+    "issueLabel": "Filter by validation issue",
+    "allIssues": "All validation issues",
+    "sortLabel": "Sort order",
+    "show": "More filters",
+    "hide": "Fewer filters",
+    "active_one": "{{count}} active",
+    "active_other": "{{count}} active"
+  },
+  "sort": {
+    "queue": "Review queue first",
+    "qualityAsc": "Lowest quality first",
+    "qualityDesc": "Highest quality first"
+  },
+  "refresh": "Refresh catalog",
+  "loadError": "The catalog could not be loaded",
+  "empty": {
+    "title": "No products found",
+    "description": "Adjust the search or clear the filters to see other SKUs.",
+    "firstPage": "Back to the first page"
+  },
+  "table": {
+    "product": "Product",
+    "category": "Category",
+    "status": "Status",
+    "quality": "Quality",
+    "coverage": "Coverage",
+    "updated": "Updated",
+    "open": "Open",
+    "gtin": "GTIN {{gtin}}",
+    "openProduct": "Open {{title}}",
+    "issueCounts": "Errors: {{errors}} · Warnings: {{warnings}}"
+  },
+  "pagination": {
+    "label": "Product list pages",
+    "showing_one": "Showing {{from}}–{{to}} of {{total}} product",
+    "showing_other": "Showing {{from}}–{{to}} of {{total}} products",
+    "pageSizeLabel": "Products per page",
+    "perPage": "{{size}} per page",
+    "previous": "Previous page",
+    "next": "Next page",
+    "page": "Page {{page}} of {{pages}}"
+  }
+}

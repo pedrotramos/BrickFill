@@ -1,0 +1,46 @@
+resources:
+  jobs:
+    brickfill_source_contract:
+      name: BrickFill · Source contract
+      description: Builds the three documented canonical views (v_products, v_attributes, v_attribute_options) from the configured adapter over the retailer's tables and validates them against the BrickFill contract (results in the contract_check table). Run it whenever the adapter or the source tables change.
+      max_concurrent_runs: 1
+      budget_policy_id: ${var.budget_policy_id}
+      timeout_seconds: 1800
+      email_notifications:
+        on_failure: ${var.alert_emails}
+      parameters:
+        - name: adapter
+          default: ${var.adapter}
+        - name: adapter_source_catalog
+          default: ${var.adapter_source_catalog}
+        - name: adapter_source_schema
+          default: ${var.adapter_source_schema}
+        - name: adapter_params
+          default: ${var.adapter_params}
+        - name: source_catalog
+          default: ${var.source_catalog}
+        - name: source_schema
+          default: ${var.source_schema}
+        - name: contract_fail_on
+          default: ${var.contract_fail_on}
+
+      tasks:
+        - task_key: source_contract
+          notebook_task:
+            notebook_path: ../notebooks/01_source_contract.py
+            base_parameters:
+              adapter: "{{job.parameters.adapter}}"
+              adapter_source_catalog: "{{job.parameters.adapter_source_catalog}}"
+              adapter_source_schema: "{{job.parameters.adapter_source_schema}}"
+              adapter_params: "{{job.parameters.adapter_params}}"
+              source_catalog: "{{job.parameters.source_catalog}}"
+              source_schema: "{{job.parameters.source_schema}}"
+              contract_fail_on: "{{job.parameters.contract_fail_on}}"
+          environment_key: default
+
+      performance_target: STANDARD
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies: ${var.job_dependencies}

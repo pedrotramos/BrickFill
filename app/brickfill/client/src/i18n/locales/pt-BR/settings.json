@@ -1,0 +1,125 @@
+{
+  "title": "Idioma e regras editoriais",
+  "subtitle": "Escolha em que idioma o conteúdo é escrito e ajuste o perfil editorial, global ou por categoria. O Job de enriquecimento lê estas configurações no início de cada lote.",
+  "reload": "Recarregar configurações",
+  "loadError": "Não foi possível carregar as configurações",
+  "conflict": "Suas alterações não foram salvas porque outra pessoa mudou estas configurações antes.",
+  "readOnly": {
+    "title": "Somente leitura",
+    "description": "Você pode ver estas configurações, mas só os editores configurados podem alterá-las."
+  },
+  "yes": "Sim",
+  "no": "Não",
+  "reason": "Motivo da alteração (opcional)",
+  "reasonPlaceholder": "Fica registrado no histórico",
+  "fields": {
+    "content_language": "Idioma do conteúdo",
+    "catalog_language": "Idioma do catálogo",
+    "content_profile": "Perfil editorial",
+    "market": "Mercado",
+    "active": "Ativo"
+  },
+  "scopes": {
+    "global": "Global",
+    "department": "Departamento",
+    "category": "Categoria",
+    "subcategory": "Subcategoria"
+  },
+  "profiles": {
+    "default": "Padrão (neutro)"
+  },
+  "markets": {
+    "BR": "Brasil",
+    "ES": "Espanha",
+    "MX": "México",
+    "US": "Estados Unidos"
+  },
+  "global": {
+    "title": "Configurações globais",
+    "savedBy": "Salvo por {{user}} em {{date}} · versão {{version}}",
+    "usingDefaults": "Ainda não salvo: o Job usa os padrões da implantação abaixo.",
+    "contentLanguageHelp": "Títulos, descrições, ficha técnica e FAQ são escritos neste idioma.",
+    "catalogLanguageHelp": "Idioma dos nomes dos seus atributos e valores permitidos; eles nunca são traduzidos.",
+    "sameAsContent": "O padrão do catálogo",
+    "profileHelp": "Tamanhos, estrutura e outras regras editoriais.",
+    "noMarket": "Nenhum mercado específico",
+    "marketHelp": "Acrescenta indicações regulatórias e localiza a busca na web.",
+    "rulesTitle": "Ajustes das regras editoriais",
+    "rulesHelp": "Deixe um campo vazio para manter o valor do perfil “{{profile}}”.",
+    "deploymentDefaults": "Padrões da implantação: {{language}} · {{profile}} · mercado {{market}}",
+    "save": "Salvar configurações"
+  },
+  "overrides": {
+    "profileDefault": "Padrão do perfil ({{value}})",
+    "listPlaceholder": "Um por linha. Padrão do perfil: {{value}}",
+    "title_max_length": {
+      "label": "Título: tamanho máximo",
+      "help": "Caracteres."
+    },
+    "short_description_min_length": {
+      "label": "Descrição abreviada: tamanho mínimo",
+      "help": "Caracteres."
+    },
+    "short_description_max_length": {
+      "label": "Descrição abreviada: tamanho máximo",
+      "help": "Caracteres; textos maiores são cortados no fim de uma palavra."
+    },
+    "meta_description_min_length": {
+      "label": "Meta description: tamanho mínimo",
+      "help": "Caracteres."
+    },
+    "meta_description_max_length": {
+      "label": "Meta description: tamanho máximo",
+      "help": "Caracteres."
+    },
+    "meta_description_required_suffixes": {
+      "label": "Meta description: finais obrigatórios",
+      "help": "Chamadas para ação opcionais; quando definidas, a meta description precisa terminar com uma delas."
+    },
+    "faq_enabled": {
+      "label": "Gerar FAQ",
+      "help": "As FAQs usam somente fontes oficiais."
+    },
+    "units": {
+      "label": "Unidades",
+      "help": "Sistema de medidas usado no conteúdo.",
+      "values": {
+        "metric": "Métrico (cm, kg, L)",
+        "imperial": "Imperial (in, lb, fl oz)"
+      }
+    },
+    "image_min_width": {
+      "label": "Imagem: largura mínima",
+      "help": "Pixels."
+    },
+    "image_min_height": {
+      "label": "Imagem: altura mínima",
+      "help": "Pixels."
+    }
+  },
+  "categories": {
+    "title": "Ajustes por categoria",
+    "description": "Use outro idioma ou perfil em categorias específicas, por exemplo uma seção do catálogo vendida em outro país.",
+    "add": "Adicionar ajuste",
+    "addTitle": "Novo ajuste por categoria",
+    "editTitle": "Editar ajuste por categoria",
+    "dialogDescription": "Só os campos definidos aqui substituem as configurações globais nos produtos desta categoria.",
+    "category": "Categoria",
+    "chooseCategory": "Escolha uma categoria",
+    "inherit": "Usar global ({{value}})",
+    "inherited": "Global",
+    "rules": "Ajustes de regras",
+    "rulesHelp": "Deixe um campo vazio para manter o valor global ou do perfil.",
+    "updated": "Atualização",
+    "actions": "Ações",
+    "empty": "Nenhum ajuste por categoria: todas as categorias usam as configurações globais.",
+    "removeTitle": "Remover este ajuste?",
+    "removeDescription": "Os produtos de {{category}} vão usar as configurações globais no próximo lote. Produtos já enriquecidos mantêm o conteúdo.",
+    "precedence": "Precedência, campo a campo: subcategoria > categoria > departamento > configurações globais > parâmetros do Job > perfil."
+  },
+  "history": {
+    "title": "Histórico de alterações",
+    "description": "As 50 alterações mais recentes, da mais nova para a mais antiga.",
+    "empty": "Ainda não há alterações."
+  }
+}

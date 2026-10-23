@@ -1,0 +1,14 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Bundle state and per-developer variable overrides (.databricks/bundle/<target>/variable-overrides.json)
+.databricks/
+.env
+
+# Local agent workspace
+.isaac/

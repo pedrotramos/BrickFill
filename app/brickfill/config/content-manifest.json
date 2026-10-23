@@ -1,0 +1,107 @@
+{
+  "contract_version": "1",
+  "languages": [
+    {
+      "code": "en",
+      "name": "English"
+    },
+    {
+      "code": "pt-BR",
+      "name": "Português (Brasil)"
+    },
+    {
+      "code": "es",
+      "name": "Español"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "default",
+      "name": "Default (neutral)"
+    }
+  ],
+  "markets": [
+    {
+      "code": "BR",
+      "name": "Brazil"
+    },
+    {
+      "code": "ES",
+      "name": "Spain"
+    },
+    {
+      "code": "MX",
+      "name": "Mexico"
+    },
+    {
+      "code": "US",
+      "name": "United States"
+    }
+  ],
+  "overrides": {
+    "title_max_length": {
+      "type": "integer",
+      "minimum": 40,
+      "maximum": 300
+    },
+    "short_description_min_length": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000
+    },
+    "short_description_max_length": {
+      "type": "integer",
+      "minimum": 50,
+      "maximum": 2000
+    },
+    "meta_description_min_length": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 300
+    },
+    "meta_description_max_length": {
+      "type": "integer",
+      "minimum": 50,
+      "maximum": 320
+    },
+    "meta_description_required_suffixes": {
+      "type": "string_list",
+      "max_items": 5,
+      "max_length": 40
+    },
+    "faq_enabled": {
+      "type": "boolean"
+    },
+    "units": {
+      "type": "enum",
+      "values": [
+        "metric",
+        "imperial"
+      ]
+    },
+    "image_min_width": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 5000
+    },
+    "image_min_height": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 5000
+    }
+  },
+  "profile_defaults": {
+    "default": {
+      "title_max_length": 150,
+      "short_description_min_length": 120,
+      "short_description_max_length": 300,
+      "meta_description_min_length": 70,
+      "meta_description_max_length": 160,
+      "meta_description_required_suffixes": [],
+      "faq_enabled": true,
+      "units": "metric",
+      "image_min_width": 1000,
+      "image_min_height": 1000
+    }
+  }
+}

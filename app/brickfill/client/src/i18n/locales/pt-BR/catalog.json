@@ -1,0 +1,55 @@
+{
+  "title": "Produtos e qualidade do enriquecimento",
+  "subtitle": "Busque por GTIN, título, marca ou categoria e abra o produto para revisar as evidências.",
+  "filters": {
+    "title": "Filtros",
+    "searchLabel": "Buscar produtos",
+    "searchPlaceholder": "GTIN, produto, marca ou categoria",
+    "statusLabel": "Filtrar por status",
+    "allStatuses": "Todos os status",
+    "categoryLabel": "Filtrar por categoria",
+    "allCategories": "Todas as categorias",
+    "issueLabel": "Filtrar por validação",
+    "allIssues": "Todas as validações",
+    "sortLabel": "Ordenação",
+    "show": "Mais filtros",
+    "hide": "Menos filtros",
+    "active_one": "{{count}} ativo",
+    "active_other": "{{count}} ativos"
+  },
+  "sort": {
+    "queue": "Fila de revisão primeiro",
+    "qualityAsc": "Menor qualidade primeiro",
+    "qualityDesc": "Maior qualidade primeiro"
+  },
+  "refresh": "Atualizar catálogo",
+  "loadError": "Falha ao consultar o catálogo",
+  "empty": {
+    "title": "Nenhum produto encontrado",
+    "description": "Ajuste a busca ou limpe os filtros para ver outros SKUs.",
+    "firstPage": "Voltar à primeira página"
+  },
+  "table": {
+    "product": "Produto",
+    "category": "Categoria",
+    "status": "Status",
+    "quality": "Qualidade",
+    "coverage": "Cobertura",
+    "updated": "Atualização",
+    "open": "Abrir",
+    "gtin": "GTIN {{gtin}}",
+    "openProduct": "Abrir {{title}}",
+    "issueCounts": "Erros: {{errors}} · Alertas: {{warnings}}"
+  },
+  "pagination": {
+    "label": "Paginação da lista de produtos",
+    "showing_one": "Mostrando {{from}}–{{to}} de {{total}} produto",
+    "showing_many": "Mostrando {{from}}–{{to}} de {{total}} produtos",
+    "showing_other": "Mostrando {{from}}–{{to}} de {{total}} produtos",
+    "pageSizeLabel": "Produtos por página",
+    "perPage": "{{size}} por página",
+    "previous": "Página anterior",
+    "next": "Próxima página",
+    "page": "Página {{page}} de {{pages}}"
+  }
+}
