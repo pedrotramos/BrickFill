@@ -73,7 +73,8 @@ Everything runs on the retailer's own Databricks workspace.
 ## Brand Commitments
 
 - The name is **BrickFill**, and it is presented as a Databricks solution accelerator.
-- The mark and wordmark live in `app/brickfill/client/public/brickfill-logo.svg`.
+- The mark and wordmark live in `app/brickfill/client/public/brickfill-logo.svg`, with a dark-theme variant in
+  `brickfill-logo-dark.svg` next to it (the README swaps between them with `<picture>`).
 - Firecrawl is credited as the web-research partner.
 - **Visual home: the Databricks workspace.** The review app follows the Databricks product UI conventions (the
   category standard, played straight), so it reads as part of the workspace it runs in rather than as its own world.

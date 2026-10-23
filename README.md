@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="app/brickfill/client/public/brickfill-logo.svg" alt="BrickFill" height="56">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="app/brickfill/client/public/brickfill-logo-dark.svg">
+    <img src="app/brickfill/client/public/brickfill-logo.svg" alt="BrickFill" height="56">
+  </picture>
 </p>
 
 <p align="center">
