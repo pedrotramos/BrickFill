@@ -36,7 +36,6 @@
     "quality": "Calidad",
     "coverage": "Cobertura",
     "updated": "Actualización",
-    "open": "Abrir",
     "gtin": "GTIN {{gtin}}",
     "openProduct": "Abrir {{title}}",
     "issueCounts": "Errores: {{errors}} · Alertas: {{warnings}}"

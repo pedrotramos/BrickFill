@@ -18,7 +18,7 @@
     "next": "Next to review",
     "remaining_one": "({{count}} left)",
     "remaining_other": "({{count}} left)",
-    "empty": "The review queue is empty",
+    "empty": "No other product in the review queue",
     "afterDecision": "Approving or rejecting opens the next product of the review queue."
   },
   "gtin": "GTIN {{gtin}}",

@@ -187,7 +187,8 @@ function FirecrawlMark({ className }: { className?: string }) {
   );
 }
 
-export function ArchitectureModal() {
+/** `triggerClassName` styles the opening button; the sidebar draws it as one of its items. */
+export function ArchitectureModal({ triggerClassName }: { triggerClassName?: string } = {}) {
   const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState<NodeId>('web-search');
   const [highlightedSku, setHighlightedSku] = useState<SkuId | null>(null);
@@ -197,10 +198,17 @@ export function ArchitectureModal() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button aria-label={t('architecture:trigger')} size="sm" variant="outline">
-          <Network className="h-4 w-4" />
-          <span className="hidden lg:inline">{t('architecture:trigger')}</span>
-        </Button>
+        {triggerClassName ? (
+          <button className={triggerClassName} type="button">
+            <Network aria-hidden className="h-4 w-4" />
+            {t('architecture:trigger')}
+          </button>
+        ) : (
+          <Button aria-label={t('architecture:trigger')} size="sm" variant="outline">
+            <Network className="h-4 w-4" />
+            <span className="hidden lg:inline">{t('architecture:trigger')}</span>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-h-[94vh] w-[calc(100vw-1.5rem)] max-w-[1480px] gap-0 overflow-hidden p-0 sm:max-w-[1480px]">
         <DialogHeader className="border-b bg-muted/30 px-5 py-5 pr-14 text-left md:px-7">
@@ -262,7 +270,7 @@ export function ArchitectureModal() {
                               className={cn(
                                 'w-full rounded-lg border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                                 isSelected
-                                  ? 'border-primary bg-primary/5 shadow-sm'
+                                  ? 'border-primary bg-accent'
                                   : 'border-border bg-card hover:border-primary/40 hover:bg-muted/50',
                                 node.partner === 'firecrawl' && !isSelected && 'border-orange-500/40',
                                 lit && 'ring-2 ring-primary',
@@ -324,7 +332,7 @@ export function ArchitectureModal() {
             <section className="grid gap-4 rounded-xl border bg-muted/30 p-4 md:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.6fr)] md:p-5">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="rounded-md bg-primary/10 p-1.5 text-primary">
+                  <span className="rounded-md bg-muted p-1.5 text-muted-foreground">
                     <Bot className="h-4 w-4" />
                   </span>
                   <h3 className="text-lg font-semibold">{t(`architecture:nodes.${selected.id}.title`)}</h3>
@@ -417,7 +425,7 @@ export function ArchitectureModal() {
                     <button
                       aria-pressed={active}
                       className={cn(
-                        'flex flex-col rounded-xl border bg-card p-4 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                        'flex flex-col rounded-xl border bg-card p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                         active ? 'border-primary bg-primary/5' : 'hover:border-primary/40'
                       )}
                       key={id}
@@ -426,7 +434,7 @@ export function ArchitectureModal() {
                     >
                       <div className="flex w-full items-start justify-between gap-2">
                         <span className="flex items-center gap-2">
-                          <span className="rounded-md bg-primary/10 p-1.5 text-primary">
+                          <span className="rounded-md bg-muted p-1.5 text-muted-foreground">
                             <Icon className="h-4 w-4" />
                           </span>
                           <span className="text-sm font-semibold leading-5">{t(`architecture:skus.${id}.name`)}</span>
@@ -464,19 +472,19 @@ export function ArchitectureModal() {
               </h3>
               <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 <div className="flex items-center gap-2 rounded-lg border bg-card p-3">
-                  <ListChecks className="h-4 w-4 text-primary" />
+                  <ListChecks className="h-4 w-4 text-muted-foreground" />
                   {t('architecture:guarantees.noEvidenceNoValue')}
                 </div>
                 <div className="flex items-center gap-2 rounded-lg border bg-card p-3">
-                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  <ShieldCheck className="h-4 w-4 text-muted-foreground" />
                   {t('architecture:guarantees.secrets')}
                 </div>
                 <div className="flex items-center gap-2 rounded-lg border bg-card p-3">
-                  <Database className="h-4 w-4 text-primary" />
+                  <Database className="h-4 w-4 text-muted-foreground" />
                   {t('architecture:guarantees.immutable')}
                 </div>
                 <div className="flex items-center gap-2 rounded-lg border bg-card p-3">
-                  <PencilLine className="h-4 w-4 text-primary" />
+                  <PencilLine className="h-4 w-4 text-muted-foreground" />
                   {t('architecture:guarantees.editsNeedEvidence')}
                 </div>
               </div>

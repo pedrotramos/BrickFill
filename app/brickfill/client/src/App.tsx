@@ -13,25 +13,30 @@ import { OverviewPage } from './pages/OverviewPage';
 import { ProductPage } from './pages/ProductPage';
 import { SettingsPage } from './pages/SettingsPage';
 
+/** Sidebar items as in the workspace: compact rows, the current page on a blue wash with blue text. */
+const itemClass =
+  'touch-min flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 const navClass = ({ isActive }: { isActive: boolean }) =>
-  `touch-min inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-    isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+  `${itemClass} ${
+    isActive
+      ? 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground'
+      : 'text-sidebar-foreground hover:bg-sidebar-accent/60'
   }`;
 
 function Navigation({ onClick }: { onClick?: () => void }) {
   const { t } = useTranslation();
   return (
-    <nav aria-label={t('common:nav.label')} className="flex flex-col gap-1 md:flex-row">
+    <nav aria-label={t('common:nav.label')} className="flex flex-col gap-0.5">
       <NavLink className={navClass} end onClick={onClick} to="/">
-        <LayoutDashboard className="h-4 w-4" />
+        <LayoutDashboard aria-hidden className="h-4 w-4" />
         {t('common:nav.overview')}
       </NavLink>
       <NavLink className={navClass} onClick={onClick} to="/catalog">
-        <PackageSearch className="h-4 w-4" />
+        <PackageSearch aria-hidden className="h-4 w-4" />
         {t('common:nav.catalog')}
       </NavLink>
       <NavLink className={navClass} onClick={onClick} to="/settings">
-        <SlidersHorizontal className="h-4 w-4" />
+        <SlidersHorizontal aria-hidden className="h-4 w-4" />
         {t('common:nav.settings')}
       </NavLink>
     </nav>
@@ -39,37 +44,58 @@ function Navigation({ onClick }: { onClick?: () => void }) {
 }
 
 /** BrickFill logo, plus "for <customer>" (and the customer's logo) when the deployment sets co-branding. */
-function Brand() {
+function Brand({ onClick }: { onClick?: () => void }) {
   const { t } = useTranslation();
   const { brand } = useAppConfig();
   return (
-    <Link aria-label={t('common:app.home')} className="touch-min flex min-w-0 shrink-0 items-center gap-3" to="/">
-      <BrandLogo />
+    <div className="min-w-0 space-y-2">
+      <Link
+        aria-label={t('common:app.home')}
+        className="touch-min flex w-fit items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        onClick={onClick}
+        to="/"
+      >
+        <BrandLogo markClassName="h-7 w-7" />
+      </Link>
       {brand.customerName || brand.customerLogoUrl ? (
-        <span className="hidden min-w-0 items-center gap-2 border-l pl-3 text-sm text-muted-foreground sm:flex">
+        <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
           {brand.customerLogoUrl ? (
-            <img alt={brand.customerName ?? ''} className="h-6 max-w-28 object-contain" src={brand.customerLogoUrl} />
+            <img alt={brand.customerName ?? ''} className="h-5 max-w-24 object-contain" src={brand.customerLogoUrl} />
           ) : null}
           {brand.customerName ? (
             <span className="truncate">{t('common:app.forCustomer', { name: brand.customerName })}</span>
           ) : null}
         </span>
       ) : null}
-    </Link>
+    </div>
   );
 }
 
-function Footer() {
+function Credits({ className = '' }: { className?: string }) {
   const { t } = useTranslation();
   return (
-    <footer className="border-t px-4 py-4 text-xs text-muted-foreground md:px-6">
-      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-2">
-        <span>{t('common:footer.product')}</span>
-        <span>
-          {t('common:footer.builtOn')} · {t('common:footer.webData')}
-        </span>
+    <p className={`text-xs leading-5 text-muted-foreground ${className}`.trim()}>
+      {t('common:footer.product')}
+      <br />
+      {t('common:footer.builtOn')} · {t('common:footer.webData')}
+    </p>
+  );
+}
+
+/** Everything the sidebar holds, shared by the fixed desktop sidebar and the mobile sheet. */
+function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <div className="flex h-full flex-col gap-6 px-3 py-4">
+      <div className="px-1">
+        <Brand onClick={onNavigate} />
       </div>
-    </footer>
+      <Navigation onClick={onNavigate} />
+      <div className="mt-auto space-y-2">
+        <ArchitectureModal triggerClassName={`${itemClass} text-sidebar-foreground hover:bg-sidebar-accent/60`} />
+        <LanguageSwitcher wide />
+        <Credits className="px-1 pt-3" />
+      </div>
+    </div>
   );
 }
 
@@ -77,7 +103,7 @@ function Layout() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground md:grid md:grid-cols-[15rem_minmax(0,1fr)]">
       {/* off screen until focused: the first Tab stop on every page */}
       <a
         className="fixed left-4 top-3 z-50 -translate-y-[200%] rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground focus:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -85,40 +111,34 @@ function Layout() {
       >
         {t('common:nav.skip')}
       </a>
-      <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-4 px-4 md:gap-6 md:px-6">
-          <Brand />
-          <div className="hidden md:block">
-            <Navigation />
-          </div>
-          <div className="ml-auto hidden text-xs text-muted-foreground xl:block">{t('common:app.tagline')}</div>
-          <div className="ml-auto flex items-center gap-2 xl:ml-0">
-            <LanguageSwitcher />
-            <ArchitectureModal />
-            <div className="md:hidden">
-              <Sheet open={open} onOpenChange={setOpen}>
-                <Button aria-label={t('common:nav.open')} onClick={() => setOpen(true)} size="icon" variant="ghost">
-                  <Menu className="h-5 w-5" />
-                </Button>
-                <SheetContent side="left">
-                  <SheetHeader>
-                    <SheetTitle>
-                      <BrandLogo />
-                    </SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-6 px-4">
-                    <Navigation onClick={() => setOpen(false)} />
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-          </div>
+      {/* the column runs the page's full height; only its content sticks to the viewport */}
+      <aside className="hidden border-r border-sidebar-border bg-sidebar md:block">
+        <div className="sticky top-0 h-screen overflow-y-auto">
+          <SidebarContent />
+        </div>
+      </aside>
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-sidebar px-4 md:hidden">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <Button aria-label={t('common:nav.open')} onClick={() => setOpen(true)} size="icon" variant="ghost">
+            <Menu className="h-5 w-5" />
+          </Button>
+          <SheetContent className="w-72 gap-0 bg-sidebar p-0" side="left">
+            <SheetHeader className="sr-only">
+              <SheetTitle>{t('common:nav.label')}</SheetTitle>
+            </SheetHeader>
+            <SidebarContent onNavigate={() => setOpen(false)} />
+          </SheetContent>
+        </Sheet>
+        <Link aria-label={t('common:app.home')} className="touch-min flex items-center" to="/">
+          <BrandLogo markClassName="h-7 w-7" />
+        </Link>
+        <div className="ml-auto">
+          <LanguageSwitcher />
         </div>
       </header>
-      <main className="flex-1 px-4 py-6 focus:outline-none md:px-6 md:py-8" id="main" tabIndex={-1}>
+      <main className="min-w-0 px-4 py-6 focus:outline-none md:px-8 md:py-7" id="main" tabIndex={-1}>
         <Outlet />
       </main>
-      <Footer />
     </div>
   );
 }

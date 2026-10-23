@@ -57,6 +57,6 @@ describe('branding', () => {
     expect(isHexColor('#C2410C')).toBe(true);
     expect(isHexColor('red')).toBe(false);
     expect(foregroundFor('#C2410C')).toBe('#FFFFFF');
-    expect(foregroundFor('#FDE68A')).toBe('#1B2A3A');
+    expect(foregroundFor('#FDE68A')).toBe('#11171C');
   });
 });

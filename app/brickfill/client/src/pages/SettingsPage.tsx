@@ -41,8 +41,9 @@ import {
   TableRow,
   Textarea,
 } from '@databricks/appkit-ui/react';
-import { AlertCircle, Languages, Lock, Pencil, Plus, RefreshCw, Save, Trash2 } from 'lucide-react';
+import { AlertCircle, Languages, Lock, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useTranslation } from '../i18n/react';
+import { PageHeader, RefreshButton } from '../components/PageHeader';
 import { ApiError, errorText } from '../lib/api-errors';
 import { useCatalogQuery } from '../lib/catalog-query';
 import { formatDate } from '../lib/formatters';
@@ -288,7 +289,7 @@ function GlobalSettingsCard({
     <Card>
       <CardHeader>
         <CardTitle aria-level={2} role="heading" className="flex items-center gap-2">
-          <Languages className="h-5 w-5 text-primary" />
+          <Languages aria-hidden className="h-5 w-5 text-muted-foreground" />
           {t('settings:global.title')}
         </CardTitle>
         <CardDescription>
@@ -902,21 +903,11 @@ export function SettingsPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{t('settings:title')}</h1>
-          <p className="mt-1 max-w-3xl text-muted-foreground">{t('settings:subtitle')}</p>
-        </div>
-        <Button
-          aria-label={t('settings:reload')}
-          disabled={loading}
-          size="icon"
-          variant="outline"
-          onClick={() => void reload()}
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-        </Button>
-      </div>
+      <PageHeader
+        actions={<RefreshButton busy={loading} label={t('settings:reload')} onClick={() => void reload()} />}
+        description={t('settings:subtitle')}
+        title={t('settings:title')}
+      />
 
       {conflict ? (
         <Alert variant="destructive">

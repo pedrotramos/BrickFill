@@ -25,7 +25,6 @@
     }
   },
   "nextAction": {
-    "title": "Next step",
     "heading": "Start with the products that need review",
     "description": "Open the catalog, check the sources and record every correction with its evidence.",
     "cta": "Open the review queue"
