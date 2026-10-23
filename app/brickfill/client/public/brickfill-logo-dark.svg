@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="232" height="64" viewBox="0 0 232 64" fill="none">
+  <title>BrickFill</title>
+  <rect x="10" y="10" width="44" height="12" rx="3" fill="#E8ECF0" fill-opacity="0.18"/>
+  <rect x="10" y="26" width="44" height="12" rx="3" fill="#E8ECF0" fill-opacity="0.18"/>
+  <rect x="10" y="26" width="28" height="12" rx="3" fill="#F06A35"/>
+  <rect x="10" y="42" width="44" height="12" rx="3" fill="#F06A35"/>
+  <text x="64" y="43" fill="#E8ECF0" font-family="Inter, 'Segoe UI', system-ui, -apple-system, Helvetica, Arial, sans-serif" font-size="30" font-weight="800" letter-spacing="-0.9">BrickFill</text>
+</svg>
