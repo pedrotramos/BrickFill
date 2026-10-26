@@ -179,7 +179,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh     # then open a new terminal
 uv --version
 ```
 
-You don't need to install Python: `uv` downloads a compatible version (3.10 to 3.12) the first time.
+You don't need to install Python: `uv` downloads a compatible version (3.11 to 3.12) the first time.
 
 ### 2.3 Project code
 

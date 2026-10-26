@@ -4,14 +4,13 @@ import asyncio
 import json
 from contextlib import AsyncExitStack, nullcontext
 from types import TracebackType
-from typing import Any
+from typing import Any, Self
 
 import httpx
 from databricks.sdk import WorkspaceClient
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client  # MCP >= 1.30 (accepts http_client)
 from mcp.shared._httpx_utils import create_mcp_http_client
-from typing_extensions import Self
 
 
 class FirecrawlMCPClient:

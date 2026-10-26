@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -72,7 +72,7 @@ def create_source_views(
 def run_contract_checks(catalog: str, schema: str, adapter: str, results_table: str = "contract_check") -> list[dict]:
     """Validate the canonical views; every result is appended to ``<catalog>.<schema>.contract_check``."""
     namespace = _namespace(catalog, schema)
-    checked_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    checked_at = datetime.now(UTC).replace(tzinfo=None)
     results: list[dict[str, Any]] = []
     schema_ok = True
     for contract in VIEWS:

@@ -134,14 +134,14 @@ display(
 # COMMAND ----------
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from brickfill.enrich import research
 from brickfill.secrets import firecrawl_api_key
 
 firecrawl_key = firecrawl_api_key(dbutils, catalog=secret_catalog, schema=secret_schema, key=firecrawl_secret_key)
 run_id = str(uuid.uuid4())
-started_at = datetime.now(timezone.utc).replace(tzinfo=None)
+started_at = datetime.now(UTC).replace(tzinfo=None)
 
 outcomes = research(
     seeds,

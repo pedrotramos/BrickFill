@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
@@ -9,7 +9,7 @@ from brickfill.publish import check_plan, merge_statement, publication_plan
 
 NAMESPACE = "`main`.`brickfill`"
 DESTINATION = "main.ecommerce.approved_products"
-CREATED = datetime(2026, 10, 20, 12, 0, tzinfo=timezone.utc).replace(tzinfo=None)  # Spark reads naive UTC
+CREATED = datetime(2026, 10, 20, 12, 0, tzinfo=UTC).replace(tzinfo=None)  # Spark reads naive UTC
 
 
 def _compact(sql: str) -> str:

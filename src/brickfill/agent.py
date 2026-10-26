@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
 
@@ -655,7 +655,7 @@ class CatalogResearchAgent:
                     result,
                     definitions=definitions,
                     seed=seed,
-                    retrieved_at=datetime.now(timezone.utc),
+                    retrieved_at=datetime.now(UTC),
                     discovered_urls=discovery.candidate_urls,
                     scraped_urls=sorted(scraped_urls),
                     web_search_queries=discovery.queries,

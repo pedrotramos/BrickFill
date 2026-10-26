@@ -6,11 +6,10 @@ import asyncio
 import copy
 import json
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Self
 
 import pytest
 from conftest import EAN, OFFICIAL_URL, definition, make_result
-from typing_extensions import Self
 
 from brickfill import agent as agent_module
 from brickfill.agent import CatalogResearchAgent

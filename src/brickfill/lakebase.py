@@ -7,7 +7,7 @@ and settings. The jobs only read it; every read tolerates tables the app has not
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, NamedTuple
 
 from brickfill.identifiers import pg_identifier
@@ -25,7 +25,7 @@ class Decision(NamedTuple):
 def naive_utc(value: datetime | None) -> datetime | None:
     """Lakebase returns aware timestamps and Spark naive UTC ones; compare them as naive UTC."""
     if value is not None and value.tzinfo is not None:
-        return value.astimezone(timezone.utc).replace(tzinfo=None)
+        return value.astimezone(UTC).replace(tzinfo=None)
     return value
 
 

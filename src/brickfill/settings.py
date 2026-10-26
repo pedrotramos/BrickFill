@@ -14,7 +14,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from brickfill.content.loader import (
@@ -49,7 +49,7 @@ class SettingsSnapshot:
     app: dict[str, Any] | None = None
     scopes: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
     source: str = "job_parameters"
-    read_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    read_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def as_dict(self) -> dict[str, Any]:
         return {
