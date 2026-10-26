@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from brickfill.content.loader import EffectiveRules, default_rules
 from brickfill.issues import applicability_reason, rejection_reason
@@ -310,7 +310,7 @@ def enforce_evidence_policy(
         normalized.short_description = _truncate_at_word(
             normalized.short_description, rules.profile.short_description.max_length
         )
-    captured_at = retrieved_at or datetime.now(timezone.utc)
+    captured_at = retrieved_at or datetime.now(UTC)
     discovered = {url for value in (discovered_urls or []) if (url := canonicalize_url(value))}
     restrict_to_scraped = scraped_urls is not None
     scraped = {url for value in (scraped_urls or []) if (url := canonicalize_url(value))}

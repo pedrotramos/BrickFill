@@ -10,16 +10,15 @@ import math
 import re
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 from urllib.parse import urlsplit
 
 import httpx
 from databricks.sdk.errors import DatabricksError
 from PIL import Image
 from tenacity import AsyncRetrying, retry_if_exception, stop_after_attempt, wait_exponential
-from typing_extensions import Self
 
 from brickfill.errors import safe_exception_message
 from brickfill.issues import make
@@ -384,7 +383,7 @@ class CaptureCollector:
             metadata = data.get("metadata") or {}
             page.source_text = _source_text(data)
             page.final_url = metadata.get("url") or metadata.get("sourceURL") or url
-            page.captured_at = datetime.now(timezone.utc)
+            page.captured_at = datetime.now(UTC)
             directory = f"{self.run_id}/{page.capture_id}"
             public_data = {key: data[key] for key in ("markdown", "metadata", "links", "images") if key in data}
             page.tool_payload = json.dumps(
@@ -746,7 +745,7 @@ class CaptureCollector:
             for evidence, _value, _index in assigned:
                 evidence.capture_error = reason
             return
-        captured_at = datetime.now(timezone.utc)
+        captured_at = datetime.now(UTC)
         focused_text = _source_text(data)
         shots: dict[int, FocusShot] = {}
         for target in targets:
@@ -842,7 +841,7 @@ def evidence_rows(
         for evidence in attribute.visual_evidence:
             row = evidence.model_dump(exclude={"crop_box"})
             if row["captured_at"] is not None:
-                row["captured_at"] = row["captured_at"].astimezone(timezone.utc).replace(tzinfo=None)
+                row["captured_at"] = row["captured_at"].astimezone(UTC).replace(tzinfo=None)
             row.update(
                 run_id=run_id,
                 source_run_id=source_run_id,

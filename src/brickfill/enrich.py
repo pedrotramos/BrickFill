@@ -6,7 +6,7 @@ import uuid
 from collections.abc import Coroutine
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, TypeVar
 
 from databricks.sdk.runtime import dbutils, spark
@@ -41,7 +41,7 @@ T = TypeVar("T")
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def _run_async(coroutine: Coroutine[Any, Any, T]) -> T:

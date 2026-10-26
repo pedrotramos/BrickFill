@@ -8,7 +8,7 @@
 <p align="center">
   <a href="https://github.com/pedrotramos/BrickFill/actions/workflows/ci.yml"><img src="https://github.com/pedrotramos/BrickFill/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License: Apache-2.0"></a>
-  <img src="https://img.shields.io/badge/python-3.10%E2%80%933.12-blue.svg" alt="Python 3.10–3.12">
+  <img src="https://img.shields.io/badge/python-3.11%E2%80%933.12-blue.svg" alt="Python 3.11–3.12">
   <img src="https://img.shields.io/badge/node-22-green.svg" alt="Node.js 22">
   <img src="https://img.shields.io/badge/status-pre--1.0-orange.svg" alt="Status: pre-1.0">
 </p>

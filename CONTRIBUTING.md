@@ -24,7 +24,7 @@ Security problems go through [SECURITY.md](SECURITY.md), never through a public 
 ## Development setup
 
 Requirements:
-- Python 3.10–3.12 and [`uv`](https://docs.astral.sh/uv/);
+- Python 3.11–3.12 and [`uv`](https://docs.astral.sh/uv/);
 - Node.js 22 (`app/brickfill/.nvmrc`);
 - Databricks CLI ≥ 1.19, only for the bundle checks and for deploying.
 

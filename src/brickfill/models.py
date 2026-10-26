@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -67,7 +67,7 @@ class Evidence(BaseModel):
     source_title: str = ""
     source_tier: SourceTier
     excerpt: str = Field(min_length=1, max_length=1200)
-    retrieved_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    retrieved_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     retrieval_provider: str = "firecrawl"
     discovery_provider: str | None = None
 
