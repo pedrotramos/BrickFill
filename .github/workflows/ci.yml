@@ -88,6 +88,9 @@ jobs:
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
+          # body-parser < 1.20.9 (express 4 needs ~1.20.5): the Databricks Apps npm mirror doesn't serve 1.20.9 yet.
+          # Remove once app/brickfill/package-lock.json has it.
+          allow-ghsas: GHSA-27r3-jxmh-p828
 
   ci-ok:
     name: ci-ok
