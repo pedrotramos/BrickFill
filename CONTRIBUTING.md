@@ -79,6 +79,7 @@ bundles (root and `app/brickfill`) when you change `databricks.yml` or `resource
 | Quality score formula | `src/brickfill/quality.py` | Update `client/src/components/QualityInfo.tsx` and its `qualityInfo` texts |
 | A new catalog screen | `app/brickfill/config/lakebase-queries/*.sql` | Add the row type to `client/src/lib/catalog-query.ts` |
 | Issue code | `src/brickfill/issues.py` | Add `issues.codes.<CODE>` to the three `issues.json` |
+| Python dependency | `pyproject.toml` | `uv lock`, or, without access to pypi.org, the Relock workflow (`.github/workflows/relock.yml`); a job runtime package also gets its exact pin in `job_dependencies` (`databricks.yml`) |
 
 Tests fail while a generated file is stale.
 
