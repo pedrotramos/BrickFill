@@ -7,6 +7,12 @@ versions the canonical data contract separately.
 
 ## [Unreleased]
 
+### Security
+
+- Review app dependencies upgraded past known vulnerabilities: react-router 7.18.4, zod 4.6.7, and in development
+  sharp 0.35.5 and vitest 4.1.12. Transitive packages that AppKit pins (OpenTelemetry, dompurify, echarts, js-yaml,
+  qs, uuid, ws) are lifted to patched versions with npm `overrides`.
+
 ## [0.2.0] - 2026-10-23
 
 ### Changed

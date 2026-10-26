@@ -68,7 +68,11 @@ bundles (root and `app/brickfill`) when you change `databricks.yml` or `resource
   warehouse. A query that reads a results table needs an empty stand-in (`_pending_<table>.sql`) or returns no rows
   on a fresh install.
 - **App dependencies.** Databricks Apps installs npm packages from its own mirror, which refuses some public packages
-  and versions. Deploy to a dev workspace before merging a new or updated dependency.
+  and versions. Deploy to a dev workspace before merging a new or updated dependency. AppKit pins its dependencies
+  exactly, so `overrides` in `package.json` lifts the vulnerable ones (OpenTelemetry, dompurify, echarts, js-yaml, qs,
+  uuid, ws, zod) to patched versions; drop each entry once an AppKit upgrade ships that version or newer. Keep the
+  experimental OpenTelemetry packages at 0.219.x while AppKit is 0.38: 0.220 changed the `BatchLogRecordProcessor`
+  constructor that AppKit calls, which silently stops log export.
 
 ## Common changes
 
