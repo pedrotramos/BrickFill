@@ -1,0 +1,39 @@
+# Regenerates uv.lock on a GitHub runner, which reaches pypi.org, and publishes it as an artifact to commit by hand:
+#   gh workflow run relock.yml --ref <branch> -f upgrade_packages="pillow certifi"
+#   gh run download <run-id> -n uv-lock
+# The token stays read-only, and the commit pushed afterwards runs CI as usual.
+name: Relock
+
+on:
+  workflow_dispatch:
+    inputs:
+      upgrade_packages:
+        description: Packages to upgrade within pyproject.toml's constraints (space-separated); empty only relocks
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  relock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          python-version: "3.12"
+      - name: Lock
+        env:
+          UPGRADE_PACKAGES: ${{ inputs.upgrade_packages }}
+        run: |
+          args=()
+          for package in $UPGRADE_PACKAGES; do args+=(--upgrade-package "$package"); done
+          uv lock "${args[@]}"
+          uv lock --check
+          git diff --stat -- uv.lock
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: uv-lock
+          path: uv.lock
+          if-no-files-found: error
