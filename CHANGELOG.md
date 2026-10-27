@@ -7,6 +7,8 @@ versions the canonical data contract separately.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-27
+
 ### Changed
 
 - Python 3.11 is the minimum version (3.11–3.12). Pillow 13 no longer supports Python 3.10, which reaches end of life
@@ -68,6 +70,7 @@ First public release.
 - `scripts/replay_capture.py`: replays the evidence crops of a past run from its archived text maps, without credits.
 - CI on GitHub Actions (Python, app, bundles, secret scanning) and a tag-driven release workflow.
 
-[Unreleased]: https://github.com/pedrotramos/BrickFill/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/pedrotramos/BrickFill/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/pedrotramos/BrickFill/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pedrotramos/BrickFill/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pedrotramos/BrickFill/releases/tag/v0.1.0
