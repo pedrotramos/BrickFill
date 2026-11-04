@@ -220,7 +220,8 @@
       "SCREENSHOT_ONLY": "Página mudou durante a captura — confira a captura completa",
       "UNSUPPORTED": "Fonte sem captura visual (PDF) — revisão necessária",
       "NOT_CAPTURED": "Fonte não capturada — revisão necessária",
-      "FAILED": "Falha na captura — revisão necessária"
+      "FAILED": "Falha na captura — revisão necessária",
+      "BLANK": "A página não foi renderizada (captura em branco) — revisão necessária"
     },
     "capturedAt": "Capturada em {{date}}",
     "sourceValue": "Valor na fonte: {{value}}",

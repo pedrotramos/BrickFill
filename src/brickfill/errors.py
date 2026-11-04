@@ -19,4 +19,6 @@ def safe_exception_message(exc: BaseException, secret: str, limit: int = 2000) -
             visit(cause)
 
     visit(exc)
-    return " | ".join(messages).replace(secret, "[REDACTED]")[:limit]
+    message = " | ".join(messages)
+    # an empty secret (no key configured) would otherwise "redact" between every character
+    return (message.replace(secret, "[REDACTED]") if secret else message)[:limit]

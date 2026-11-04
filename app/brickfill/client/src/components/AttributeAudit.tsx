@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '../i18n/react';
 import { formatDate } from '../lib/formatters';
-import { evidenceFileUrl, hostname } from '../lib/evidence';
+import { captureLabelKey, evidenceFileUrl, hostname } from '../lib/evidence';
 import {
   type ManualEvidence,
   type ManualEvidenceDraft,
@@ -133,17 +133,6 @@ function EvidenceImage({
 
 const SOURCE_TIERS = new Set(['official', 'authorized_distributor', 'recognized_retailer', 'other']);
 
-/** Why a value has no crop (capture_status written by the enrichment job); translated under product:audit.capture. */
-const CAPTURE_STATUSES = new Set([
-  'NOT_VISIBLE',
-  'NO_MATCH',
-  'AMBIGUOUS',
-  'SCREENSHOT_ONLY',
-  'UNSUPPORTED',
-  'NOT_CAPTURED',
-  'FAILED',
-]);
-
 export function AttributeAudit({
   attributeName,
   aiValue,
@@ -201,13 +190,8 @@ export function AttributeAudit({
       {hasUnsupportedValue ? t('product:audit.noReference') : t('product:attributes.notFound')}
     </ToneBadge>
   );
-  const captureLabel = (reference: EvidenceReference) => {
-    if (reference.capture_status === 'COMPLETE') return t('product:audit.capture.COMPLETE');
-    if (!reference.capture_status && !captureExpected) return t('product:audit.capture.LEGACY');
-    return CAPTURE_STATUSES.has(reference.capture_status ?? '')
-      ? t(`product:audit.capture.${reference.capture_status}`)
-      : t('product:audit.capture.INCOMPLETE');
-  };
+  const captureLabel = (reference: EvidenceReference) =>
+    t(`product:audit.capture.${captureLabelKey(reference.capture_status, reference.capture_error, captureExpected)}`);
   const notFound = t('product:attributes.notFound');
 
   const removeOverride = async () => {

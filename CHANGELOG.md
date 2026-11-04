@@ -7,6 +7,24 @@ versions the canonical data contract separately.
 
 ## [Unreleased]
 
+### Fixed
+
+- Full-page crops work again with Firecrawl's tall rendering window (1920×100000). The crop used to require the image
+  height to match the document height, so every web crop failed and every page paid for a focused capture. One scale
+  from the width is used now, and only blocks inside the part of the layout that the image shows are cropped.
+- A blank (single-color) screenshot is no longer shown as the page capture: the page fails with "blank screenshot",
+  the image stays archived for the audit, and the app shows its own label.
+- A page whose text map is missing after the screenshot now fails (`FAILED`, with the reason) instead of being labeled
+  `SCREENSHOT_ONLY`.
+- Pages that add a fragment, a variant or tracking parameters to their address during the capture are no longer
+  rejected as "changed address"; a change of path still is.
+- Error messages are no longer garbled when no secret is configured.
+
+### Changed
+
+- `scripts/replay_capture.py` also crops the archived screenshot with the current code and prints the window height
+  of the text map, so crop regressions are caught without spending credits.
+
 ## [0.2.1] - 2026-10-27
 
 ### Changed
