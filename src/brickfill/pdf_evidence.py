@@ -70,7 +70,10 @@ async def check_public_url(url: str, resolve: Resolver | None = None) -> None:
         literal = ipaddress.ip_address(host)
     except ValueError:
         literal = None
-    addresses = [str(literal)] if literal else await (resolve or _resolve)(host, port)
+    try:
+        addresses = [str(literal)] if literal else await (resolve or _resolve)(host, port)
+    except OSError as exc:  # socket.gaierror: the name does not resolve
+        raise PdfRefused("PDF host does not resolve") from exc
     if not addresses:
         raise PdfRefused("PDF host does not resolve")
     for address in addresses:
