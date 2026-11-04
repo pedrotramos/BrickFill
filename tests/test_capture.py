@@ -168,3 +168,40 @@ def test_missing_text_map_fails_instead_of_screenshot_only(tmp_path):
     assert page.status == "FAILED"
     assert page.error == "ValueError: Missing rendered text coordinates"
     assert page.screenshot_path  # the real page screenshot stays available to the reviewer
+
+
+def test_focused_capture_shoots_the_full_page_in_the_tall_window(tmp_path):
+    """In the 1920x100000 window the page never scrolls; a value far below the first screen is still cropped."""
+    low = text_map([277, 2400, 1366, 72])
+    collector = capture(tmp_path, firecrawl(png(1920, 2499), [low, low]))
+    page = collector.pages[PAGE_URL]
+    sent: list[dict] = []
+    focus_shot = "https://cdn.example.com/focus.png"
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url == focus_shot:
+            return httpx.Response(200, content=png(1920, 2499))
+        sent.append(json.loads(request.content))
+        reveal = {"href": PAGE_URL, "found": True, "revealedBy": []}
+        returns = [{"href": PAGE_URL}, reveal, {"href": PAGE_URL}, low, low]
+        data = {
+            "markdown": "Power: 750 W",
+            "metadata": {"url": PAGE_URL, "statusCode": 200, "creditsUsed": 1},
+            "actions": {
+                "screenshots": [focus_shot],
+                "javascriptReturns": [{"type": "executeJavascript", "value": json.dumps(item)} for item in returns],
+            },
+        }
+        return httpx.Response(200, json={"success": True, "data": data})
+
+    async def go():
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
+            collector._http = http
+            item = evidence()
+            await collector._focus_page(page, [(item, "750 W")])
+            return item
+
+    item = asyncio.run(go())
+    shots = [action for action in sent[0]["actions"] if action["type"] == "screenshot"]
+    assert shots == [{"type": "screenshot", "fullPage": True, "quality": 100}]
+    assert item.capture_status == "COMPLETE", item.capture_error

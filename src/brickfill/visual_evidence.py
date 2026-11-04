@@ -344,7 +344,7 @@ class PageCapture:
 
 @dataclass
 class FocusShot:
-    """One value of a focused capture: what reveal.js did, the two text maps and the viewport screenshot."""
+    """One value of a focused capture: what reveal.js did, the two text maps and the full-page screenshot."""
 
     reveal: dict[str, Any]
     before: dict[str, Any]
@@ -846,7 +846,7 @@ class CaptureCollector:
         """Second capture for values that are on the page but were not cropped from the full-page screenshot.
 
         For each such value, the page's own control is clicked when the value sits in a collapsed section or tab
-        (reveal.js), the value is centered and a screenshot of the visible window is taken between two text maps.
+        (reveal.js), the value is scrolled to and a full-page screenshot is taken between two text maps.
         The window is not resized, so the text map and the image describe the same layout. One paid scrape per page
         covers all of its values. A value that still cannot be shown gets NOT_VISIBLE with the reason.
         """
@@ -899,7 +899,9 @@ class CaptureCollector:
                 {"type": "executeJavascript", "script": _script("scroll", target["index"])},
                 {"type": "wait", "milliseconds": 300},
                 {"type": "executeJavascript", "script": DOM_SCRIPT},
-                {"type": "screenshot", "fullPage": False, "quality": 100},
+                # full page: in Firecrawl's 1920x100000 window the page never scrolls, and a screenshot of the
+                # visible window is cut to its first 1080 px, leaving out any value below them
+                {"type": "screenshot", "fullPage": True, "quality": 100},
                 {"type": "executeJavascript", "script": DOM_SCRIPT},
             ]
         payload: dict[str, Any] = {"url": page.url, "formats": ["markdown"], "maxAge": 0, "actions": actions}
@@ -968,9 +970,7 @@ class CaptureCollector:
                 self._not_visible(evidence, shot.problem or "Focused screenshot is unavailable.")
                 continue
             attempt = evidence.model_copy(update={"crop_path": None, "crop_box": None, "crop_sha256": None})
-            self._crop_image(
-                attempt, value, shot.screenshot, shot.after, shot.before, f"{directory}/crops", viewport=True
-            )
+            self._crop_image(attempt, value, shot.screenshot, shot.after, shot.before, f"{directory}/crops")
             if attempt.capture_status == "COMPLETE":
                 evidence.capture_id = capture_id
                 evidence.captured_at = captured_at
