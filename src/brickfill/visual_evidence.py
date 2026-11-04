@@ -71,6 +71,8 @@ def _script(name: str, argument: Any = None) -> str:
 
 DOM_SCRIPT = _script("dom_map")
 DISMISS_SCRIPT = _script("dismiss")
+OVERLAYS_SCRIPT = _script("overlays")
+OVERLAY_PASSES = 3  # answering a notice can open another one
 EXPAND_SCRIPT = _script("expand")
 SCROLL_BOTTOM_SCRIPT = _script("scroll", "bottom")
 SCROLL_TOP_SCRIPT = _script("scroll", "top")
@@ -367,6 +369,7 @@ class CaptureCollector:
         location: dict[str, Any] | None = None,
         pdf_parser: DocumentParser | None = None,
         pdf_parser_max_pages: int = 20,
+        dismiss_overlays: bool = False,
     ) -> None:
         if max_credits is not None and max_credits < 1:
             raise ValueError("Credit budget must be positive")
@@ -390,6 +393,27 @@ class CaptureCollector:
         # Reads scanned PDFs (no text layer), e.g. ai_parse_document on the job; None keeps them NO_MATCH.
         self.pdf_parser = pdf_parser
         self.pdf_parser_max_pages = pdf_parser_max_pages
+        # Also close welcome tours, location prompts, newsletters and stacked dialogs (capture_scripts/overlays.js).
+        self.dismiss_overlays = dismiss_overlays
+
+    def _dismiss_actions(self) -> list[dict[str, Any]]:
+        """Refuse the cookie banner, then (with ``dismiss_overlays``) answer the other notices a few times."""
+        actions: list[dict[str, Any]] = [
+            {"type": "executeJavascript", "script": DISMISS_SCRIPT},
+            {"type": "wait", "milliseconds": 500},
+        ]
+        if self.dismiss_overlays:
+            for _ in range(OVERLAY_PASSES):
+                actions += [
+                    {"type": "executeJavascript", "script": OVERLAYS_SCRIPT},
+                    {"type": "wait", "milliseconds": 600},
+                ]
+        return actions
+
+    @property
+    def _dismiss_returns(self) -> int:
+        """Script returns of :meth:`_dismiss_actions` at the start of ``javascriptReturns``."""
+        return 1 + (OVERLAY_PASSES if self.dismiss_overlays else 0)
 
     async def __aenter__(self) -> Self:
         if self._http is None:
@@ -478,8 +502,7 @@ class CaptureCollector:
                 {"type": "wait", "milliseconds": 1000},
                 # Refuse the cookie banner, open what a visitor can open (accordions, <details>, "show more"), then
                 # scroll to the end and back so lazy-loaded content is rendered before the text maps and the screenshot.
-                {"type": "executeJavascript", "script": DISMISS_SCRIPT},
-                {"type": "wait", "milliseconds": 500},
+                *self._dismiss_actions(),
                 {"type": "executeJavascript", "script": EXPAND_SCRIPT},
                 {"type": "executeJavascript", "script": SCROLL_BOTTOM_SCRIPT},
                 {"type": "wait", "milliseconds": 1500},
@@ -868,11 +891,7 @@ class CaptureCollector:
             for evidence, _value, _index in assigned:
                 self._not_visible(evidence, "Recapture credit budget exhausted before the focused capture.")
             return
-        actions: list[dict[str, Any]] = [
-            {"type": "wait", "milliseconds": 1000},
-            {"type": "executeJavascript", "script": DISMISS_SCRIPT},
-            {"type": "wait", "milliseconds": 500},
-        ]
+        actions: list[dict[str, Any]] = [{"type": "wait", "milliseconds": 1000}, *self._dismiss_actions()]
         for target in targets:
             actions += [
                 {"type": "executeJavascript", "script": _script("reveal", target)},
@@ -892,7 +911,7 @@ class CaptureCollector:
             data = await self._post_scrape(payload, page)
             returns = (data.get("actions") or {}).get("javascriptReturns") or []
             screenshots = (data.get("actions") or {}).get("screenshots") or []
-            returns = returns[1:]  # the first return is the cookie banner refusal
+            returns = returns[self._dismiss_returns :]  # the cookie banner refusal (and the other notices)
             if len(returns) != 4 * len(targets) or len(screenshots) != len(targets):
                 raise ValueError("Firecrawl did not return every focused capture")
         except (httpx.HTTPError, DatabricksError, OSError, ValueError, KeyError, TypeError) as exc:

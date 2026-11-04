@@ -29,6 +29,7 @@ dbutils.widgets.text("concurrency", "2")
 dbutils.widgets.text("firecrawl_concurrency", "2")
 dbutils.widgets.text("ean", "")
 dbutils.widgets.text("evidence_volume", "brickfill_evidence")
+dbutils.widgets.text("dismiss_overlays", "false")
 dbutils.widgets.text("pdf_ocr", "false")
 dbutils.widgets.text("pdf_ocr_max_pages", "20")
 dbutils.widgets.text("reviewers", "0")
@@ -54,6 +55,7 @@ concurrency = int(dbutils.widgets.get("concurrency"))
 firecrawl_concurrency = int(dbutils.widgets.get("firecrawl_concurrency"))
 ean = dbutils.widgets.get("ean").strip()
 evidence_volume = dbutils.widgets.get("evidence_volume")
+dismiss_overlays = dbutils.widgets.get("dismiss_overlays").strip().lower() == "true"
 pdf_ocr = dbutils.widgets.get("pdf_ocr").strip().lower() == "true"
 pdf_ocr_max_pages = int(dbutils.widgets.get("pdf_ocr_max_pages") or "20")
 reviewers = int(dbutils.widgets.get("reviewers"))
@@ -165,6 +167,7 @@ outcomes = research(
     rules_for=resolver,
     pdf_parser=SparkDocumentParser(spark) if pdf_ocr else None,
     pdf_parser_max_pages=pdf_ocr_max_pages,
+    dismiss_overlays=dismiss_overlays,
 )
 success_count = sum(1 for _seed, result, _issues, _error in outcomes if result)
 print(f"Run {run_id}: {success_count}/{len(seeds)} products researched")

@@ -75,6 +75,9 @@ resources:
         - name: evidence_volume
           default: ${var.evidence_volume}
         # Scanned PDFs (no text layer) read with ai_parse_document, billed per page; PDFs with text never need it.
+        # Also close notices other than the cookie banner before the screenshots (welcome tours, region prompts...).
+        - name: dismiss_overlays
+          default: ${var.dismiss_overlays}
         - name: pdf_ocr
           default: ${var.pdf_ocr}
         - name: pdf_ocr_max_pages
@@ -125,6 +128,7 @@ resources:
               firecrawl_concurrency: "{{job.parameters.firecrawl_concurrency}}"
               ean: "{{job.parameters.ean}}"
               evidence_volume: "{{job.parameters.evidence_volume}}"
+              dismiss_overlays: "{{job.parameters.dismiss_overlays}}"
               pdf_ocr: "{{job.parameters.pdf_ocr}}"
               pdf_ocr_max_pages: "{{job.parameters.pdf_ocr_max_pages}}"
               reviewers: "{{job.parameters.reviewers}}"

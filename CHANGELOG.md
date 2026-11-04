@@ -9,6 +9,14 @@ versions the canonical data contract separately.
 
 ### Added
 
+- Searchable category pickers: the catalog filter, the Settings scopes, the category templates and the Attributes
+  screen find a category by name, identifier or synonym (from the category templates), ignoring accents and case.
+- `dismiss_overlays` job parameter (off by default): before the screenshots, also answer the notices beyond the
+  cookie banner (welcome tours, location or region prompts, newsletters, notification requests, stacked dialogs),
+  from a closed list of labels and never accepting anything, with safeguards so the page itself is never hidden.
+  Checked on synthetic pages at window heights 1080 and 100000 (`tests/test_overlays.py`, with Chrome and
+  `BRICKFILL_BROWSER_TESTS=1`).
+
 - **Category templates** screen: the content model of each product type (title formula with a live example,
   fact-sheet sections and fields, facts always shown, required and optional), matched to departments, categories and
   subcategories by id, name or synonym. Templates are one more settings layer (between the global settings and the

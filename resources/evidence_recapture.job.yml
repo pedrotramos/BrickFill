@@ -30,6 +30,7 @@ resources:
               ean: "{{job.parameters.ean}}"
               attribute_codes: "{{job.parameters.attribute_codes}}"
               max_credits: "{{job.parameters.max_credits}}"
+              dismiss_overlays: "${var.dismiss_overlays}"
               pdf_ocr: "${var.pdf_ocr}"
               pdf_ocr_max_pages: "${var.pdf_ocr_max_pages}"
           environment_key: default

@@ -250,6 +250,7 @@ variables, and a required variable without a value makes `validate` fail with it
 | `model_endpoint` | default `databricks-claude-sonnet-4-6` | [FinOps, section 4](finops.md#4-choosing-and-changing-the-model) |
 | `use_native_web_search` | default `"false"` | `"false"` uses Firecrawl search; `"true"` uses `system.ai.web_search` (step 1.1) |
 | `firecrawl_concurrency` | default `"2"` | Simultaneous Firecrawl requests in the whole run. The free plan accepts 2 |
+| `dismiss_overlays` | default `"false"` | `"true"` also closes welcome tours, region prompts, newsletters and stacked dialogs before the screenshots. Turn it on when captures show such notices covering the values (`NOT_VISIBLE`, covered crops) |
 | `pdf_ocr`, `pdf_ocr_max_pages` | defaults `"false"`, `"20"` | `"true"` reads scanned PDFs (no text layer) with `ai_parse_document`, billed per page, up to `pdf_ocr_max_pages` pages. PDFs with text never need it |
 | `secret_catalog`, `secret_schema`, `firecrawl_secret_key` | defaults: `catalog`, `schema`, `firecrawl_api_key` | Where the Firecrawl secret lives (step 5) |
 | `publish_cron` | default `0 0 * * * ?` | Hourly publication, in `timezone_id` |

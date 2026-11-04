@@ -24,6 +24,7 @@ dbutils.widgets.text("firecrawl_secret_key", "")
 dbutils.widgets.text("ean", "")
 dbutils.widgets.text("attribute_codes", "")
 dbutils.widgets.dropdown("max_credits", "3", ["1", "2", "3"])
+dbutils.widgets.text("dismiss_overlays", "false")
 dbutils.widgets.text("pdf_ocr", "false")
 dbutils.widgets.text("pdf_ocr_max_pages", "20")
 
@@ -36,6 +37,7 @@ firecrawl_secret_key = dbutils.widgets.get("firecrawl_secret_key")
 ean = dbutils.widgets.get("ean").strip()
 attribute_codes = dbutils.widgets.get("attribute_codes")
 max_credits = int(dbutils.widgets.get("max_credits"))
+dismiss_overlays = dbutils.widgets.get("dismiss_overlays").strip().lower() == "true"
 pdf_ocr = dbutils.widgets.get("pdf_ocr").strip().lower() == "true"
 pdf_ocr_max_pages = int(dbutils.widgets.get("pdf_ocr_max_pages") or "20")
 
@@ -61,6 +63,7 @@ summary = run(
     max_credits=max_credits,
     pdf_parser=SparkDocumentParser(spark) if pdf_ocr else None,
     pdf_parser_max_pages=pdf_ocr_max_pages,
+    dismiss_overlays=dismiss_overlays,
 )
 
 # COMMAND ----------

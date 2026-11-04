@@ -25,6 +25,7 @@ const MAX_VISIBLE = 200;
  */
 export function CategoryCombobox({
   id,
+  label,
   options,
   value,
   onChange,
@@ -34,6 +35,8 @@ export function CategoryCombobox({
   className,
 }: {
   id?: string;
+  /** Accessible name when no visible label points at `id`. */
+  label?: string;
   options: readonly CategoryOption[];
   value: string | null;
   onChange: (value: string | null, option: CategoryOption | null) => void;
@@ -61,6 +64,7 @@ export function CategoryCombobox({
       <PopoverTrigger asChild>
         <Button
           aria-expanded={open}
+          aria-label={label}
           className={`w-full justify-between font-normal ${className ?? ''}`}
           disabled={disabled}
           id={id}

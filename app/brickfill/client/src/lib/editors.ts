@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { ensureOk } from './api-errors';
 import type { ContentManifest, Overrides, SettingsEvent } from './settings';
 import type { MatchLike } from './category-tree';
@@ -48,6 +49,19 @@ export interface TemplateBody {
 
 export const loadTemplates = (signal?: AbortSignal) =>
   load<TemplatesState>('/api/category-templates', 'errors:TEMPLATES_LOAD_FAILED', signal);
+
+/** Matches of the active templates, so category pickers also find a category by its synonyms (best effort). */
+export function useTemplateMatches(): MatchLike[] {
+  const [matches, setMatches] = useState<MatchLike[]>([]);
+  useEffect(() => {
+    const controller = new AbortController();
+    loadTemplates(controller.signal)
+      .then((state) => setMatches(state.templates.filter((item) => item.active).map((item) => item.match)))
+      .catch(() => undefined); // without synonyms the pickers still search names and ids
+    return () => controller.abort();
+  }, []);
+  return matches;
+}
 
 export const saveTemplate = (id: string, body: TemplateBody) =>
   send<CategoryTemplate>(

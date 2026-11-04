@@ -43,7 +43,10 @@ import {
 } from '@databricks/appkit-ui/react';
 import { AlertCircle, Languages, Lock, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useTranslation } from '../i18n/react';
+import { CategoryCombobox } from '../components/CategoryCombobox';
 import { PageHeader, RefreshButton } from '../components/PageHeader';
+import { categoryOptions, type CategoryOption, type CategoryTreeRow } from '../lib/category-tree';
+import { useTemplateMatches } from '../lib/editors';
 import { ApiError, errorText } from '../lib/api-errors';
 import { useCatalogQuery } from '../lib/catalog-query';
 import { formatDate } from '../lib/formatters';
@@ -439,11 +442,6 @@ function GlobalSettingsCard({
   );
 }
 
-interface CategoryOption {
-  id: string;
-  name: string;
-}
-
 function CategoryOverrideDialog({
   state,
   categories,
@@ -527,21 +525,29 @@ function CategoryOverrideDialog({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="min-w-0 space-y-1.5 md:col-span-2">
               <Label htmlFor="category-override-category">{t('settings:categories.category')}</Label>
-              <Select disabled={Boolean(editing)} value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger className="w-full md:w-[calc(50%-0.5rem)]" id="category-override-category">
-                  <SelectValue placeholder={t('settings:categories.chooseCategory')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {editing && !categories.some((item) => item.id === editing.scopeId) ? (
-                    <SelectItem value={editing.scopeId}>{editing.scopeName ?? editing.scopeId}</SelectItem>
-                  ) : null}
-                  {available.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="w-full md:w-[calc(50%-0.5rem)]">
+                <CategoryCombobox
+                  disabled={Boolean(editing)}
+                  id="category-override-category"
+                  options={
+                    editing && !categories.some((item) => item.id === editing.scopeId)
+                      ? [
+                          {
+                            level: 'category',
+                            id: editing.scopeId,
+                            name: editing.scopeName ?? editing.scopeId,
+                            path: '',
+                            synonyms: [],
+                          },
+                          ...available,
+                        ]
+                      : available
+                  }
+                  placeholder={t('settings:categories.chooseCategory')}
+                  value={categoryId || null}
+                  onChange={(value) => setCategoryId(value ?? '')}
+                />
+              </div>
             </div>
             <div className="min-w-0 space-y-1.5">
               <Label htmlFor="category-override-language">{t('settings:fields.content_language')}</Label>
@@ -638,21 +644,17 @@ function CategoryOverridesCard({
   const { t } = useTranslation();
   const { manifest, canEdit } = state;
   const { languageName, profileName, overrideLabel } = useLabels(manifest);
-  const categoriesQuery = useCatalogQuery('categories', NO_PARAMETERS);
+  const categoriesQuery = useCatalogQuery('category_tree', NO_PARAMETERS);
+  const templateMatches = useTemplateMatches();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CategorySetting | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const categories = useMemo<CategoryOption[]>(() => {
-    const options = new Map<string, string>();
-    for (const row of categoriesQuery.data ?? []) {
-      const id = (row as { category_id?: unknown }).category_id;
-      const key = typeof id === 'string' && id ? id : row.category;
-      if (key) options.set(key, row.category);
-    }
-    return Array.from(options, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
-  }, [categoriesQuery.data]);
+  const categories = useMemo<CategoryOption[]>(
+    () => categoryOptions((categoriesQuery.data ?? []) as CategoryTreeRow[], 'category', templateMatches),
+    [categoriesQuery.data, templateMatches]
+  );
 
   const rows = state.categories.filter((item) => item.active);
 

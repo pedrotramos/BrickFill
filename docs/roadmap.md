@@ -15,6 +15,11 @@ opening an issue first, so the approach can be agreed before the work starts.
   none. Options: look for the manufacturer page explicitly before writing FAQs, or let the profile accept authorized
   distributors.
 
+- **Turn `dismiss_overlays` on by default** once measured captures show notices covering values often enough; the
+  flag is off until then, because the cookie-only script is the safer default.
+- **Accent-insensitive product search**: the catalog search box matches with `LIKE` (case-insensitive, accent
+  sensitive); the category pickers already ignore accents.
+
 ## Cost and latency
 
 - **Re-measure cost per product** with the moving cache breakpoint and the cached evidence follow-up, and update
