@@ -15,9 +15,10 @@ import {
   Skeleton,
   Textarea,
 } from '@databricks/appkit-ui/react';
-import { AlertCircle, History, Lock, RotateCcw, Save } from 'lucide-react';
+import { AlertCircle, CircleCheck, CircleDot, Lock, RotateCcw, Save, ShieldCheck } from 'lucide-react';
 import { useTranslation } from '../i18n/react';
 import { PageHeader, RefreshButton } from '../components/PageHeader';
+import { ToneBadge } from '../components/StatusBadge';
 import { ApiError, errorText } from '../lib/api-errors';
 import {
   loadInstructions,
@@ -44,28 +45,34 @@ function VersionRow({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="space-y-2 border-l-2 border-border pl-3">
+    <li className="space-y-2 px-6 py-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium">{t('instructions:history.version', { version: item.version })}</span>
-        {item.active ? <Badge>{t('instructions:history.active')}</Badge> : null}
+        <span className="text-sm font-medium tabular-nums">
+          {t('instructions:history.version', { version: item.version })}
+        </span>
+        {item.active ? (
+          <ToneBadge icon={CircleCheck} tone="success">
+            {t('instructions:history.active')}
+          </ToneBadge>
+        ) : null}
         {item.restoredFrom ? (
           <Badge variant="outline">{t('instructions:history.restoredFrom', { version: item.restoredFrom })}</Badge>
         ) : null}
-        <span className="text-xs text-muted-foreground">
-          {item.createdBy} · {formatDate(item.createdAt)}
-        </span>
       </div>
-      {item.reason ? <p className="text-xs text-muted-foreground">{item.reason}</p> : null}
-      <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-md bg-muted p-2 text-xs">
-        {item.body || t('instructions:history.emptyBody')}
-      </pre>
+      <p className="text-xs text-muted-foreground tabular-nums">
+        {formatDate(item.createdAt)} · <span title={item.createdBy}>{item.createdBy}</span>
+      </p>
+      {item.reason ? <p className="text-xs text-foreground/80">“{item.reason}”</p> : null}
+      <p className="line-clamp-6 rounded-md bg-muted/50 px-3 py-2 text-sm whitespace-pre-wrap break-words">
+        {item.body || <span className="text-muted-foreground">{t('instructions:history.emptyBody')}</span>}
+      </p>
       {canRestore && !item.active ? (
         <Button disabled={busy} size="sm" variant="outline" onClick={() => onRestore(item)}>
-          <RotateCcw className="mr-1 h-3.5 w-3.5" />
+          <RotateCcw aria-hidden className="mr-1 h-3.5 w-3.5" />
           {t('instructions:history.restore')}
         </Button>
       ) : null}
-    </div>
+    </li>
   );
 }
 
@@ -126,7 +133,7 @@ export function InstructionsPage() {
   const tooLong = draft.length > maxLength;
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-6">
       <PageHeader
         actions={<RefreshButton busy={loading} label={t('instructions:reload')} onClick={() => void reload()} />}
         description={t('instructions:subtitle')}
@@ -162,76 +169,98 @@ export function InstructionsPage() {
       ) : null}
 
       {!state && loading ? (
-        <Skeleton className="h-80" />
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+          <Skeleton className="h-96" />
+          <Skeleton className="h-72" />
+        </div>
       ) : state ? (
-        <>
-          <Card>
-            <CardHeader>
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+          <Card className="gap-0 overflow-hidden py-0">
+            <CardHeader className="py-5">
               <CardTitle aria-level={2} role="heading">
                 {t('instructions:editor.title')}
               </CardTitle>
-              <CardDescription>{t('instructions:editor.description')}</CardDescription>
+              <CardDescription className="max-w-prose">{t('instructions:editor.description')}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
+            <CardContent className="space-y-2 pb-5">
+              <div className="flex items-baseline justify-between gap-3">
                 <Label htmlFor="instructions-body">{t('instructions:editor.label')}</Label>
-                <Textarea
-                  disabled={!state.canEdit || busy}
-                  id="instructions-body"
-                  placeholder={t('instructions:editor.placeholder')}
-                  rows={12}
-                  value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
-                />
-                <p className={`text-xs ${tooLong ? 'text-destructive' : 'text-muted-foreground'}`}>
-                  {t('instructions:editor.count', { count: draft.length, max: maxLength })}
-                </p>
+                <span
+                  className={`text-xs tabular-nums ${tooLong ? 'text-destructive' : 'text-muted-foreground'}`}
+                  id="instructions-count"
+                >
+                  {t('instructions:editor.count', { length: draft.length, max: maxLength })}
+                </span>
               </div>
-              {state.canEdit ? (
-                <>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="instructions-reason">{t('settings:reason')}</Label>
-                    <Input
-                      id="instructions-reason"
-                      maxLength={2000}
-                      placeholder={t('settings:reasonPlaceholder')}
-                      value={reason}
-                      onChange={(event) => setReason(event.target.value)}
-                    />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Button
-                      disabled={busy || !changed || tooLong}
-                      onClick={() =>
-                        void run(() =>
-                          saveInstructions({ body: draft, expectedVersion, reason: reason.trim() || undefined })
-                        )
-                      }
-                    >
-                      <Save className="mr-2 h-4 w-4" />
-                      {busy ? t('common:actions.saving') : t('instructions:editor.save')}
-                    </Button>
-                    {saved ? <span className="text-sm text-muted-foreground">{t('instructions:saved')}</span> : null}
-                  </div>
-                </>
-              ) : null}
-              <p className="text-xs text-muted-foreground">{t('instructions:editor.guard')}</p>
+              <Textarea
+                aria-describedby="instructions-count instructions-guard"
+                aria-invalid={tooLong || undefined}
+                className="min-h-72 leading-6"
+                disabled={busy}
+                id="instructions-body"
+                readOnly={!state.canEdit}
+                placeholder={t('instructions:editor.placeholder')}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+              />
+              <p className="flex items-start gap-2 text-xs text-muted-foreground" id="instructions-guard">
+                <ShieldCheck aria-hidden className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                {t('instructions:editor.guard')}
+              </p>
             </CardContent>
+            {state.canEdit ? (
+              <div className="flex flex-wrap items-center gap-3 border-t bg-muted/30 px-6 py-3">
+                <p aria-live="polite" className="flex min-w-0 flex-1 basis-48 items-center gap-2 text-sm">
+                  {changed ? (
+                    <>
+                      <CircleDot aria-hidden className="h-4 w-4 shrink-0 text-warning" />
+                      {t('instructions:editor.unsaved')}
+                    </>
+                  ) : saved ? (
+                    <>
+                      <CircleCheck aria-hidden className="h-4 w-4 shrink-0 text-success" />
+                      <span className="text-muted-foreground">{t('instructions:saved')}</span>
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">{t('instructions:editor.noChanges')}</span>
+                  )}
+                </p>
+                <Input
+                  aria-label={t('settings:reason')}
+                  className="w-full bg-background sm:w-64"
+                  disabled={!changed}
+                  maxLength={2000}
+                  placeholder={t('settings:reasonPlaceholder')}
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                />
+                <Button
+                  disabled={busy || !changed || tooLong}
+                  onClick={() =>
+                    void run(() =>
+                      saveInstructions({ body: draft, expectedVersion, reason: reason.trim() || undefined })
+                    )
+                  }
+                >
+                  <Save aria-hidden className="mr-2 h-4 w-4" />
+                  {busy ? t('common:actions.saving') : t('instructions:editor.save')}
+                </Button>
+              </div>
+            ) : null}
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle aria-level={2} className="flex items-center gap-2" role="heading">
-                <History aria-hidden className="h-4 w-4" />
+          <Card className="gap-0 overflow-hidden py-0">
+            <CardHeader className="border-b py-5">
+              <CardTitle aria-level={2} role="heading">
                 {t('instructions:history.title')}
               </CardTitle>
               <CardDescription>{t('instructions:history.description')}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {!state.versions.length ? (
-                <p className="text-sm text-muted-foreground">{t('instructions:history.empty')}</p>
-              ) : (
-                state.versions.map((item) => (
+            {!state.versions.length ? (
+              <p className="px-6 py-5 text-sm text-muted-foreground">{t('instructions:history.empty')}</p>
+            ) : (
+              <ol className="max-h-[70vh] divide-y overflow-y-auto">
+                {state.versions.map((item) => (
                   <VersionRow
                     busy={busy}
                     canRestore={state.canEdit}
@@ -243,11 +272,11 @@ export function InstructionsPage() {
                       )
                     }
                   />
-                ))
-              )}
-            </CardContent>
+                ))}
+              </ol>
+            )}
           </Card>
-        </>
+        </div>
       ) : null}
     </div>
   );

@@ -65,6 +65,24 @@ describe('field-level history', () => {
       { key: 'overrides.title_order', before: ['brand'], after: null },
     ]);
   });
+
+  it('ignores the key order of a stored object', () => {
+    const stored = { overrides: { fact_sheet_layout: [{ fields: ['Power'], section: 'Specs' }] } };
+    const sent = { overrides: { fact_sheet_layout: [{ section: 'Specs', fields: ['Power'] }] } };
+    expect(changes(stored, sent)).toEqual([]);
+  });
+
+  it('records no change for the empty fields of a new record', () => {
+    const created = {
+      name: 'Dryer',
+      match: { synonyms: [], subcategory_ids: ['100'] },
+      overrides: { title_order: [] },
+    };
+    expect(changes({}, created)).toEqual([
+      { key: 'match.subcategory_ids', before: null, after: ['100'] },
+      { key: 'name', before: null, after: 'Dryer' },
+    ]);
+  });
 });
 
 describe('agent instruction editors', () => {

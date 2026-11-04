@@ -44,12 +44,14 @@ import {
 import { AlertCircle, Languages, Lock, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useTranslation } from '../i18n/react';
 import { CategoryCombobox } from '../components/CategoryCombobox';
+import { ChangeLog } from '../components/ChangeLog';
 import { PageHeader, RefreshButton } from '../components/PageHeader';
 import { categoryOptions, type CategoryOption, type CategoryTreeRow } from '../lib/category-tree';
 import { useTemplateMatches } from '../lib/editors';
 import { ApiError, errorText } from '../lib/api-errors';
 import { useCatalogQuery } from '../lib/catalog-query';
 import { formatDate } from '../lib/formatters';
+import { groupEvents } from '../lib/history';
 import {
   cleanOverrides,
   loadSettings,
@@ -841,33 +843,32 @@ function HistoryCard({ state }: { state: SettingsState }) {
     return `${t(`settings:scopes.${scope}`, { defaultValue: scope })} · ${match?.scopeName ?? scopeId}`;
   };
   return (
-    <Card>
-      <CardHeader>
+    <Card className="gap-0 overflow-hidden py-0">
+      <CardHeader className="border-b py-5">
         <CardTitle aria-level={2} role="heading">
           {t('settings:history.title')}
         </CardTitle>
         <CardDescription>{t('settings:history.description')}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {!state.history.length ? (
-          <p className="text-sm text-muted-foreground">{t('settings:history.empty')}</p>
-        ) : (
-          state.history.map((event) => (
-            <div className="border-l-2 border-border pl-3" key={event.id}>
-              <p className="text-sm">
-                <span className="font-medium">{fieldLabel(event.fieldKey)}</span>{' '}
-                <span className="text-muted-foreground">
-                  {render(event.fieldKey, event.before)} → {render(event.fieldKey, event.after)}
-                </span>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {scopeName(event.scope, event.scopeId)} · {event.actor} · {formatDate(event.createdAt)}
-              </p>
-              {event.reason ? <p className="mt-1 text-xs text-muted-foreground">{event.reason}</p> : null}
-            </div>
-          ))
+      <ChangeLog
+        empty="settings:history.empty"
+        fieldLabel={fieldLabel}
+        groups={groupEvents(state.history)}
+        renderValue={(key, before, after) => (
+          <span>
+            {before === null || before === undefined || before === '' ? null : (
+              <>
+                <span className="text-muted-foreground line-through decoration-muted-foreground/60">
+                  {render(key, before)}
+                </span>{' '}
+                →{' '}
+              </>
+            )}
+            {render(key, after)}
+          </span>
         )}
-      </CardContent>
+        title={(group) => scopeName(group.scope, group.scopeId)}
+      />
     </Card>
   );
 }

@@ -14,7 +14,9 @@
     "skip": "Skip to content",
     "templates": "Category templates",
     "attributes": "Attributes",
-    "instructions": "Agent instructions"
+    "instructions": "Agent instructions",
+    "review": "Review",
+    "configure": "Configure"
   },
   "footer": {
     "product": "BrickFill · catalog enrichment accelerator",
@@ -70,5 +72,22 @@
     "empty": "Nothing found.",
     "more_one": "{{count}} more: refine the search",
     "more_other": "{{count}} more: refine the search"
+  },
+  "tags": {
+    "remove": "Remove {{value}}",
+    "full": "Limit of {{count}} reached"
+  },
+  "history": {
+    "empty": "Not set",
+    "added": "Added",
+    "removed": "Removed",
+    "yes": "Yes",
+    "no": "No",
+    "revision": "revision {{revision}}"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "This address does not match any page of the app. It may have been mistyped, or the link is out of date.",
+    "home": "Go to the overview"
   }
 }

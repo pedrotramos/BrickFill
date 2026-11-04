@@ -59,9 +59,23 @@ versions the canonical data contract separately.
 - Pages that add a fragment, a variant or tracking parameters to their address during the capture are no longer
   rejected as "changed address"; a change of path still is.
 - Error messages are no longer garbled when no secret is configured.
+- Review app: an unknown address shows the app's own "Page not found" instead of the router's developer error page.
+- Agent instructions: the character counter showed "{{length}}" instead of the count; read-only text is no longer
+  dimmed as if disabled.
+- Settings history listed category template and attribute requirement changes (with "[object Object]" values); it
+  now shows only the settings scopes, and each screen keeps its own history.
+- Saving a category template no longer records empty fields or a reordering of the same object as changes.
 
 ### Changed
 
+- Category templates are edited on their own page (`/templates/<id>`) instead of a modal: the sections in panels, a
+  sticky live preview (the title built from example values, with its length against the profile limit, and the
+  fact-sheet outline), tag fields for synonyms, fields and facts, one search for departments, categories and
+  subcategories, and a sticky save bar that says what is unsaved or missing. Leaving with unsaved changes asks first.
+- The template, attribute, instruction and settings histories show one row per save, with lists as added and removed
+  tags and ids by name. Active, inactive and required are tone tags with an icon instead of the action blue.
+- Attributes opens on an overview of the subcategories (attributes, required, team choices); the sidebar groups its
+  items under Review and Configure; Agent instructions puts the editor and its versions side by side.
 - Titles separate their parts with spaces: the prompt no longer asks for a hyphen as separator, and leaves out
   the parts of the title formula without a verified value.
 - `scripts/replay_capture.py` also crops the archived screenshot with the current code and prints the window height

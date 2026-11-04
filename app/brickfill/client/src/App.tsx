@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider, useParams } from 'react-router';
 import { Button, Sheet, SheetContent, SheetHeader, SheetTitle } from '@databricks/appkit-ui/react';
 import { Bot, LayoutDashboard, LayoutTemplate, ListChecks, Menu, PackageSearch, SlidersHorizontal } from 'lucide-react';
@@ -14,6 +14,8 @@ import { InstructionsPage } from './pages/InstructionsPage';
 import { OverviewPage } from './pages/OverviewPage';
 import { ProductPage } from './pages/ProductPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { TemplateEditorPage } from './pages/TemplateEditorPage';
 import { TemplatesPage } from './pages/TemplatesPage';
 
 /** Sidebar items as in the workspace: compact rows, the current page on a blue wash with blue text. */
@@ -26,34 +28,51 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
       : 'text-sidebar-foreground hover:bg-sidebar-accent/60'
   }`;
 
+/** A group of the sidebar: the daily review, then what configures the enrichment. */
+function NavGroup({ label, children }: { label: string; children: ReactNode }) {
+  const id = useId();
+  return (
+    <div aria-labelledby={id} className="flex flex-col gap-0.5 not-first:pt-5" role="group">
+      <p className="px-2.5 pb-1 text-xs font-medium text-muted-foreground" id={id}>
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
 function Navigation({ onClick }: { onClick?: () => void }) {
   const { t } = useTranslation();
   return (
-    <nav aria-label={t('common:nav.label')} className="flex flex-col gap-0.5">
-      <NavLink className={navClass} end onClick={onClick} to="/">
-        <LayoutDashboard aria-hidden className="h-4 w-4" />
-        {t('common:nav.overview')}
-      </NavLink>
-      <NavLink className={navClass} onClick={onClick} to="/catalog">
-        <PackageSearch aria-hidden className="h-4 w-4" />
-        {t('common:nav.catalog')}
-      </NavLink>
-      <NavLink className={navClass} onClick={onClick} to="/settings">
-        <SlidersHorizontal aria-hidden className="h-4 w-4" />
-        {t('common:nav.settings')}
-      </NavLink>
-      <NavLink className={navClass} onClick={onClick} to="/templates">
-        <LayoutTemplate aria-hidden className="h-4 w-4" />
-        {t('common:nav.templates')}
-      </NavLink>
-      <NavLink className={navClass} onClick={onClick} to="/attributes">
-        <ListChecks aria-hidden className="h-4 w-4" />
-        {t('common:nav.attributes')}
-      </NavLink>
-      <NavLink className={navClass} onClick={onClick} to="/instructions">
-        <Bot aria-hidden className="h-4 w-4" />
-        {t('common:nav.instructions')}
-      </NavLink>
+    <nav aria-label={t('common:nav.label')} className="flex flex-col">
+      <NavGroup label={t('common:nav.review')}>
+        <NavLink className={navClass} end onClick={onClick} to="/">
+          <LayoutDashboard aria-hidden className="h-4 w-4" />
+          {t('common:nav.overview')}
+        </NavLink>
+        <NavLink className={navClass} onClick={onClick} to="/catalog">
+          <PackageSearch aria-hidden className="h-4 w-4" />
+          {t('common:nav.catalog')}
+        </NavLink>
+      </NavGroup>
+      <NavGroup label={t('common:nav.configure')}>
+        <NavLink className={navClass} onClick={onClick} to="/settings">
+          <SlidersHorizontal aria-hidden className="h-4 w-4" />
+          {t('common:nav.settings')}
+        </NavLink>
+        <NavLink className={navClass} onClick={onClick} to="/templates">
+          <LayoutTemplate aria-hidden className="h-4 w-4" />
+          {t('common:nav.templates')}
+        </NavLink>
+        <NavLink className={navClass} onClick={onClick} to="/attributes">
+          <ListChecks aria-hidden className="h-4 w-4" />
+          {t('common:nav.attributes')}
+        </NavLink>
+        <NavLink className={navClass} onClick={onClick} to="/instructions">
+          <Bot aria-hidden className="h-4 w-4" />
+          {t('common:nav.instructions')}
+        </NavLink>
+      </NavGroup>
     </nav>
   );
 }
@@ -164,6 +183,12 @@ function ProductRoute() {
   return <ProductPage key={ean} />;
 }
 
+/** One editor instance per template: a draft never carries over to another template. */
+function TemplateRoute() {
+  const { id = 'new' } = useParams();
+  return <TemplateEditorPage key={id} />;
+}
+
 const router = createBrowserRouter([
   {
     element: <Layout />,
@@ -173,8 +198,10 @@ const router = createBrowserRouter([
       { path: '/catalog/:ean', element: <ProductRoute /> },
       { path: '/settings', element: <SettingsPage /> },
       { path: '/templates', element: <TemplatesPage /> },
+      { path: '/templates/:id', element: <TemplateRoute /> },
       { path: '/attributes', element: <AttributesPage /> },
       { path: '/instructions', element: <InstructionsPage /> },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
 ]);

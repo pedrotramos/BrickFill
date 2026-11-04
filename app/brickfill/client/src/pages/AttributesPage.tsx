@@ -25,9 +25,11 @@ import {
   TableHeader,
   TableRow,
 } from '@databricks/appkit-ui/react';
-import { AlertCircle, Lock, Search } from 'lucide-react';
+import { AlertCircle, Asterisk, Lock, PencilLine, Search } from 'lucide-react';
 import { useTranslation } from '../i18n/react';
 import { CategoryCombobox } from '../components/CategoryCombobox';
+import { ChangeLog } from '../components/ChangeLog';
+import { ToneBadge } from '../components/StatusBadge';
 import { PageHeader, RefreshButton } from '../components/PageHeader';
 import { ApiError, errorText, queryErrorText } from '../lib/api-errors';
 import { useCatalogQuery } from '../lib/catalog-query';
@@ -41,6 +43,7 @@ import {
   type RequirementsState,
 } from '../lib/editors';
 import { formatDate } from '../lib/formatters';
+import { groupEvents } from '../lib/history';
 import { matchesSearch } from '../lib/search';
 
 const NO_PARAMETERS = {};
@@ -53,11 +56,16 @@ function RequirementBadge({ value }: { value: boolean | null }) {
   const { t } = useTranslation();
   if (value === null) return <span className="text-muted-foreground">—</span>;
   return value ? (
-    <Badge>{t('attributes:required')}</Badge>
+    <ToneBadge icon={Asterisk} tone="quiet">
+      {t('attributes:required')}
+    </ToneBadge>
   ) : (
     <Badge variant="outline">{t('attributes:optional')}</Badge>
   );
 }
+
+/** Most subcategories listed before one is chosen; the picker finds any other. */
+const OVERVIEW_ROWS = 12;
 
 /** Required or optional, per subcategory and attribute: the team's choice wins over the source and survives syncs. */
 export function AttributesPage() {
@@ -135,6 +143,23 @@ export function AttributesPage() {
   const selectedCounts = subcategoryId ? counts.get(subcategoryId) : undefined;
   const names = new Map((state?.attributes ?? []).map((row) => [row.attributeId, row.attributeName]));
   const treeError = queryErrorText(tree);
+  const optionById = new Map(options.map((option) => [option.id, option]));
+  const overview = [...(summary.data ?? [])]
+    .sort(
+      (a, b) =>
+        b.override_count - a.override_count ||
+        b.attribute_count - a.attribute_count ||
+        (optionById.get(a.subcategory_id)?.name ?? '').localeCompare(optionById.get(b.subcategory_id)?.name ?? '')
+    )
+    .slice(0, OVERVIEW_ROWS)
+    .map((row) => ({ row, option: optionById.get(row.subcategory_id) }));
+  const history = groupEvents(state?.history ?? []);
+  const choiceLabel = (value: unknown) =>
+    value === true
+      ? t('attributes:choice.required')
+      : value === false
+        ? t('attributes:choice.optional')
+        : t('attributes:choice.follow');
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -206,129 +231,191 @@ export function AttributesPage() {
         </CardContent>
       </Card>
 
+      {!subcategoryId ? (
+        <Card className="gap-0 overflow-hidden py-0">
+          <CardHeader className="border-b py-5">
+            <CardTitle aria-level={2} role="heading">
+              {t('attributes:overview.title')}
+            </CardTitle>
+            <CardDescription>
+              {t('attributes:overview.description', { count: summary.data?.length ?? 0 })}
+            </CardDescription>
+          </CardHeader>
+          {summary.loading ? (
+            <Skeleton className="m-6 h-40" />
+          ) : !overview.length ? (
+            <p className="px-6 py-5 text-sm text-muted-foreground">{t('attributes:table.empty')}</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-6">{t('attributes:overview.subcategory')}</TableHead>
+                  <TableHead className="text-right">{t('attributes:overview.attributes')}</TableHead>
+                  <TableHead className="text-right">{t('attributes:overview.required')}</TableHead>
+                  <TableHead className="pr-6 text-right">{t('attributes:overview.choices')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {overview.map(({ row, option }) => (
+                  <TableRow className="relative hover:bg-muted/50" key={row.subcategory_id}>
+                    <TableCell className="pl-6">
+                      <button
+                        className="text-left font-medium after:absolute after:inset-0 hover:text-primary hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-ring"
+                        type="button"
+                        onClick={() => setSubcategoryId(row.subcategory_id)}
+                      >
+                        {option?.name ?? row.subcategory_id}
+                      </button>
+                      {option?.path ? <span className="block text-xs text-muted-foreground">{option.path}</span> : null}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{row.attribute_count}</TableCell>
+                    <TableCell className="text-right tabular-nums">{row.required_count}</TableCell>
+                    <TableCell className="pr-6 text-right tabular-nums">
+                      {row.override_count ? row.override_count : <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+          {(summary.data?.length ?? 0) > OVERVIEW_ROWS ? (
+            <p className="border-t px-6 py-3 text-xs text-muted-foreground">
+              {t('attributes:overview.more', { shown: OVERVIEW_ROWS, count: summary.data?.length ?? 0 })}
+            </p>
+          ) : null}
+        </Card>
+      ) : null}
+
       {subcategoryId ? (
-        <Card>
-          <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
+        <Card className="gap-0 overflow-hidden py-0">
+          <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0 border-b py-5">
             <div className="space-y-1.5">
               <CardTitle aria-level={2} role="heading">
                 {t('attributes:table.title')}
               </CardTitle>
-              <CardDescription>{t('attributes:table.description')}</CardDescription>
+              <CardDescription className="max-w-prose">{t('attributes:table.description')}</CardDescription>
             </div>
-            <div className="relative w-full max-w-xs">
-              <Search aria-hidden className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+            <div className="relative w-full sm:max-w-xs">
+              <Search aria-hidden className="absolute top-2 left-3 h-4 w-4 text-muted-foreground" />
               <Input
                 aria-label={t('attributes:table.search')}
-                className="pl-8"
+                className="pl-9"
                 placeholder={t('attributes:table.search')}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
             </div>
           </CardHeader>
-          <CardContent>
-            {!state && loading ? (
-              <Skeleton className="h-48" />
-            ) : !rows.length ? (
-              <p className="text-sm text-muted-foreground">{t('attributes:table.empty')}</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('attributes:table.attribute')}</TableHead>
-                    <TableHead>{t('attributes:table.source')}</TableHead>
-                    <TableHead>{t('attributes:table.choice')}</TableHead>
-                    <TableHead>{t('attributes:table.effective')}</TableHead>
-                    <TableHead>{t('attributes:table.updated')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rows.map((row) => (
-                    <TableRow key={row.attributeId}>
-                      <TableCell>
-                        <span className="block font-medium">{row.attributeName ?? row.attributeId}</span>
-                        <span className="block text-xs text-muted-foreground">
-                          {row.attributeId}
-                          {!row.inSource ? ` · ${t('attributes:table.notInSource')}` : ''}
+          {!state && loading ? (
+            <Skeleton className="m-6 h-48" />
+          ) : !rows.length ? (
+            <p className="px-6 py-5 text-sm text-muted-foreground">{t('attributes:table.empty')}</p>
+          ) : (
+            <Table className="stack-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-6">{t('attributes:table.attribute')}</TableHead>
+                  <TableHead>{t('attributes:table.source')}</TableHead>
+                  <TableHead>{t('attributes:table.choice')}</TableHead>
+                  <TableHead>{t('attributes:table.effective')}</TableHead>
+                  <TableHead className="pr-6">{t('attributes:table.updated')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row) => (
+                  <TableRow key={row.attributeId}>
+                    <TableCell className="pl-6" data-label={t('attributes:table.attribute')}>
+                      <span className="block font-medium">{row.attributeName ?? row.attributeId}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {row.attributeId}
+                        {!row.inSource ? ` · ${t('attributes:table.notInSource')}` : ''}
+                      </span>
+                    </TableCell>
+                    <TableCell data-label={t('attributes:table.source')}>
+                      <RequirementBadge value={row.sourceEffectiveRequired} />
+                      {row.inSource && row.sourceRequired === null ? (
+                        <span className="mt-1 block text-xs text-muted-foreground">
+                          {t('attributes:table.sourceDefault')}
                         </span>
-                      </TableCell>
-                      <TableCell>
-                        <RequirementBadge value={row.sourceEffectiveRequired} />
-                        {row.inSource && row.sourceRequired === null ? (
-                          <span className="block text-xs text-muted-foreground">
-                            {t('attributes:table.sourceDefault')}
-                          </span>
-                        ) : null}
-                      </TableCell>
-                      <TableCell className="min-w-44">
-                        <Select
-                          disabled={!state?.canEdit || saving !== null}
-                          value={row.overrideRequired === null ? FOLLOW : String(row.overrideRequired)}
-                          onValueChange={(choice) => void change(row, choice)}
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="min-w-48" data-label={t('attributes:table.choice')}>
+                      <Select
+                        disabled={!state?.canEdit || saving !== null}
+                        value={row.overrideRequired === null ? FOLLOW : String(row.overrideRequired)}
+                        onValueChange={(choice) => void change(row, choice)}
+                      >
+                        <SelectTrigger
+                          aria-label={t('attributes:table.choiceFor', { name: row.attributeName })}
+                          className="w-full"
                         >
-                          <SelectTrigger aria-label={t('attributes:table.choiceFor', { name: row.attributeName })}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value={FOLLOW}>{t('attributes:choice.follow')}</SelectItem>
-                            <SelectItem value="true">{t('attributes:choice.required')}</SelectItem>
-                            <SelectItem value="false">{t('attributes:choice.optional')}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={FOLLOW}>{t('attributes:choice.follow')}</SelectItem>
+                          <SelectItem value="true">{t('attributes:choice.required')}</SelectItem>
+                          <SelectItem value="false">{t('attributes:choice.optional')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell data-label={t('attributes:table.effective')}>
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <RequirementBadge value={row.effectiveRequired} />
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {row.updatedBy ? `${row.updatedBy} · ${formatDate(row.updatedAt)}` : '—'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
+                        {row.overrideRequired !== null ? (
+                          <ToneBadge icon={PencilLine} tone="info">
+                            {t('attributes:table.teamChoice')}
+                          </ToneBadge>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                    <TableCell
+                      className="pr-6 text-xs text-muted-foreground"
+                      data-label={t('attributes:table.updated')}
+                    >
+                      {row.updatedBy ? (
+                        <>
+                          <span className="block tabular-nums whitespace-nowrap">{formatDate(row.updatedAt)}</span>
+                          <span className="block max-w-48 truncate" title={row.updatedBy}>
+                            {row.updatedBy}
+                          </span>
+                        </>
+                      ) : (
+                        '—'
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </Card>
       ) : null}
 
       {state ? (
-        <Card>
-          <CardHeader>
+        <Card className="gap-0 overflow-hidden py-0">
+          <CardHeader className="border-b py-5">
             <CardTitle aria-level={2} role="heading">
               {t('attributes:history.title')}
             </CardTitle>
             <CardDescription>{t('attributes:history.description')}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {!state.history.length ? (
-              <p className="text-sm text-muted-foreground">{t('attributes:history.empty')}</p>
-            ) : (
-              state.history.map((event) => {
-                const attributeId = event.scopeId.slice((subcategoryId ?? '').length + 1);
-                const label = (value: unknown) =>
-                  value === true
-                    ? t('attributes:choice.required')
-                    : value === false
-                      ? t('attributes:choice.optional')
-                      : t('attributes:choice.follow');
-                return (
-                  <div className="border-l-2 border-border pl-3" key={event.id}>
-                    <p className="text-sm">
-                      <span className="font-medium">{names.get(attributeId) ?? attributeId}</span>{' '}
-                      <span className="text-muted-foreground">
-                        {label(event.before)} → {label(event.after)}
-                      </span>
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {event.actor} · {formatDate(event.createdAt)}
-                      {event.revision ? ` · ${t('attributes:history.revision', { revision: event.revision })}` : ''}
-                    </p>
-                    {event.reason ? <p className="mt-1 text-xs text-muted-foreground">{event.reason}</p> : null}
-                  </div>
-                );
-              })
+          <ChangeLog
+            empty="attributes:history.empty"
+            fieldLabel={() => t('attributes:history.field')}
+            groups={history}
+            renderValue={(_key, before, after) => (
+              <span>
+                <span className="text-muted-foreground line-through decoration-muted-foreground/60">
+                  {choiceLabel(before)}
+                </span>{' '}
+                → {choiceLabel(after)}
+              </span>
             )}
-          </CardContent>
+            title={(group) => {
+              const attributeId = group.scopeId.slice((subcategoryId ?? '').length + 1);
+              return names.get(attributeId) ?? attributeId;
+            }}
+          />
         </Card>
       ) : null}
     </div>

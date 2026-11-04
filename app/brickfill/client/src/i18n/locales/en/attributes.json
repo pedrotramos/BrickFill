@@ -10,7 +10,7 @@
     "description": "Search by name, identifier or synonym; the path shows the department and category.",
     "label": "Subcategory",
     "placeholder": "Choose a subcategory",
-    "counts": "{{attributes}} attributes · {{required}} required · {{overrides}} team choices"
+    "counts": "{{attributes}} attributes · {{required}} required · team choices: {{overrides}}"
   },
   "table": {
     "title": "Attributes of the subcategory",
@@ -24,7 +24,8 @@
     "updated": "Changed by",
     "notInSource": "no longer in the source",
     "sourceDefault": "not informed: deployment default",
-    "choiceFor": "Requirement of {{name}}"
+    "choiceFor": "Requirement of {{name}}",
+    "teamChoice": "Team choice"
   },
   "choice": {
     "follow": "Follow the source",
@@ -35,6 +36,16 @@
     "title": "History",
     "description": "Changes to the requirements of this subcategory.",
     "empty": "No changes yet.",
-    "revision": "revision {{revision}}"
+    "revision": "revision {{revision}}",
+    "field": "Requirement"
+  },
+  "overview": {
+    "title": "Subcategories",
+    "description": "{{count}} subcategories with attributes in the source. Pick one above, or open one of these.",
+    "subcategory": "Subcategory",
+    "attributes": "Attributes",
+    "required": "Required",
+    "choices": "Team choices",
+    "more": "Showing {{shown}} of {{count}}, the ones with team choices first. Search above for any other."
   }
 }

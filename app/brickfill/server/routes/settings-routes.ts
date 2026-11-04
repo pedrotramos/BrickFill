@@ -219,7 +219,11 @@ export async function setupSettingsRoutes(appkit: AppKitWithLakebase) {
           appkit.lakebase.query(
             `SELECT * FROM ${S}.category_settings WHERE active ORDER BY scope, COALESCE(scope_name, scope_id)`
           ),
-          appkit.lakebase.query(`SELECT * FROM ${S}.settings_event ORDER BY created_at DESC, id DESC LIMIT 50`),
+          // templates, attribute requirements and instructions keep their history on their own screens
+          appkit.lakebase.query(
+            `SELECT * FROM ${S}.settings_event WHERE scope IN ('global', 'department', 'category', 'subcategory')
+             ORDER BY created_at DESC, id DESC LIMIT 50`
+          ),
         ]);
         res.json({
           app: global.rows[0] ? appSettings(global.rows[0]) : null,

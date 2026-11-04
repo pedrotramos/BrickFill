@@ -117,7 +117,9 @@ The app shows the content language of each product as a badge.
 ## Category templates
 
 The **Category templates** page (`/templates`) holds the content model of each product type, so the content team can
-adjust, for example, the model of a hair dryer without a pull request:
+adjust, for example, the model of a hair dryer without a pull request. Each template opens in its own editor
+(`/templates/<id>`, or `/templates/new`), with a preview of the title built from example values and of the fact-sheet
+outline:
 
 - the product type's name and the departments, categories and subcategories of the source it covers, plus
   **synonyms** (other names the sources use), compared without accents or case;
