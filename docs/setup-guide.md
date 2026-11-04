@@ -561,8 +561,8 @@ Menus, links that leave the page, cart, login and tabs are not touched.
 If a value is on the page but not in the crop, **focused capture** takes over. Typical causes are a collapsed section
 or tab, or a page that changed height during the capture. Focused capture:
 - runs a second extraction of the same page: one per page, covering all of its values;
-- clicks the page's own control that opens the section (accordion header, tab or `<summary>`), centers the value and
-  takes a screenshot of the visible area;
+- clicks the page's own control that opens the section (accordion header, tab or `<summary>`), scrolls to the value
+  and takes a full-page screenshot;
 - keeps the window size unchanged, so the text map and the image describe the same layout;
 - points the evidence at that screenshot, and records in `coordinates.json` what was clicked (`revealedBy`).
 

@@ -12,6 +12,8 @@ versions the canonical data contract separately.
 - Full-page crops work again with Firecrawl's tall rendering window (1920×100000). The crop used to require the image
   height to match the document height, so every web crop failed and every page paid for a focused capture. One scale
   from the width is used now, and only blocks inside the part of the layout that the image shows are cropped.
+- The focused capture takes a full-page screenshot. In the tall window the page never scrolls and a screenshot of the
+  visible window came back cut to its first 1080 px, so values below them were left as `SCREENSHOT_ONLY`.
 - A blank (single-color) screenshot is no longer shown as the page capture: the page fails with "blank screenshot",
   the image stays archived for the audit, and the app shows its own label.
 - A page whose text map is missing after the screenshot now fails (`FAILED`, with the reason) instead of being labeled
