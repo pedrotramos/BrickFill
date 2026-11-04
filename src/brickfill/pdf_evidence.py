@@ -322,7 +322,14 @@ class PdfSource:
                 "scrollY": 0,
                 "blocks": blocks,
             }
-            pages.append(PdfPageMap(number, geometry, [block["text"] for block in blocks], image=item.image))
+            # the agent reads a table one row per line; the block that locates a value keeps it on a single line
+            lines = [
+                line
+                for block in item.blocks
+                for line in (" ".join(row.split()) for row in str(block.get("text", "")).splitlines())
+                if line
+            ]
+            pages.append(PdfPageMap(number, geometry, lines, image=item.image))
         if pages:
             self.pages = pages
             self.ocr = True

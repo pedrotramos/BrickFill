@@ -37,7 +37,8 @@ def _text(content: Any) -> str:
     value = str(content or "")
     value = re.sub(r"</t[dh]>\s*<t[dh][^>]*>", " | ", value, flags=re.IGNORECASE)
     value = re.sub(r"</tr>", "\n", value, flags=re.IGNORECASE)
-    return " ".join(html.unescape(re.sub(r"<[^>]+>", " ", value)).split())
+    lines = html.unescape(re.sub(r"<[^>]+>", " ", value)).splitlines()
+    return "\n".join(line for line in (" ".join(item.split()) for item in lines) if line)
 
 
 def _local(uri: str) -> Path:
