@@ -575,7 +575,7 @@ class CaptureCollector:
             content, final_url = await fetch_pdf(url, self._http)
         except PdfRefused as exc:
             return str(exc)
-        except httpx.HTTPError as exc:
+        except (httpx.HTTPError, OSError, ValueError) as exc:
             return f"PDF download failed: {safe_exception_message(exc, self.api_key)}"
         directory = f"{self.run_id}/{page.capture_id}"
         try:

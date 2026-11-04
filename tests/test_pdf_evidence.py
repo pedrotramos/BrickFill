@@ -385,3 +385,33 @@ def test_ai_parse_document_result_becomes_page_blocks():
     ]
     with pytest.raises(ValueError, match="failed"):
         pages_from_parsed({"error_status": [{"error_message": "boom"}]}, lambda uri: b"")
+
+
+def test_name_that_does_not_resolve_is_refused():
+    import socket
+
+    async def no_dns(host, port):
+        raise socket.gaierror(8, "nodename nor servname provided, or not known")
+
+    with pytest.raises(PdfRefused, match="does not resolve"):
+        run(check_public_url(PDF_URL, no_dns))
+
+
+def test_failed_scrape_of_a_web_page_survives_the_pdf_fallback(tmp_path, monkeypatch):
+    """A failed scrape tries the address as a PDF; a host that does not resolve leaves the scrape error."""
+    import socket
+
+    async def no_dns(host, port):
+        raise socket.gaierror(8, "nodename nor servname provided, or not known")
+
+    async def go():
+        async with (
+            httpx.AsyncClient(transport=httpx.MockTransport(lambda request: httpx.Response(500))) as http,
+            CaptureCollector("fc-key", EvidenceArchive(str(tmp_path)), "run-1", http_client=http) as collector,
+        ):
+            await collector.scrape({"url": "https://shop.example.com/p/1"})
+            return collector
+
+    monkeypatch.setattr("brickfill.pdf_evidence._resolve", no_dns)
+    page = run(go()).pages["https://shop.example.com/p/1"]
+    assert page.status == "FAILED" and "500" in page.error
