@@ -60,3 +60,9 @@ describe('branding', () => {
     expect(foregroundFor('#FDE68A')).toBe('#11171C');
   });
 });
+
+describe('list positions in issue fields', () => {
+  it('reads a position as the item number', () => {
+    expect(fieldLabel('images.0')).toBe('Image 1');
+  });
+});

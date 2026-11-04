@@ -46,9 +46,6 @@
   },
   "attributes": {
     "title": "Technical attributes",
-    "subtitle": "Compare the proposed value with the original source before approving or editing.",
-    "auditTitle": "Per-attribute audit",
-    "auditDescription": "“View audit” shows the source page, the captured excerpt and the source type, and lets you attach manual evidence (URL and excerpt, or a screenshot). Every edit needs its own evidence.",
     "filterLabel": "Filter attributes",
     "filters": {
       "relevant": "Relevant",
@@ -69,11 +66,10 @@
     },
     "effectiveValue": "Effective value",
     "confidence": "Confidence",
-    "valueOrigin": "Value origin",
     "table": {
       "attribute": "Attribute",
       "origin": "Origin",
-      "audit": "Audit"
+      "evidence": "Evidence"
     },
     "notPublished": "Not published",
     "notFound": "Not found",
@@ -83,7 +79,6 @@
     "curated": "Reviewed",
     "edited": "Edited",
     "agent": "AI agent",
-    "editAttribute": "Edit attribute",
     "candidate": {
       "outOfVocabulary": "Outside the vocabulary",
       "outOfVocabularyPreapproved": "Outside the vocabulary · Pre-approved",
@@ -102,28 +97,68 @@
       "REQUIRED_NO_EVIDENCE": "Required attribute without enough evidence.",
       "OPTIONAL_NO_CANDIDATE": "Optional attribute with no candidate or evidence for this product.",
       "NOT_IN_MATRIX": "The attribute is not in the applicable matrix or was marked as not applicable."
+    },
+    "description": "Each value with how it is backed. Open an attribute to compare it with its sources, attach evidence or edit it; every edit needs its own evidence.",
+    "search": "Search attributes",
+    "noMatches": "No attribute matches the search or the filter.",
+    "wasValue": "AI value: {{value}}",
+    "checksFailed_one": "{{count}} check failed",
+    "checksFailed_other": "{{count}} checks failed",
+    "summary": {
+      "total_one": "{{count}} attribute",
+      "total_other": "{{count}} attributes",
+      "missing_one": "{{count}} required without value",
+      "missing_other": "{{count}} required without value",
+      "check_one": "{{count}} to check",
+      "check_other": "{{count}} to check",
+      "edited_one": "{{count}} edited",
+      "edited_other": "{{count}} edited"
     }
   },
   "evidence": {
     "title": "Facts and sources",
     "confidence": "Confidence {{value}}",
-    "empty": "No facts were researched for this product yet."
+    "empty": "No facts were researched for this product yet.",
+    "description": "Every fact the agent researched, with the pages that state it."
   },
   "issues": {
     "title": "Deterministic validations",
     "none": {
       "title": "No problems found",
       "description": "The result passed every validation."
-    }
+    },
+    "description": "Checks run by code on the result: rules, vocabularies and evidence. Open an attribute to fix it.",
+    "errors_one": "{{count}} error",
+    "errors_other": "{{count}} errors",
+    "warnings_one": "{{count}} warning",
+    "warnings_other": "{{count}} warnings",
+    "error": "Error",
+    "warning": "Warning",
+    "places_one": "{{count}} place",
+    "places_other": "{{count}} places"
   },
   "review": {
     "title": "Review decision",
-    "status": "Status",
+    "status": "Decision",
     "assignee": "Assignee",
     "notes": "Notes",
-    "save": "Save review",
+    "save": "Save decision",
     "staleDecision": "The previous decision ({{status}}) was made on an older enrichment result. Review this result and decide again.",
-    "saved": "Review saved."
+    "saved": "Review saved.",
+    "description": "The decision applies to this result and the edits shown here.",
+    "assigneePlaceholder": "Who is reviewing this product",
+    "notesPlaceholder": "What you checked, and why you decided",
+    "options": {
+      "PENDING": "No decision yet.",
+      "IN_REVIEW": "You are checking this product; the decision comes later.",
+      "APPROVED": "The result and its edits are published at the next publication.",
+      "REJECTED": "The result is not published."
+    },
+    "readiness": {
+      "open": "Still open in this result: {{errors}} errors, {{warnings}} warnings and {{missing}} required attributes without value.",
+      "clean": "Every validation passed and every required attribute has a value.",
+      "see": "See validations"
+    }
   },
   "history": {
     "title": "History",
@@ -148,7 +183,7 @@
     "screenshot": "Screenshot",
     "previewAlt": "Screenshot preview",
     "removeScreenshot": "Remove screenshot",
-    "fileHint": "PNG, JPEG or WebP up to 10 MB. You can also paste with Ctrl+V.",
+    "fileHint": "PNG, JPEG or WebP, up to 10 MB. Ctrl+V pastes from the clipboard.",
     "note": "Note (optional)",
     "notePlaceholder": "Context for whoever audits this later",
     "problems": {
@@ -156,7 +191,11 @@
       "imageSize": "The screenshot must be at most 10 MB.",
       "https": "The source URL must start with https://.",
       "missing": "Attach a screenshot, or enter the source URL and the excerpt that proves the value."
-    }
+    },
+    "dropTitle": "Drop, paste or choose a screenshot",
+    "size": "{{size}} KB",
+    "or": "or prove it with the source page",
+    "ready": "The evidence is enough to save."
   },
   "audit": {
     "image": {
@@ -181,9 +220,7 @@
     "noReference": "No reference",
     "manualCount_one": "{{count}} manual",
     "manualCount_other": "{{count}} manual",
-    "open": "View audit",
     "humanOverride": "Human edit",
-    "title": "Audit of {{attribute}}",
     "description": "Check the proposed value and the sources behind it before approving or editing.",
     "candidateFound": "Candidate found",
     "aiValue": "Original AI value",
@@ -240,11 +277,26 @@
       "save": "Save evidence",
       "add": "Add evidence"
     },
-    "researchNote": "Research note"
+    "researchNote": "Research note",
+    "previous": "Previous attribute",
+    "next": "Next attribute",
+    "position": "{{index}} of {{count}}",
+    "checks": "Checks this value failed",
+    "value": "Value",
+    "editValue": "Edit value",
+    "published": "Published value",
+    "confidence": "Confidence {{value}}",
+    "editedBy": "Edited by {{actor}} on {{date}}",
+    "editNote": "The edit is recorded with its evidence; an approved product goes back to review.",
+    "saveEdit": "Save edit"
   },
   "loadFailed": {
     "title": "This product could not be loaded",
     "description": "The catalog did not answer. Try again in a moment."
   },
-  "loading": "Loading the product…"
+  "loading": "Loading the product…",
+  "evidenceState": {
+    "captured": "On the page",
+    "check": "Check capture"
+  }
 }

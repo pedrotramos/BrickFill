@@ -74,6 +74,12 @@ versions the canonical data contract separately.
   subcategories, and a sticky save bar that says what is unsaved or missing. Leaving with unsaved changes asks first.
 - The template, attribute, instruction and settings histories show one row per save, with lists as added and removed
   tags and ids by name. Active, inactive and required are tone tags with an icon instead of the action blue.
+- Product review: attributes are no longer edited inside their table row. Each row shows the published value, how it
+  is backed ("On the page", "Check capture", "No reference") and the checks it failed, and opens one side sheet that
+  audits and edits the attribute (‹ › walks through the list). Evidence is attached through a drop area (drop, paste
+  or choose a screenshot) instead of the browser's file input. Validations are grouped by rule, with the affected
+  attributes one click away; the decision is four described options under a readiness line; the evidence and history
+  are divided lists.
 - Attributes opens on an overview of the subcategories (attributes, required, team choices); the sidebar groups its
   items under Review and Configure; Agent instructions puts the editor and its versions side by side.
 - Titles separate their parts with spaces: the prompt no longer asks for a hyphen as separator, and leaves out

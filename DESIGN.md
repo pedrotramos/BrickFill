@@ -436,10 +436,36 @@ Workspace buttons: one blue fill per area, and outlines everywhere else.
 - **Unknown address:** a 404 page in the shell (icon tile, page title, one line, an outline button back to the
   overview), never the router's default error screen.
 
-### Evidence audit sheet (signature)
-A side sheet that puts the AI value, the curated value and each source side by side. Each source shows its host, a
-source-tier tag, a capture tag, the screenshot crop in an 8px bordered frame, and the excerpt. Anything new that
-shows a value should be able to show its proof the same way.
+### Attribute sheet (signature)
+One side sheet (`AttributeSheet`, 672px) is where an attribute is both audited and edited; the list never edits in
+place. The header holds ‹ › to walk the visible attributes without closing it ("6 of 23"), the name, and its tags
+(required, evidence, edited). Then, in order:
+- the checks this value failed, as a bordered list with the severity icon;
+- **Value**: the AI value (with its confidence) and the published value side by side, and "Edit value", which turns
+  the section into the edit form (value, reason, evidence) with a sticky footer (Cancel, the one blue Save edit);
+- **Sources**: one bordered tile per source, the crop on top, then the source-tier and capture tags, the host, the
+  title, the excerpt and ghost links to the page and the full screenshot;
+- the reviewer's own evidence, and the research note.
+
+Anything new that shows a value should be able to show its proof the same way.
+
+### Evidence field
+Reviewer evidence (`ManualEvidenceForm`) leads with a dashed drop area (drop, paste with Ctrl+V or choose; a preview
+with name, size and Remove once attached), then "or prove it with the source page" and the URL and excerpt, then an
+optional note. A status line under it says whether the evidence is enough to save. The native file input is never
+shown.
+
+### Attribute list
+Rows are uniform and read-only: name and tags, the published value (with the AI value it replaced, or the candidate),
+one evidence tag, the confidence right-aligned, and the origin. The evidence tag says how the value is backed: "On the
+page" (success, a crop or reviewer evidence), "Check capture" (warning), "N references" (neutral, text only), "No
+reference" (danger). The name opens the attribute sheet and its hit area covers the row. Above the list: search, the
+filter and the counts (required without value, to check, edited).
+
+### Validations and decision
+Validations are grouped by rule and severity, one row each, with the attributes they hit as outline buttons that
+open the attribute sheet. The review decision is four radio tiles (pending, in review, approve, reject) with what each
+does, under a readiness line (amber with the open errors and a "See validations" button, or green when clean).
 
 ### Record editor page
 A record with several sections and ordered lists (a category template) is edited on its own page, not in a modal:

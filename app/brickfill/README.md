@@ -89,7 +89,7 @@ to confirm the mirror serves it and every transitive package.
 | Folder                        | Contents                                                                              |
 | ----------------------------- | ------------------------------------------------------------------------------------- |
 | `client/src/pages`            | Overview, catalog, product and settings                                               |
-| `client/src/components`       | Attribute audit, manual evidence, architecture ("How it works")                       |
+| `client/src/components`       | Attribute sheet (audit and edit), evidence field, change log, architecture ("How it works") |
 | `server/`                     | Review, edit, evidence and settings routes; upload validation; evidence Volume reads  |
 | `config/`                     | Lakebase catalog queries and the content manifest                                     |
 | `resources/lakebase_sync.yml` | The products table synced to Lakebase                                                 |

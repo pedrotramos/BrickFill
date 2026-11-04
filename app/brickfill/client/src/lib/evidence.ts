@@ -38,3 +38,33 @@ export function captureLabelKey(
   if (status !== 'UNSUPPORTED' && CAPTURE_STATUSES.has(status ?? '') && /^PDF:/.test(error ?? '')) return 'PDF_FAILED';
   return CAPTURE_STATUSES.has(status ?? '') ? (status as string) : 'INCOMPLETE';
 }
+
+/**
+ * How well a value is backed, for the attribute list: a crop shows it on its source page (`captured`), a source
+ * without a usable crop needs a look (`check`), sources without visual capture back it by text (`text`), a value
+ * without any source is unsupported (`missing`), and an empty value has nothing to back (`none`).
+ */
+export type EvidenceState = 'captured' | 'check' | 'text' | 'missing' | 'none';
+
+export function evidenceState({
+  hasValue,
+  references,
+  manualCount,
+  captureExpected,
+}: {
+  hasValue: boolean;
+  references: readonly { capture_status?: string | null }[];
+  manualCount: number;
+  captureExpected: boolean;
+}): EvidenceState {
+  if (!hasValue) return 'none';
+  if (references.some((item) => item.capture_status === 'COMPLETE') || manualCount > 0) return 'captured';
+  if (!references.length) return 'missing';
+  return captureExpected || references.some((item) => item.capture_status) ? 'check' : 'text';
+}
+
+/** Validation issues of one attribute: the job writes their field as "attributes.<code>" (or "attribute.<code>"). */
+export function attributeCodeOf(field: string | null | undefined): string | null {
+  const match = /^attributes?\.(.+)$/.exec(field ?? '');
+  return match ? match[1] : null;
+}

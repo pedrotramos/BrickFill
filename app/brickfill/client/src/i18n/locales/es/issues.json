@@ -23,7 +23,11 @@
       "status": "Estado de la revisión"
     },
     "fact": "Hecho «{{name}}»",
-    "attribute": "Atributo «{{name}}»"
+    "attribute": "Atributo «{{name}}»",
+    "item": {
+      "images": "Imagen {{index}}",
+      "faq": "Pregunta {{index}} del FAQ"
+    }
   },
   "codes": {
     "INVALID_GTIN": {
