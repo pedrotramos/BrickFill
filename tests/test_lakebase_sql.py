@@ -10,8 +10,10 @@ from brickfill.lakebase_load import (
     ATTRIBUTE_COLUMNS,
     ENRICHMENT_COLUMNS,
     ISSUE_COLUMNS,
+    LATE_COLUMNS,
     REQUIREMENT_COLUMNS,
     ddl_statements,
+    requirement_query,
     source_queries,
 )
 
@@ -50,6 +52,28 @@ def test_source_queries_select_every_column():
     for column in ISSUE_COLUMNS:
         if column != "row_id":
             assert f"t.{column}" in queries["validation_issue"]
+
+
+def test_tables_written_before_this_release_load_without_the_new_columns():
+    # a workspace upgraded before its next enrichment: the prepare step has not ALTERed the Delta tables yet
+    old_attribute = {c for c in ATTRIBUTE_COLUMNS if c not in LATE_COLUMNS}
+    old_catalog = {c for c in ENRICHMENT_COLUMNS if c not in LATE_COLUMNS}
+    queries = source_queries("`c`.`s`", available={"product_attribute": old_attribute, "product_catalog": old_catalog})
+    assert (
+        "NULL AS required_origin" in queries["product_attribute"]
+        and "t.required_origin" not in queries["product_attribute"]
+    )
+    assert "NULL AS prompt_version" in queries["product_enrichment"]
+    assert "NULL AS instructions_version" in queries["product_enrichment"]
+    # tables the map does not cover, and columns of earlier releases, are selected as they are
+    assert "t.params_json" in queries["validation_issue"]
+    assert "NULL AS" not in source_queries("`c`.`s`", available={"product_attribute": set()})["product_enrichment"]
+    assert "t.attribute_code" in source_queries("`c`.`s`", available={"product_attribute": set()})["product_attribute"]
+    # once the prepare step added them, they are read again
+    full = source_queries("`c`.`s`", available={"product_attribute": set(ATTRIBUTE_COLUMNS)})
+    assert "t.required_origin" in full["product_attribute"]
+    assert "NULL AS source_required" in requirement_query("`c`.`s`", {"subcategory_id", "required"})
+    assert "NULL AS" not in requirement_query("`c`.`s`", {"source_required"})
 
 
 @pytest.mark.parametrize(
