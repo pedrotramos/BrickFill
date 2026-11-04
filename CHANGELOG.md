@@ -7,6 +7,16 @@ versions the canonical data contract separately.
 
 ## [Unreleased]
 
+### Added
+
+- PDF sources are visual evidence. PDFs cited by the agent are downloaded directly (HTTPS only, public hosts only,
+  redirects checked at every hop, 30 MB and 250 pages at most, encrypted files refused), without Firecrawl credits.
+  PDFium (`pypdfium2`) gives the agent the text and each page a text map, so values are cropped from the right page,
+  with table rows as one piece. Without a match the rendered page stays as the capture, and the app labels PDF crop
+  failures apart. PDFs are no longer excluded from the credit-limited recapture.
+- `pdf_ocr` and `pdf_ocr_max_pages` job parameters: scanned PDFs (no text layer) can be read with `ai_parse_document`
+  (billed per page). Off by default.
+
 ### Fixed
 
 - Full-page crops work again with Firecrawl's tall rendering window (1920×100000). The crop used to require the image

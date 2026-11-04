@@ -229,7 +229,28 @@ forced visible with CSS. The scripts:
   capture; a change of scheme, host or path is not.
 - The crop is derived only when the verbatim excerpt and the fact value identify a unique region.
 - Capture failures don't invalidate the text extraction, but require review of the value.
-- PDFs keep the text extraction but are never presented as visually proven.
+- PDFs are evidence like web pages, without Firecrawl credits (see **PDF sources** below).
+
+**PDF sources.** A URL ending in `.pdf`, a scrape whose `contentType` is a PDF, or a failed scrape whose address
+serves the `%PDF-` signature is downloaded directly:
+- only HTTPS on port 443, to a host that resolves only to public addresses (no `localhost`, `.local`, `.internal` or
+  private ranges), with redirects followed by hand (at most 6) and the same check at every hop;
+- at most 30 MB (declared and streamed) and 250 pages; encrypted PDFs are refused.
+
+PDFium (`pypdfium2`) extracts the text, which the agent reads as the page's markdown (`## Page N`, table rows as
+`a | b | c`), and a text map per page in the same shape as the web text map. Rows are the blocks, so a quote that
+crosses table columns is cropped as one piece. The crop picks the page where the quote identifies one row, retries
+with the rows that also name the attribute, and renders that page at twice its size (`page-N.png`, `page-N.json` and
+`source.pdf` are archived). Without a match the rendered page stays as the capture (`NO_MATCH`, error prefixed
+`PDF:`). A PDF that cannot be used this way still has its text extracted by Firecrawl, as before (`UNSUPPORTED`),
+except in the credit-limited recapture.
+
+Scanned PDFs (no text layer) are read with `ai_parse_document` only when the job runs with `pdf_ocr: "true"`, up to
+`pdf_ocr_max_pages`; each parsed element becomes a block (a table is cropped whole). Otherwise they keep the rendered
+first page for review.
+
+The host check runs before the download, and the HTTP client resolves the name again when it connects: a DNS answer
+that changes between the two (rebinding) is not prevented. Evidence downloads hold no credentials.
 
 **Archiving.** Files and links are written before the `product_enrichment` marker. There is no automatic deletion and
 no overwrite of history.

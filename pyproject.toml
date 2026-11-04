@@ -13,7 +13,8 @@ dependencies = [
   "Pillow>=13,<14",
   "pydantic>=2.11,<3",
   "tenacity>=9,<10",
-  "psycopg[binary]>=3.2,<4"
+  "psycopg[binary]>=3.2,<4",
+  "pypdfium2>=5.14,<6"
 ]
 
 [dependency-groups]

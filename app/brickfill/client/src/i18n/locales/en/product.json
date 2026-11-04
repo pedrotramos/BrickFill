@@ -219,7 +219,8 @@
       "UNSUPPORTED": "Source without visual capture (PDF) — review needed",
       "NOT_CAPTURED": "Source not captured — review needed",
       "FAILED": "Capture failed — review needed",
-      "BLANK": "The page did not render (blank screenshot) — review needed"
+      "BLANK": "The page did not render (blank screenshot) — review needed",
+      "PDF_FAILED": "PDF crop failed — check the PDF page"
     },
     "capturedAt": "Captured {{date}}",
     "sourceValue": "Value at the source: {{value}}",

@@ -25,6 +25,7 @@ from brickfill.models import (
     ValidationIssue,
     parse_eans,
 )
+from brickfill.pdf_evidence import DocumentParser
 from brickfill.quality import quality_score, validate_enrichment
 from brickfill.secrets import firecrawl_api_key
 from brickfill.settings import EffectiveSettings, JobDefaults, SettingsSnapshot, read_settings, resolve
@@ -372,12 +373,15 @@ def research(
     firecrawl_concurrency: int = 2,
     use_native_web_search: bool = False,
     rules_for: RulesResolver | None = None,
+    pdf_parser: DocumentParser | None = None,
+    pdf_parser_max_pages: int = 20,
 ) -> list[tuple[ProductSeed, ProductEnrichment | None, list[ValidationIssue], str | None]]:
     """Research, validate and capture visual evidence for every seed (concurrently).
 
     ``concurrency`` products are researched at the same time (they mostly wait on the model); every Firecrawl request
     of the run shares ``firecrawl_concurrency`` slots, the limit of the Firecrawl plan (2 on the free plan).
     ``rules_for`` gives each product its language, profile and market (job parameters and app settings).
+    ``pdf_parser`` reads scanned PDFs (``ai_parse_document``); without it they are kept for human review.
     """
     rules_for = rules_for or RulesResolver(SettingsSnapshot(), JobDefaults())
     # Resolved before any paid request, so an unknown language or profile fails the run immediately.
@@ -393,6 +397,8 @@ def research(
         run_id,
         concurrency=firecrawl_concurrency,
         location={"country": market.country, "languages": market.languages} if market else None,
+        pdf_parser=pdf_parser,
+        pdf_parser_max_pages=pdf_parser_max_pages,
     )
     agent.capture_collector = collector
 

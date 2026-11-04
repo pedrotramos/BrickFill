@@ -74,6 +74,11 @@ resources:
           default: ""
         - name: evidence_volume
           default: ${var.evidence_volume}
+        # Scanned PDFs (no text layer) read with ai_parse_document, billed per page; PDFs with text never need it.
+        - name: pdf_ocr
+          default: ${var.pdf_ocr}
+        - name: pdf_ocr_max_pages
+          default: ${var.pdf_ocr_max_pages}
         - name: lakebase_endpoint
           default: ${var.lakebase_endpoint}
         - name: lakebase_database
@@ -120,6 +125,8 @@ resources:
               firecrawl_concurrency: "{{job.parameters.firecrawl_concurrency}}"
               ean: "{{job.parameters.ean}}"
               evidence_volume: "{{job.parameters.evidence_volume}}"
+              pdf_ocr: "{{job.parameters.pdf_ocr}}"
+              pdf_ocr_max_pages: "{{job.parameters.pdf_ocr_max_pages}}"
               reviewers: "{{job.parameters.reviewers}}"
               products_per_reviewer: "{{job.parameters.products_per_reviewer}}"
               lakebase_endpoint: "{{job.parameters.lakebase_endpoint}}"

@@ -29,6 +29,8 @@ dbutils.widgets.text("concurrency", "2")
 dbutils.widgets.text("firecrawl_concurrency", "2")
 dbutils.widgets.text("ean", "")
 dbutils.widgets.text("evidence_volume", "brickfill_evidence")
+dbutils.widgets.text("pdf_ocr", "false")
+dbutils.widgets.text("pdf_ocr_max_pages", "20")
 dbutils.widgets.text("reviewers", "0")
 dbutils.widgets.text("products_per_reviewer", "0")
 dbutils.widgets.text("lakebase_endpoint", "")
@@ -52,6 +54,8 @@ concurrency = int(dbutils.widgets.get("concurrency"))
 firecrawl_concurrency = int(dbutils.widgets.get("firecrawl_concurrency"))
 ean = dbutils.widgets.get("ean").strip()
 evidence_volume = dbutils.widgets.get("evidence_volume")
+pdf_ocr = dbutils.widgets.get("pdf_ocr").strip().lower() == "true"
+pdf_ocr_max_pages = int(dbutils.widgets.get("pdf_ocr_max_pages") or "20")
 reviewers = int(dbutils.widgets.get("reviewers"))
 products_per_reviewer = int(dbutils.widgets.get("products_per_reviewer"))
 lakebase_endpoint = dbutils.widgets.get("lakebase_endpoint")
@@ -137,6 +141,7 @@ import uuid
 from datetime import UTC, datetime
 
 from brickfill.enrich import research
+from brickfill.pdf_ocr import SparkDocumentParser
 from brickfill.secrets import firecrawl_api_key
 
 firecrawl_key = firecrawl_api_key(dbutils, catalog=secret_catalog, schema=secret_schema, key=firecrawl_secret_key)
@@ -157,6 +162,8 @@ outcomes = research(
     firecrawl_concurrency=firecrawl_concurrency,
     use_native_web_search=use_native_web_search,
     rules_for=resolver,
+    pdf_parser=SparkDocumentParser(spark) if pdf_ocr else None,
+    pdf_parser_max_pages=pdf_ocr_max_pages,
 )
 success_count = sum(1 for _seed, result, _issues, _error in outcomes if result)
 print(f"Run {run_id}: {success_count}/{len(seeds)} products researched")

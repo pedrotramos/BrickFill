@@ -250,6 +250,7 @@ variables, and a required variable without a value makes `validate` fail with it
 | `model_endpoint` | default `databricks-claude-sonnet-4-6` | [FinOps, section 4](finops.md#4-choosing-and-changing-the-model) |
 | `use_native_web_search` | default `"false"` | `"false"` uses Firecrawl search; `"true"` uses `system.ai.web_search` (step 1.1) |
 | `firecrawl_concurrency` | default `"2"` | Simultaneous Firecrawl requests in the whole run. The free plan accepts 2 |
+| `pdf_ocr`, `pdf_ocr_max_pages` | defaults `"false"`, `"20"` | `"true"` reads scanned PDFs (no text layer) with `ai_parse_document`, billed per page, up to `pdf_ocr_max_pages` pages. PDFs with text never need it |
 | `secret_catalog`, `secret_schema`, `firecrawl_secret_key` | defaults: `catalog`, `schema`, `firecrawl_api_key` | Where the Firecrawl secret lives (step 5) |
 | `publish_cron` | default `0 0 * * * ?` | Hourly publication, in `timezone_id` |
 
@@ -578,7 +579,7 @@ never cited or captured.
 | `NO_MATCH` | The value was not found in the visible text, e.g. the source says "24 months" and the value is "2 years". |
 | `AMBIGUOUS` | The value appears in more than one place and the excerpt doesn't identify which. |
 | `SCREENSHOT_ONLY` | The page moved during the capture (carousel, banner). |
-| `UNSUPPORTED` | The source is a PDF: only the extracted text exists. |
+| `UNSUPPORTED` | A PDF that could not be downloaded or read directly (blocked address, encrypted, over 30 MB or 250 pages): only the text Firecrawl extracted exists. |
 | `FAILED` | The capture or the crop failed; the reason is in `capture_error` (for example a blank screenshot, when the page did not render). |
 
 In every case except `COMPLETE`, the reviewer checks the value in the page screenshot or attaches manual evidence

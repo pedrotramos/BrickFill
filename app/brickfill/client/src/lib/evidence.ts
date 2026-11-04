@@ -24,7 +24,7 @@ const CAPTURE_STATUSES = new Set([
 
 /**
  * Key under product:audit.capture for an evidence's capture outcome. A few failures the job reports by message
- * (a blank screenshot) get their own label, so the reviewer knows the page was never rendered.
+ * (a blank screenshot, a PDF crop) get their own label, so the reviewer knows the page was never rendered.
  */
 export function captureLabelKey(
   status: string | null | undefined,
@@ -34,5 +34,7 @@ export function captureLabelKey(
   if (status === 'COMPLETE') return 'COMPLETE';
   if (!status && !captureExpected) return 'LEGACY';
   if (status === 'FAILED' && /blank screenshot/i.test(error ?? '')) return 'BLANK';
+  // a PDF page was rendered but the value could not be cropped from it (messages prefixed "PDF:")
+  if (status !== 'UNSUPPORTED' && CAPTURE_STATUSES.has(status ?? '') && /^PDF:/.test(error ?? '')) return 'PDF_FAILED';
   return CAPTURE_STATUSES.has(status ?? '') ? (status as string) : 'INCOMPLETE';
 }

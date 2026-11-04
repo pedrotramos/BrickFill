@@ -470,6 +470,8 @@ The job names start with `BrickFill ·` (in development mode, prefixed with `[de
 | `max_products` | Hard cap of products per run |
 | `use_native_web_search: "false"` (default) | Discovery through Firecrawl search (~4 credits per product), the same path in every cloud |
 | `firecrawl_concurrency` | Simultaneous Firecrawl requests (2 on the free plan). Changes only the duration |
+| PDF sources (already applied) | PDFs cited by the agent are downloaded directly: no Firecrawl credit, no focused capture |
+| `pdf_ocr: "false"` (default) | Scanned PDFs are kept for human review. `"true"` reads them with `ai_parse_document` (AI Functions, billed per page), at most `pdf_ocr_max_pages` pages per document |
 | `performance_target: STANDARD` (already applied) | Half the DBUs of performance optimized, with 10–15 min more to start. Switch modes only for urgent reprocessing (section 2) |
 | Lean prompt (already applied) | Pages in markdown capped at 30 k characters; only search and scrape tools; missing attributes filled by code; a system prompt that depends only on language, profile and market, so Claude prompt caching holds across a batch |
 | Lakebase scale-to-zero (30 min, already applied) | The compute suspends after 30 min without connections, so cost follows review hours, not the clock (section 3) |
