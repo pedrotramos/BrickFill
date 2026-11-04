@@ -246,8 +246,9 @@ with the rows that also name the attribute, and renders that page at twice its s
 except in the credit-limited recapture.
 
 Scanned PDFs (no text layer) are read with `ai_parse_document` only when the job runs with `pdf_ocr: "true"`, up to
-`pdf_ocr_max_pages`; each parsed element becomes a block (a table is cropped whole). Otherwise they keep the rendered
-first page for review.
+`pdf_ocr_max_pages`. Each parsed element becomes a block positioned by its `bbox`, in pixels of the page image the
+function writes to the evidence Volume (200 dpi); a table is cropped whole, since the function gives one box per table,
+and reaches the agent one row per line. Otherwise they keep the rendered first page for review.
 
 The host check runs before the download, and the HTTP client resolves the name again when it connects: a DNS answer
 that changes between the two (rebinding) is not prevented. Evidence downloads hold no credentials.
