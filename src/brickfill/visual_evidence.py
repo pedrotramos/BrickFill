@@ -111,7 +111,9 @@ def crop_value(excerpt: str | None, *values: str | None) -> str:
 STABLE_TOLERANCE_PX = 2.0
 # Values that the focused capture tries again (a full-page FAILED only counts when the page itself was captured).
 FOCUS_STATUSES = {"NO_MATCH", "AMBIGUOUS", "SCREENSHOT_ONLY", "FAILED"}
-MAX_FOCUS_TARGETS = 6  # one paid scrape per page; 7 actions per value
+MAX_FOCUS_TARGETS = 6  # one paid scrape per page
+FOCUS_ACTIONS_PER_VALUE = 7
+FIRECRAWL_MAX_ACTIONS = 50  # Firecrawl refuses a scrape with more actions (HTTP 400)
 
 
 def table_cells(excerpt: str | None) -> list[str]:
@@ -411,6 +413,12 @@ class CaptureCollector:
         return actions
 
     @property
+    def _focus_limit(self) -> int:
+        """Values one focused scrape can show: with ``dismiss_overlays`` its notice passes leave room for fewer."""
+        room = FIRECRAWL_MAX_ACTIONS - 1 - len(self._dismiss_actions())
+        return min(MAX_FOCUS_TARGETS, room // FOCUS_ACTIONS_PER_VALUE)
+
+    @property
     def _dismiss_returns(self) -> int:
         """Script returns of :meth:`_dismiss_actions` at the start of ``javascriptReturns``."""
         return 1 + (OVERLAY_PASSES if self.dismiss_overlays else 0)
@@ -497,8 +505,7 @@ class CaptureCollector:
             original_actions = (
                 [item for item in requested if isinstance(item, dict)] if isinstance(requested, list) else []
             )
-            payload["actions"] = [
-                *original_actions,
+            capture_actions = [
                 {"type": "wait", "milliseconds": 1000},
                 # Refuse the cookie banner, open what a visitor can open (accordions, <details>, "show more"), then
                 # scroll to the end and back so lazy-loaded content is rendered before the text maps and the screenshot.
@@ -512,6 +519,9 @@ class CaptureCollector:
                 {"type": "screenshot", "fullPage": True, "quality": 100},
                 {"type": "executeJavascript", "script": DOM_SCRIPT},
             ]
+            # the agent's own actions run first, in the room the capture leaves under Firecrawl's limit
+            original_actions = original_actions[: max(0, FIRECRAWL_MAX_ACTIONS - len(capture_actions))]
+            payload["actions"] = [*original_actions, *capture_actions]
         if self._budget_exhausted():
             page.error = "Recapture credit budget exhausted; no paid request was made."
             page.tool_payload = self._error_payload(page.error)
@@ -881,7 +891,7 @@ class CaptureCollector:
                 needle = ""  # an excerpt that is not literally on the page cannot locate the element
             key = {"needle": needle, "value": value}
             index = next((item["index"] for item in targets if {k: item[k] for k in key} == key), None)
-            if index is None and len(targets) < MAX_FOCUS_TARGETS:
+            if index is None and len(targets) < self._focus_limit:
                 index = len(targets)
                 targets.append({"index": index, **key})
             assigned.append((evidence, value, index))

@@ -15,7 +15,10 @@ versions the canonical data contract separately.
   cookie banner (welcome tours, location or region prompts, newsletters, notification requests, stacked dialogs),
   from a closed list of labels and never accepting anything, with safeguards so the page itself is never hidden.
   Checked on synthetic pages at window heights 1080 and 100000 (`tests/test_overlays.py`, with Chrome and
-  `BRICKFILL_BROWSER_TESTS=1`).
+  `BRICKFILL_BROWSER_TESTS=1`). Its passes take room under Firecrawl's limit of 50 actions per scrape, so a focused
+  capture shows at most 5 values of a page with it (6 without).
+- Every scrape stays within Firecrawl's 50 actions: actions the agent asks for beyond the room the capture leaves are
+  dropped instead of failing the scrape with HTTP 400.
 
 - **Category templates** screen: the content model of each product type (title formula with a live example,
   fact-sheet sections and fields, facts always shown, required and optional), matched to departments, categories and

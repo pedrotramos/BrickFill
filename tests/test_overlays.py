@@ -19,7 +19,14 @@ from pathlib import Path
 import httpx
 import pytest
 
-from brickfill.visual_evidence import CAPTURE_SCRIPTS, OVERLAYS_SCRIPT, CaptureCollector, EvidenceArchive
+from brickfill.models import VisualEvidence
+from brickfill.visual_evidence import (
+    CAPTURE_SCRIPTS,
+    FIRECRAWL_MAX_ACTIONS,
+    OVERLAYS_SCRIPT,
+    CaptureCollector,
+    EvidenceArchive,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures" / "overlays"
 CHROME = next(
@@ -37,7 +44,7 @@ CHROME = next(
 )
 
 
-def scraped_actions(tmp_path: Path, dismiss_overlays: bool, monkeypatch) -> list[dict]:
+def scraped_actions(tmp_path: Path, dismiss_overlays: bool, monkeypatch, requested: list | None = None) -> list[dict]:
     sent: list[dict] = []
 
     async def no_dns(host, port):
@@ -58,7 +65,7 @@ def scraped_actions(tmp_path: Path, dismiss_overlays: bool, monkeypatch) -> list
                 "key", EvidenceArchive(str(tmp_path)), "run", http_client=http, dismiss_overlays=dismiss_overlays
             ) as collector,
         ):
-            await collector.scrape({"url": "https://shop.example.com/p/1"})
+            await collector.scrape({"url": "https://shop.example.com/p/1", "actions": requested or []})
 
     asyncio.run(go())
     return sent[0]["actions"]
@@ -76,6 +83,49 @@ def test_flag_on_answers_the_notices_three_times_after_the_cookie_banner(tmp_pat
     assert scripts[1:4] == [OVERLAYS_SCRIPT] * 3
     # the text maps stay the last two script returns, so the capture reads them as before
     assert actions[-1]["type"] == actions[-3]["type"] == "executeJavascript" and actions[-2]["type"] == "screenshot"
+
+
+@pytest.mark.parametrize("dismiss_overlays", [False, True])
+def test_full_page_scrape_stays_within_firecrawl_action_limit(tmp_path, monkeypatch, dismiss_overlays):
+    requested = [{"type": "click", "selector": f"#tab-{index}"} for index in range(60)]
+    actions = scraped_actions(tmp_path, dismiss_overlays, monkeypatch, requested)
+    assert len(actions) == FIRECRAWL_MAX_ACTIONS
+    assert actions[0] == requested[0]  # the agent's actions still run first
+
+
+@pytest.mark.parametrize(("dismiss_overlays", "shown"), [(False, 6), (True, 5)])
+def test_focused_scrape_stays_within_firecrawl_action_limit(tmp_path, monkeypatch, dismiss_overlays, shown):
+    from test_capture import PAGE_URL, capture, firecrawl, png, text_map
+
+    geometry = text_map([277, 267, 1366, 72])
+    collector = capture(tmp_path, firecrawl(png(1920, 2499), [geometry, geometry]))
+    collector.dismiss_overlays = dismiss_overlays
+    page = collector.pages[PAGE_URL]
+    page.source_text = " ".join(f"Value {index} W" for index in range(8))
+    sent: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        sent.append(json.loads(request.content))
+        return httpx.Response(500)
+
+    items = [
+        (
+            VisualEvidence(
+                evidence_id=f"ev-{index}", url=PAGE_URL, excerpt=f"Value {index} W", capture_status="NO_MATCH"
+            ),
+            f"{index} W",
+        )
+        for index in range(8)
+    ]
+
+    async def go():
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
+            collector._http = http
+            await collector._focus_page(page, items)
+
+    asyncio.run(go())
+    assert len(sent[0]["actions"]) <= FIRECRAWL_MAX_ACTIONS
+    assert sum(item["type"] == "screenshot" for item in sent[0]["actions"]) == shown
 
 
 EXPECTED = {

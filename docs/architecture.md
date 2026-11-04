@@ -218,8 +218,9 @@ and the coordinates of the visible text (a DOM map returned by `executeJavascrip
 **Before the screenshot**, the scripts in `src/brickfill/capture_scripts/` act like a visitor would. Nothing is
 forced visible with CSS. The scripts:
 - decline the cookie banner;
-- with `dismiss_overlays: "true"` (off by default), also answer the other notices that cover the page, a few passes in
-  a row (welcome tours, location or region prompts, newsletters, notification requests, stacked dialogs). Layers are
+- with `dismiss_overlays: "true"` (off by default), also answer the other notices that cover the page, three passes in
+  a row (they count toward Firecrawl's 50 actions per scrape, so a focused capture then covers 5 values of a page
+  instead of 6) (welcome tours, location or region prompts, newsletters, notification requests, stacked dialogs). Layers are
   recognized by role (`dialog`, `aria-modal`), class or id (`modal`, `popup`, `overlay`, `consent`, `banner`) and
   text, and answered from a closed list of labels: refuse, skip, not now, confirm skipping the tour, cancel the
   location request, continue, close. Nothing is accepted or subscribed. A cookie layer with no answer button is hidden
