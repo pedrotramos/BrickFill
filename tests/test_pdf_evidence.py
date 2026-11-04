@@ -325,6 +325,20 @@ class FakeParser:
         return [OcrPage(buffer.getvalue(), 1200, 1600, [{"text": "Power: 750 W", "box": [100, 300, 400, 40]}])]
 
 
+class TableParser(FakeParser):
+    def parse(self, pdf_path: str, max_pages: int) -> list[OcrPage]:
+        page = super().parse(pdf_path, max_pages)[0]
+        page.blocks = [{"text": "Power | 750 W\nChuck | 13 mm", "box": [100, 300, 800, 120]}]
+        return [page]
+
+
+def test_scanned_table_reaches_the_agent_one_row_per_line(tmp_path, monkeypatch):
+    (collector, payload), _calls = collector_for(tmp_path, make_pdf([[]]), monkeypatch, TableParser())
+    assert "Power | 750 W\nChuck | 13 mm" in json.loads(json.loads(payload)["content"][0]["text"])["markdown"]
+    result = collector.crop(reference("Chuck | 13 mm"), "13 mm", "Chuck")
+    assert result.capture_status == "COMPLETE", result.capture_error
+
+
 def test_scanned_pdf_read_by_the_parser_is_cropped(tmp_path, monkeypatch):
     parser = FakeParser()
     (collector, payload), _calls = collector_for(tmp_path, make_pdf([[]]), monkeypatch, parser)
@@ -381,7 +395,7 @@ def test_ai_parse_document_result_becomes_page_blocks():
     assert (pages[0].width, pages[0].height) == (1000, 1400)
     assert pages[0].blocks == [
         {"text": "Acme X100", "box": [50.0, 40.0, 350.0, 50.0]},
-        {"text": "Power | 750 W Chuck | 13 mm", "box": [50.0, 200.0, 850.0, 200.0]},
+        {"text": "Power | 750 W\nChuck | 13 mm", "box": [50.0, 200.0, 850.0, 200.0]},
     ]
     with pytest.raises(ValueError, match="failed"):
         pages_from_parsed({"error_status": [{"error_message": "boom"}]}, lambda uri: b"")
