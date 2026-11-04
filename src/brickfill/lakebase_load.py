@@ -47,6 +47,8 @@ ENRICHMENT_COLUMNS: dict[str, str] = {
     "content_language": "TEXT",
     "content_profile": "TEXT",
     "settings_hash": "TEXT",
+    "prompt_version": "TEXT",
+    "instructions_version": "INT",
     "error_count": "INT NOT NULL DEFAULT 0",
     "warning_count": "INT NOT NULL DEFAULT 0",
     "required_count": "INT NOT NULL DEFAULT 0",
@@ -74,6 +76,7 @@ ATTRIBUTE_COLUMNS: dict[str, str] = {
     "applicability_reason": "TEXT",
     "rejection_code": "TEXT",
     "applicability_code": "TEXT",
+    "required_origin": "TEXT",
 }
 FACT_COLUMNS: dict[str, str] = {
     "run_id": "TEXT NOT NULL",
@@ -96,6 +99,19 @@ ISSUE_COLUMNS: dict[str, str] = {
     "message": "TEXT",
     "created_at": "TIMESTAMP",
     "params_json": "TEXT",
+}
+# The attributes of every subcategory and what the source says about their requirement, for the app's Attributes
+# screen. Replaced at every load; the team's choices live in the app's own attribute_requirement_override table, so a
+# sync never touches them.
+REQUIREMENT_COLUMNS: dict[str, str] = {
+    "subcategory_id": "TEXT NOT NULL",
+    "attribute_id": "TEXT NOT NULL",
+    "attribute_name": "TEXT",
+    "category_id": "TEXT",
+    "subcategory": "TEXT",
+    "source_required": "BOOLEAN",  # is_required as the source has it (NULL: not informed)
+    "required": "BOOLEAN",  # source_required, or attributes_required_default when NULL
+    "sort_order": "INT",
 }
 CHILD_TABLES: dict[str, dict[str, str]] = {
     "product_attribute": ATTRIBUTE_COLUMNS,
@@ -131,7 +147,47 @@ def ddl_statements(schema: str) -> list[str]:
         f"CREATE INDEX IF NOT EXISTS product_enrichment_category_idx ON {schema}.product_enrichment (category)",
         *[table(name, columns, ", PRIMARY KEY (ean, run_id, row_id)") for name, columns in CHILD_TABLES.items()],
         *[statement for name, columns in CHILD_TABLES.items() for statement in added_columns(name, columns)],
+        table(
+            "attribute_requirement_source",
+            {**REQUIREMENT_COLUMNS, "synced_at": "TIMESTAMPTZ NOT NULL DEFAULT NOW()"},
+            ", PRIMARY KEY (subcategory_id, attribute_id)",
+        ),
     ]
+
+
+def requirement_query(namespace: str) -> str:
+    """Spark SQL for the attribute requirements of the source (the ``attribute_definition`` the prepare step wrote)."""
+    return (
+        "SELECT subcategory_id, attribute_code AS attribute_id, attribute_name, category_id, subcategory, "
+        f"source_required, required, sort_order FROM {namespace}.attribute_definition "
+        "ORDER BY subcategory_id, attribute_code"
+    )
+
+
+def sync_attribute_requirements(connection, namespace: str, schema: str) -> int:
+    """Replace the source's attribute requirements in one transaction: new pairs appear, pairs that left the source
+    disappear, and the overrides the team saved in the app (another table) are never touched."""
+    from databricks.sdk.runtime import spark
+
+    try:
+        rows = [tuple(row[c] for c in REQUIREMENT_COLUMNS) for row in spark.sql(requirement_query(namespace)).collect()]
+    except Exception as exc:  # noqa: BLE001 - before the first prepare run there is nothing to sync
+        print(f"WARNING: attribute requirements not synced: {exc}")
+        return 0
+    names = ", ".join(REQUIREMENT_COLUMNS)
+    placeholders = ", ".join(["%s"] * len(REQUIREMENT_COLUMNS))
+    try:
+        connection.execute(f"DELETE FROM {schema}.attribute_requirement_source")
+        for batch in batches(rows):
+            with connection.cursor() as cursor:
+                cursor.executemany(
+                    f"INSERT INTO {schema}.attribute_requirement_source ({names}) VALUES ({placeholders})", batch
+                )
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    return len(rows)
 
 
 def upsert_statement(schema: str, table: str, columns: Sequence[str], conflict: Sequence[str]) -> str:
@@ -265,14 +321,17 @@ def run(
     """
     if scope not in ("all", "run"):
         raise ValueError(f'scope must be "all" or "run"; received {scope!r}')
-    if scope == "run" and not run_id:
-        print("The enrichment run enriched no product; nothing to load")
-        return {}
     namespace = f"`{_identifier(catalog)}`.`{_identifier(schema)}`"
     target = results_schema(results_schema_name)
     with connect(endpoint, database) as connection:
         prepare_schema(connection, target)
-        counts = load_results(connection, namespace, target, run_id if scope == "run" else "")
+        requirements = sync_attribute_requirements(connection, namespace, target)
+        if scope == "run" and not run_id:
+            print("The enrichment run enriched no product; nothing to load")
+            counts = {}
+        else:
+            counts = load_results(connection, namespace, target, run_id if scope == "run" else "")
+        counts["attribute_requirement_source"] = requirements
         if app_role:
             grant_app_read(connection, target, app_role)
     print(f"Loaded into Lakebase schema {target}: {counts}")

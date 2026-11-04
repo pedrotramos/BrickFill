@@ -50,6 +50,9 @@ class AttributeDefinition(BaseModel):
     unit: str = ""  # unit of numeric values ("cm", "g"); the vocabulary then holds bare numbers
     role: str = ""  # brand | manufacturer | supplier | model | color | size | taxonomy | other
     allows_free_text: bool = False  # with a vocabulary: the options are suggestions, not a closed list
+    # where ``required`` comes from: "override" (Attributes screen), "source" (is_required) or "default"
+    # (attributes_required_default, when is_required is NULL)
+    required_origin: str = "source"
 
 
 class AttributeMappingStatus(str, Enum):
@@ -108,6 +111,7 @@ class CatalogAttribute(BaseModel):
     name: str = ""
     value: str | None = None
     required: bool = False
+    required_origin: str | None = None
     applicable: bool = True
     confidence: float = Field(default=0, ge=0, le=1)
     evidence_urls: list[HttpUrl] = Field(default_factory=list)

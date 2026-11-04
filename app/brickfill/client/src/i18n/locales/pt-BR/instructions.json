@@ -1,0 +1,31 @@
+{
+  "title": "Instruções do agente",
+  "subtitle": "Instruções adicionais de estilo e ênfase para o agente de enriquecimento (por exemplo “cite sempre a garantia”, “evite o termo X”). As regras fixas de fontes, evidência, formato e segurança continuam no código e não podem ser substituídas.",
+  "reload": "Recarregar instruções",
+  "conflict": "Suas alterações não foram salvas porque outra pessoa alterou as instruções antes.",
+  "saved": "Salvo. O próximo lote de enriquecimento usa esta versão.",
+  "readOnly": {
+    "title": "Somente leitura",
+    "description": "Só os administradores configurados podem alterar as instruções do agente.",
+    "noEditors": "Ninguém pode alterar as instruções do agente ainda: defina AGENT_INSTRUCTIONS_EDITORS (ou SETTINGS_EDITORS) no deploy do app."
+  },
+  "editor": {
+    "title": "Instruções ativas",
+    "description": "Enviadas ao agente depois das regras fixas, numa seção delimitada. Elas só ajustam estilo e ênfase; em caso de conflito, valem as regras fixas.",
+    "label": "Instruções",
+    "placeholder": "Uma instrução por linha, em linguagem simples.",
+    "count": "{{length}} / {{max}} caracteres",
+    "save": "Salvar nova versão",
+    "guard": "Cada resultado registra a versão com que foi gerado. O conteúdo das páginas continua não confiável, digam o que disserem estas instruções."
+  },
+  "history": {
+    "title": "Versões",
+    "description": "Cada gravação e cada restauração criam uma versão nova; restaurar nunca reescreve o histórico.",
+    "empty": "Nenhuma versão salva ainda.",
+    "version": "Versão {{version}}",
+    "active": "Ativa",
+    "restoredFrom": "Restaurada da versão {{version}}",
+    "emptyBody": "(vazia: sem instruções adicionais)",
+    "restore": "Restaurar esta versão"
+  }
+}

@@ -1,11 +1,16 @@
 import { ensureOk } from './api-errors';
 
 /** Mirrors config/content-manifest.json (generated from the pipeline's content packs). */
-export type OverrideSpec =
-  | { type: 'integer'; minimum: number; maximum: number }
-  | { type: 'boolean' }
-  | { type: 'string_list'; max_items: number; max_length: number }
-  | { type: 'enum'; values: string[] };
+/** group "template": edited on the Category templates screen, hidden from Settings. */
+type Grouped = { group?: 'template' };
+export type OverrideSpec = Grouped &
+  (
+    | { type: 'integer'; minimum: number; maximum: number }
+    | { type: 'boolean' }
+    | { type: 'string_list'; min_items?: number; max_items: number; max_length: number }
+    | { type: 'enum'; values: string[] }
+    | { type: 'sections'; max_items: number; max_fields: number; max_length: number }
+  );
 
 export interface ContentManifest {
   contract_version: string;
@@ -52,6 +57,8 @@ export interface SettingsEvent {
   after: unknown;
   reason: string | null;
   actor: string;
+  /** Revision of the versioned record the change produced (templates, attribute requirements). */
+  revision?: number | null;
   createdAt: string | null;
 }
 

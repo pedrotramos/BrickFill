@@ -108,7 +108,8 @@ if not seeds:
 
 # MAGIC %md
 # MAGIC ## Settings of each product
-# MAGIC Field by field: subcategory > category > department > app settings > job parameters. An unknown language,
+# MAGIC Field by field: subcategory > category > department > category template > app settings > job parameters. The
+# MAGIC same read brings the agent instructions and the attribute requirement choices of the app. An unknown language,
 # MAGIC profile or market fails here, before any paid request.
 
 # COMMAND ----------

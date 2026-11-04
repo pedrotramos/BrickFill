@@ -112,6 +112,8 @@ describe('server and pipeline codes', () => {
       'GTIN_PACKAGING_LEVEL_CONFLICT',
       'CATEGORY_REQUIRED_FACT',
       'TITLE_MISSING_BRAND',
+      'TITLE_HYPHEN_SEPARATOR',
+      'FACT_SHEET_EXTRA_SECTION',
       'DESCRIPTION_LINK',
       'META_SUFFIX',
       'FAQ_COUNT',

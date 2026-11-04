@@ -164,6 +164,9 @@ Complete a retailer's product catalog with content and attributes that carry **v
 - Only the latest run of each product is kept. The marker is written last; superseded runs are removed afterwards.
 - `product_enrichment`: one row per enriched product. `product_attribute`, `product_fact` and `validation_issue`
   hold that run's children, keyed by `(ean, run_id, row_id)`.
+- `attribute_requirement_source`: the attributes of every subcategory and their `is_required` in the source (and the
+  value `attributes_required_default` gives it when the source has none). Replaced at every load; it feeds the app's
+  Attributes screen.
 
 **Created and written by the app** (`brickfill_app`):
 - `product_review`: review status (`PENDING`, `IN_REVIEW`, `APPROVED`, `REJECTED`), assignee, notes and the
@@ -175,7 +178,14 @@ Complete a retailer's product catalog with content and attributes that carry **v
 - `audit_event`: append-only history of every product change, with the user's e-mail (`actor`) and Databricks id
   (`actor_id`).
 - `app_settings`, `category_settings`: enrichment settings (global and per scope), versioned.
-- `settings_event`: append-only history of every settings change.
+- `category_template`: content models per product type (title formula, fact-sheet structure, required and optional
+  facts), matched to the source taxonomy by id, name or synonym; versioned by `revision`.
+- `attribute_requirement_override`: the team's choice, per subcategory and attribute, of required or optional (`NULL`
+  follows the source). The load job never writes this table, so a sync never overwrites a choice.
+- `agent_instruction_version`: the team's additional instructions to the agent; every save or restore is a new
+  version, and one is active.
+- `settings_event`: append-only history of every change to settings, templates and attribute requirements, field by
+  field, with the revision it produced.
 
 Delta is the system of record for the AI output: history, analytics and the evidence index. The app computes the
 effective view by applying the latest active edit over the immutable AI result.

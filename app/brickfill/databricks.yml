@@ -90,6 +90,12 @@ variables:
   settings_editors:
     description: Comma-separated e-mails allowed to change Settings; none = every app user (changes are always audited)
     default: none
+  agent_instructions_editors:
+    description: Comma-separated e-mails allowed to change the agent instructions; none = settings_editors (and nobody when both are none)
+    default: none
+  category_templates_seed:
+    description: JSON file in config/ with category templates inserted once, by id, at the first start (an initial load); none = no initial load
+    default: none
 
   # --- UI and co-branding ---
   ui_default_language:
@@ -148,6 +154,10 @@ resources:
             value: ${var.market}
           - name: SETTINGS_EDITORS
             value: ${var.settings_editors}
+          - name: AGENT_INSTRUCTIONS_EDITORS
+            value: ${var.agent_instructions_editors}
+          - name: CATEGORY_TEMPLATES_SEED
+            value: ${var.category_templates_seed}
           - name: UI_DEFAULT_LANGUAGE
             value: ${var.ui_default_language}
           - name: BRAND_CUSTOMER_NAME

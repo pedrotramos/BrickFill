@@ -9,6 +9,23 @@ versions the canonical data contract separately.
 
 ### Added
 
+- **Category templates** screen: the content model of each product type (title formula with a live example,
+  fact-sheet sections and fields, facts always shown, required and optional), matched to departments, categories and
+  subcategories by id, name or synonym. Templates are one more settings layer (between the global settings and the
+  per-category overrides), appear in each product's provenance with their revision and change `settings_hash`. Saves
+  are versioned (409 on a concurrent change), the history keeps every field before and after, and an optional JSON
+  file loads templates once at the first start (`category_templates_seed`).
+- **Attributes** screen: mark each attribute of a subcategory as required or optional. The load job syncs the source's
+  `is_required` to Lakebase; the team's choice lives in the app's own table, so syncs never overwrite it. Effective
+  requirement = choice, then source, then `attributes_required_default`, used in the agent's definitions and in
+  `MISSING_REQUIRED_ATTRIBUTE`; `product_attribute.required_origin` records where it came from.
+- **Agent instructions** screen: additional style and emphasis instructions (up to 4,000 characters), versioned with
+  restore, editable only by `agent_instructions_editors`. The prompt places them after the fixed rules, which they
+  cannot change; each result records `instructions_version` and `prompt_version`.
+- Profiles and templates accept `synonyms` in category matches, `required_fact_labels`, `optional_fact_labels` and an
+  exact `fact_sheet.layout`; the validator flags a hyphen used between words of the title (`TITLE_HYPHEN_SEPARATOR`)
+  and fact-sheet sections outside a template (`FACT_SHEET_EXTRA_SECTION`).
+
 - PDF sources are visual evidence. PDFs cited by the agent are downloaded directly (HTTPS only, public hosts only,
   redirects checked at every hop, 30 MB and 250 pages at most, encrypted files refused), without Firecrawl credits.
   PDFium (`pypdfium2`) gives the agent the text and each page a text map, so values are cropped from the right page,
@@ -32,6 +49,8 @@ versions the canonical data contract separately.
 
 ### Changed
 
+- Titles separate their parts with spaces: the prompt no longer asks for a hyphen as separator, and leaves out
+  the parts of the title formula without a verified value.
 - `scripts/replay_capture.py` also crops the archived screenshot with the current code and prints the window height
   of the text map, so crop regressions are caught without spending credits.
 

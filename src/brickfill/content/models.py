@@ -9,9 +9,11 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from brickfill.text import search_key
 
 SECTION_KEYS = ("key_features", "additional_features", "dimensions_weight", "package_contents")
 FACT_LABEL_KEYS = ("brand", "supplier", "model", "gtin", "warranty", "height", "width", "depth", "weight", "color")
@@ -65,10 +67,19 @@ class MetaDescriptionRules(_Strict):
         return self
 
 
+class FactSheetSection(_Strict):
+    """One section of a fact-sheet layout: a section key (or a name in the content language) and its fields."""
+
+    section: str = Field(min_length=1, max_length=60)
+    fields: list[str] = Field(default_factory=list, max_length=30)
+
+
 class FactSheetRules(_Strict):
     sections: list[str] = Field(default_factory=lambda: list(SECTION_KEYS))
     must_include_gtin: bool = True
     must_include: list[str] = Field(default_factory=lambda: ["brand", "supplier"])
+    # When set (a category template), the fact sheet has exactly these sections and fields, in this order.
+    layout: list[FactSheetSection] = Field(default_factory=list, max_length=12)
 
 
 class FAQRules(_Strict):
@@ -93,6 +104,27 @@ class CategoryMatch(_Strict):
     department_names: list[str] = Field(default_factory=list)
     category_names: list[str] = Field(default_factory=list)
     subcategory_names: list[str] = Field(default_factory=list)
+    # Alternative names the sources use for the same product type, compared like the names at every level.
+    synonyms: list[str] = Field(default_factory=list)
+
+    def level(self, seed: Any) -> int:
+        """How specifically this matches a product (``ProductSeed``): 3 subcategory, 2 category, 1 department, 0 no.
+
+        Ids and names match their own level; a synonym matches the level whose name it equals.
+        """
+        synonyms = {search_key(name) for name in self.synonyms} - {""}
+        best = 0
+        for rank, ids, names, value_id, value_name in (
+            (1, self.department_ids, self.department_names, seed.department_id, seed.department),
+            (2, self.category_ids, self.category_names, seed.category_id, seed.category),
+            (3, self.subcategory_ids, self.subcategory_names, seed.subcategory_id, seed.subcategory),
+        ):
+            key = search_key(value_name or "")
+            if (value_id and value_id in ids) or (
+                key and (key in {search_key(name) for name in names} or key in synonyms)
+            ):
+                best = rank
+        return best
 
 
 class CategoryRule(_Strict):
@@ -114,6 +146,9 @@ class ContentProfile(_Strict):
     forbid_emojis: bool = True
     brand_must_appear_in_source_title: bool = False
     category_rules: list[CategoryRule] = Field(default_factory=list)
+    # Facts every product of the profile (or of a category template) must / may show in the fact sheet.
+    required_fact_labels: list[str] = Field(default_factory=list)
+    optional_fact_labels: list[str] = Field(default_factory=list)
     severity_overrides: dict[str, Literal["ERROR", "WARNING", "INFO"]] = Field(default_factory=dict)
     disabled_rules: list[str] = Field(default_factory=list)
 

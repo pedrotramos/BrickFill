@@ -55,6 +55,20 @@ export function readSettingsEditors(env: NodeJS.ProcessEnv = process.env): Set<s
   );
 }
 
+/**
+ * E-mails allowed to change the agent's additional instructions (comma-separated): AGENT_INSTRUCTIONS_EDITORS, else
+ * SETTINGS_EDITORS. Unlike Settings, nobody may edit them while both are unset: the text goes into every prompt.
+ */
+export function readInstructionEditors(env: NodeJS.ProcessEnv = process.env): Set<string> {
+  const own = new Set(
+    (optional(env.AGENT_INSTRUCTIONS_EDITORS) ?? '')
+      .split(',')
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean)
+  );
+  return own.size ? own : readSettingsEditors(env);
+}
+
 export interface PublicConfig {
   uiDefaultLanguage: string;
   contentLanguageDefault: string;

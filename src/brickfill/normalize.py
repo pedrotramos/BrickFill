@@ -118,6 +118,7 @@ def normalize_sources(
             "attribute_name": name,
             "attribute_description": _text(row, "attribute_description"),
             "required": attributes_required_default if required is None else required,
+            "source_required": required,
             "value_type": _text(row, "value_type").lower() or "text",
             "unit": _text(row, "unit"),
             "attribute_role": _text(row, "attribute_role").lower(),

@@ -88,6 +88,38 @@
       "type": "integer",
       "minimum": 100,
       "maximum": 5000
+    },
+    "title_order": {
+      "type": "string_list",
+      "min_items": 1,
+      "max_items": 15,
+      "max_length": 40,
+      "group": "template"
+    },
+    "fact_sheet_layout": {
+      "type": "sections",
+      "max_items": 12,
+      "max_fields": 30,
+      "max_length": 60,
+      "group": "template"
+    },
+    "fact_sheet_must_include": {
+      "type": "string_list",
+      "max_items": 20,
+      "max_length": 60,
+      "group": "template"
+    },
+    "required_fact_labels": {
+      "type": "string_list",
+      "max_items": 30,
+      "max_length": 60,
+      "group": "template"
+    },
+    "optional_fact_labels": {
+      "type": "string_list",
+      "max_items": 30,
+      "max_length": 60,
+      "group": "template"
     }
   },
   "profile_defaults": {
@@ -101,7 +133,24 @@
       "faq_enabled": true,
       "units": "metric",
       "image_min_width": 1000,
-      "image_min_height": 1000
+      "image_min_height": 1000,
+      "title_order": [
+        "product_type",
+        "brand",
+        "model",
+        "key_feature",
+        "secondary_feature",
+        "color",
+        "variant",
+        "quantity"
+      ],
+      "fact_sheet_layout": [],
+      "fact_sheet_must_include": [
+        "brand",
+        "supplier"
+      ],
+      "required_fact_labels": [],
+      "optional_fact_labels": []
     }
   }
 }

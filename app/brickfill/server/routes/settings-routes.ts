@@ -15,6 +15,17 @@ import { sendError } from '../http-errors';
 import { reviewer, type Reviewer } from '../identity';
 import { type LockingPool, type Queryable, withLock } from '../lakebase-lock';
 import { loadLakebaseQueries, readLakebaseSchema, readResultsSchema } from '../lakebase-queries';
+import {
+  changes,
+  NotFound,
+  objectValue,
+  recordChanges,
+  type Row,
+  settingsEvent,
+  text,
+  timestamp,
+  VersionConflict,
+} from '../settings-events';
 import { runLakebaseQuery } from './lakebase-query-routes';
 
 interface AppKitWithLakebase {
@@ -71,6 +82,9 @@ const ddl = (S: string) => [
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`,
   `CREATE INDEX IF NOT EXISTS settings_event_created_idx ON ${S}.settings_event (created_at DESC)`,
+  // revision of the versioned record a change produced (category templates, attribute requirements)
+  `ALTER TABLE ${S}.settings_event ADD COLUMN IF NOT EXISTS revision INT`,
+  `CREATE INDEX IF NOT EXISTS settings_event_scope_idx ON ${S}.settings_event (scope, scope_id, created_at DESC)`,
 ];
 
 const SCOPES = ['department', 'category', 'subcategory'] as const;
@@ -78,15 +92,6 @@ const Scope = z.enum(SCOPES);
 const ScopeId = z.string().trim().min(1).max(200);
 const Reason = z.string().trim().max(2000).optional();
 const ExpectedVersion = z.number().int().min(0);
-
-type Overrides = Record<string, unknown>;
-type Row = Record<string, unknown>;
-
-const text = (value: unknown): string | null => (typeof value === 'string' ? value : null);
-const timestamp = (value: unknown): string | null =>
-  value instanceof Date ? value.toISOString() : typeof value === 'string' ? value : null;
-const objectValue = (value: unknown): Overrides =>
-  value && typeof value === 'object' && !Array.isArray(value) ? (value as Overrides) : {};
 
 function appSettings(row: Row) {
   return {
@@ -116,59 +121,6 @@ function categorySetting(row: Row) {
   };
 }
 
-function settingsEvent(row: Row) {
-  return {
-    id: Number(row.id),
-    scope: text(row.scope) ?? '',
-    scopeId: text(row.scope_id) ?? '',
-    fieldKey: text(row.field_key) ?? '',
-    before: row.before_value ?? null,
-    after: row.after_value ?? null,
-    reason: text(row.reason),
-    actor: text(row.actor) ?? '',
-    createdAt: timestamp(row.created_at),
-  };
-}
-
-/** Field-level changes between two flat states; overrides are compared key by key as "overrides.<key>". */
-function changes(before: Record<string, unknown>, after: Record<string, unknown>) {
-  const flatten = (state: Record<string, unknown>) => {
-    const { overrides, ...fields } = state;
-    const flat: Record<string, unknown> = { ...fields };
-    for (const [key, value] of Object.entries(objectValue(overrides))) flat[`overrides.${key}`] = value;
-    return flat;
-  };
-  const left = flatten(before);
-  const right = flatten(after);
-  const keys = [...new Set([...Object.keys(left), ...Object.keys(right)])].sort();
-  return keys
-    .filter((key) => JSON.stringify(left[key] ?? null) !== JSON.stringify(right[key] ?? null))
-    .map((key) => ({ key, before: left[key] ?? null, after: right[key] ?? null }));
-}
-
-const json = (value: unknown) => (value === null || value === undefined ? null : JSON.stringify(value));
-
-async function recordChanges(
-  client: Queryable,
-  S: string,
-  scope: string,
-  scopeId: string,
-  diff: ReturnType<typeof changes>,
-  reason: string | undefined,
-  user: Reviewer
-) {
-  for (const change of diff) {
-    await client.query(
-      `INSERT INTO ${S}.settings_event
-         (scope, scope_id, field_key, before_value, after_value, reason, actor, actor_id)
-       VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6, $7, $8)`,
-      [scope, scopeId, change.key, json(change.before), json(change.after), reason || null, user.email, user.id]
-    );
-  }
-}
-
-class VersionConflict extends Error {}
-class NotFound extends Error {}
 /** The saved settings would give some products a minimum length above the maximum: the job would fail the batch. */
 class InvalidResolvedSettings extends Error {}
 

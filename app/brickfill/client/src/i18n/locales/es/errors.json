@@ -34,5 +34,19 @@
   "INVALID_SETTINGS": "Hay valores de configuración no válidos. Revísalos e inténtalo de nuevo.",
   "NOT_FOUND": "No encontrado.",
   "INTERNAL_ERROR": "Error inesperado. Inténtalo de nuevo.",
-  "NETWORK_ERROR": "No se pudo conectar con el servidor de BrickFill. Revisa tu conexión e inténtalo de nuevo."
+  "NETWORK_ERROR": "No se pudo conectar con el servidor de BrickFill. Revisa tu conexión e inténtalo de nuevo.",
+  "INSTRUCTIONS_LOAD_FAILED": "No se pudieron cargar las instrucciones del agente.",
+  "INSTRUCTIONS_SAVE_FAILED": "No se pudieron guardar las instrucciones del agente.",
+  "INSTRUCTIONS_VERSION_CONFLICT": "Otra persona cambió las instrucciones del agente. Recargue e inténtelo de nuevo.",
+  "INSTRUCTIONS_FORBIDDEN": "No tiene permiso para cambiar las instrucciones del agente.",
+  "INVALID_INSTRUCTIONS": "Instrucciones del agente no válidas.",
+  "TEMPLATES_LOAD_FAILED": "No se pudieron cargar las plantillas de categoría.",
+  "TEMPLATE_SAVE_FAILED": "No se pudo guardar la plantilla de categoría.",
+  "TEMPLATE_VERSION_CONFLICT": "Otra persona cambió esta plantilla de categoría. Recargue e inténtelo de nuevo.",
+  "TEMPLATE_EXISTS": "Ya existe una plantilla de categoría con este identificador.",
+  "INVALID_TEMPLATE": "Plantilla de categoría no válida.",
+  "REQUIREMENTS_LOAD_FAILED": "No se pudo cargar la obligatoriedad de los atributos.",
+  "REQUIREMENT_SAVE_FAILED": "No se pudo guardar la obligatoriedad del atributo.",
+  "REQUIREMENT_VERSION_CONFLICT": "Otra persona cambió la obligatoriedad de este atributo. Recargue e inténtelo de nuevo.",
+  "INVALID_REQUIREMENT": "Obligatoriedad de atributo no válida."
 }

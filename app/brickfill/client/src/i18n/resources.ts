@@ -1,3 +1,12 @@
+import enAttributes from './locales/en/attributes.json';
+import esAttributes from './locales/es/attributes.json';
+import ptAttributes from './locales/pt-BR/attributes.json';
+import enInstructions from './locales/en/instructions.json';
+import esInstructions from './locales/es/instructions.json';
+import ptInstructions from './locales/pt-BR/instructions.json';
+import enTemplates from './locales/en/templates.json';
+import esTemplates from './locales/es/templates.json';
+import ptTemplates from './locales/pt-BR/templates.json';
 import enArchitecture from './locales/en/architecture.json';
 import enCatalog from './locales/en/catalog.json';
 import enCommon from './locales/en/common.json';
@@ -32,6 +41,9 @@ export const NAMESPACES = [
   'settings',
   'issues',
   'errors',
+  'templates',
+  'attributes',
+  'instructions',
 ] as const;
 
 export const resources = {
@@ -44,6 +56,9 @@ export const resources = {
     settings: enSettings,
     issues: enIssues,
     errors: enErrors,
+    templates: enTemplates,
+    attributes: enAttributes,
+    instructions: enInstructions,
   },
   'pt-BR': {
     common: ptCommon,
@@ -54,6 +69,9 @@ export const resources = {
     settings: ptSettings,
     issues: ptIssues,
     errors: ptErrors,
+    templates: ptTemplates,
+    attributes: ptAttributes,
+    instructions: ptInstructions,
   },
   es: {
     common: esCommon,
@@ -64,5 +82,8 @@ export const resources = {
     settings: esSettings,
     issues: esIssues,
     errors: esErrors,
+    templates: esTemplates,
+    attributes: esAttributes,
+    instructions: esInstructions,
   },
 } as const;

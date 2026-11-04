@@ -36,6 +36,20 @@ OVERRIDE_SPECS: dict[str, dict[str, Any]] = {
     "units": {"type": "enum", "values": ["metric", "imperial"]},
     "image_min_width": {"type": "integer", "minimum": 100, "maximum": 5000},
     "image_min_height": {"type": "integer", "minimum": 100, "maximum": 5000},
+    # Category templates: title formula, fact-sheet structure and required/optional facts. Tokens, sections and
+    # labels are semantic keys of the profile (brand, model, key_features...) or names in the content language.
+    # "group": "template" keys are edited on the app's Category templates screen, not on Settings.
+    "title_order": {"type": "string_list", "min_items": 1, "max_items": 15, "max_length": 40, "group": "template"},
+    "fact_sheet_layout": {
+        "type": "sections",
+        "max_items": 12,
+        "max_fields": 30,
+        "max_length": 60,
+        "group": "template",
+    },
+    "fact_sheet_must_include": {"type": "string_list", "max_items": 20, "max_length": 60, "group": "template"},
+    "required_fact_labels": {"type": "string_list", "max_items": 30, "max_length": 60, "group": "template"},
+    "optional_fact_labels": {"type": "string_list", "max_items": 30, "max_length": 60, "group": "template"},
 }
 # Flat override key -> (profile section, field); None as section means a top-level profile field.
 _OVERRIDE_TARGETS: dict[str, tuple[str | None, str]] = {
@@ -49,6 +63,11 @@ _OVERRIDE_TARGETS: dict[str, tuple[str | None, str]] = {
     "units": (None, "units"),
     "image_min_width": ("images", "min_width"),
     "image_min_height": ("images", "min_height"),
+    "title_order": ("title", "order"),
+    "fact_sheet_layout": ("fact_sheet", "layout"),
+    "fact_sheet_must_include": ("fact_sheet", "must_include"),
+    "required_fact_labels": (None, "required_fact_labels"),
+    "optional_fact_labels": (None, "optional_fact_labels"),
 }
 
 
@@ -113,9 +132,36 @@ def validate_overrides(overrides: dict[str, Any] | None) -> dict[str, Any]:
                 raise ValueError(f"Override {key!r} must be a list of strings")
             if len(value) > spec["max_items"] or any(len(item) > spec["max_length"] for item in value):
                 raise ValueError(f"Override {key!r} accepts at most {spec['max_items']} items")
-            value = [item.strip() for item in value if item.strip()]
+            value = list(dict.fromkeys(item.strip() for item in value if item.strip()))
+            if len(value) < spec.get("min_items", 0):
+                raise ValueError(f"Override {key!r} needs at least {spec['min_items']} item")
+        elif kind == "sections":
+            value = _sections(key, value, spec)
         clean[key] = value
     return clean
+
+
+def _sections(key: str, value: Any, spec: dict[str, Any]) -> list[dict[str, Any]]:
+    """A fact-sheet layout: [{"section": str, "fields": [str, ...]}, ...], without blanks or repeated names."""
+    if not isinstance(value, list) or len(value) > spec["max_items"]:
+        raise ValueError(f"Override {key!r} must be a list of at most {spec['max_items']} sections")
+    sections: list[dict[str, Any]] = []
+    for item in value:
+        if not isinstance(item, dict) or set(item) - {"section", "fields"}:
+            raise ValueError(f"Override {key!r}: each section is an object with section and fields")
+        name, fields = item.get("section"), item.get("fields", [])
+        if not isinstance(name, str) or not name.strip() or len(name) > spec["max_length"]:
+            raise ValueError(f"Override {key!r}: section names have 1 to {spec['max_length']} characters")
+        if not isinstance(fields, list) or len(fields) > spec["max_fields"]:
+            raise ValueError(f"Override {key!r}: at most {spec['max_fields']} fields per section")
+        if not all(isinstance(field, str) and len(field) <= spec["max_length"] for field in fields):
+            raise ValueError(f"Override {key!r}: fields are names of at most {spec['max_length']} characters")
+        if any(search_key(name) == search_key(section["section"]) for section in sections):
+            raise ValueError(f"Override {key!r}: section {name.strip()!r} is repeated")
+        sections.append(
+            {"section": name.strip(), "fields": list(dict.fromkeys(f.strip() for f in fields if f.strip()))}
+        )
+    return sections
 
 
 def apply_overrides(profile: ContentProfile, overrides: dict[str, Any] | None) -> ContentProfile:
@@ -151,6 +197,9 @@ class EffectiveRules:
     catalog: LocalePack
     market: MarketPack | None = None
     overrides: dict[str, Any] = field(default_factory=dict)
+    # Additional instructions saved in the app (Agent instructions screen): text and version.
+    agent_instructions: str = ""
+    agent_instructions_version: int | None = None
 
     @property
     def content_language(self) -> str:
@@ -176,6 +225,8 @@ class EffectiveRules:
             "catalog": self.catalog.code,
             "market": self.market_code,
         }
+        if self.agent_instructions:
+            document["agent_instructions"] = hashlib.sha256(self.agent_instructions.encode()).hexdigest()
         return hashlib.sha256(json.dumps(document, sort_keys=True).encode()).hexdigest()[:16]
 
     # --- matching helpers (search keys over both packs) ---
@@ -187,7 +238,10 @@ class EffectiveRules:
         return (self.content.fact_labels.get(key) or self.fact_label_terms(key))[0]
 
     def section_name(self, key: str) -> str:
-        return self.content.fact_sheet_sections.get(key, key.replace("_", " ").title())
+        """Localized name of a section key; a name written by the team (a template) is kept as written."""
+        if key in self.content.fact_sheet_sections:
+            return self.content.fact_sheet_sections[key]
+        return key.replace("_", " ").title() if re.fullmatch(r"[a-z0-9_]+", key) else key
 
     @property
     def promotional_terms(self) -> list[str]:
@@ -238,21 +292,11 @@ class EffectiveRules:
         return [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
 
     def required_fact_labels(self, seed: Any) -> list[str]:
-        """Semantic fact-label keys the profile's category rules require for this product (``ProductSeed``)."""
-        labels: list[str] = []
+        """Fact-label keys required for this product (``ProductSeed``): the profile's (or template's) own list plus
+        the category rules that match it by id, name or synonym."""
+        labels: list[str] = list(self.profile.required_fact_labels)
         for rule in self.profile.category_rules:
-            match = rule.match
-
-            def hit(ids: list[str], names: list[str], value_id: str, value_name: str) -> bool:
-                return (bool(value_id) and value_id in ids) or (
-                    bool(value_name) and search_key(value_name) in {search_key(name) for name in names}
-                )
-
-            if (
-                hit(match.department_ids, match.department_names, seed.department_id, seed.department)
-                or hit(match.category_ids, match.category_names, seed.category_id, seed.category)
-                or hit(match.subcategory_ids, match.subcategory_names, seed.subcategory_id, seed.subcategory)
-            ):
+            if rule.match.level(seed):
                 labels.extend(rule.required_fact_labels)
         return list(dict.fromkeys(labels))
 
@@ -264,6 +308,7 @@ class EffectiveRules:
             "content_profile": self.profile.id,
             "market": self.market_code,
             "overrides": self.overrides,
+            "agent_instructions_version": self.agent_instructions_version,
             "rules_hash": self.hash,
         }
 
@@ -274,6 +319,8 @@ def effective_rules(
     content_language: str = DEFAULT_LANGUAGE,
     catalog_language: str | None = None,
     market: str | None = None,
+    agent_instructions: str = "",
+    agent_instructions_version: int | None = None,
 ) -> EffectiveRules:
     base = load_profile(profile) if isinstance(profile, str) else profile
     clean = validate_overrides(overrides)
@@ -283,6 +330,8 @@ def effective_rules(
         catalog=load_locale(catalog_language or content_language),
         market=load_market(market) if market else None,
         overrides=clean,
+        agent_instructions=agent_instructions.strip(),
+        agent_instructions_version=agent_instructions_version if agent_instructions.strip() else None,
     )
 
 

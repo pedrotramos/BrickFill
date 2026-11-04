@@ -174,6 +174,7 @@ def _project_attributes(
         attribute = returned.get(definition.code) or CatalogAttribute(code=definition.code, name=definition.name)
         attribute.name = definition.name
         attribute.required = definition.required
+        attribute.required_origin = definition.required_origin
 
         matched_facts = _matching_facts(attribute.name, facts, attribute.source_fact_names, rules)
         candidate = attribute.candidate_value or attribute.value
