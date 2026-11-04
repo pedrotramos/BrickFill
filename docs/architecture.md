@@ -222,8 +222,9 @@ forced visible with CSS. The scripts:
 - scroll the page to load lazy content.
 
 **Focused capture.** Values present in the page text but without a crop get a second extraction of the page.
-- For each value, `reveal.js` clicks the page's own control that opens the section or tab, centers the value and
-  takes a viewport screenshot between two text maps.
+- For each value, `reveal.js` clicks the page's own control that opens the section or tab, scrolls to the value and
+  takes a full-page screenshot between two text maps. A viewport screenshot would not do: in Firecrawl's 1920×100000
+  window the page never scrolls, and the visible window comes back cut to its first 1080 px.
 - The window is not resized, so image and coordinates describe the same layout.
 - When the value still doesn't show, the evidence gets `NOT_VISIBLE`, with the reason.
 
