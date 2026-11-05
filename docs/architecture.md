@@ -212,14 +212,22 @@ forced visible with CSS. The scripts:
 - scroll the page to load lazy content.
 
 **Focused capture.** Values present in the page text but without a crop get a second extraction of the page.
-- For each value, `reveal.js` clicks the page's own control that opens the section or tab, centers the value and
-  takes a viewport screenshot between two text maps.
+- For each value, `reveal.js` clicks the page's own control that opens the section or tab, scrolls to the value and
+  takes a full-page screenshot between two text maps. A viewport screenshot would not do: in Firecrawl's 1920×100000
+  window the page never scrolls, and the visible window comes back cut to its first 1080 px.
 - The window is not resized, so image and coordinates describe the same layout.
 - When the value still doesn't show, the evidence gets `NOT_VISIBLE`, with the reason.
 
 **Crop validity.**
-- The text, positions and width of the two maps, before and after the screenshot, must match. The final height and
-  viewport width must match the image pixels.
+- The text, positions and width of the two maps, before and after the screenshot, must match.
+- One scale, from the image width over the layout width, maps layout to image pixels. Firecrawl renders in a very tall
+  window (1920×100000) and the image may show only the content height, or only the first screen: a block is cropped
+  only when it lies inside the part of the layout the image shows; anything below fails and goes to the focused
+  capture.
+- A screenshot of a single flat color (a page that did not render: WAF block, page hidden by a script) is not evidence:
+  the page fails with "blank screenshot". The image stays archived for the audit but is not shown as the page.
+- Query and fragment changes made by the page UI (`#specs`, `?variant=`, tracking parameters) are tolerated during the
+  capture; a change of scheme, host or path is not.
 - The crop is derived only when the verbatim excerpt and the fact value identify a unique region.
 - Capture failures don't invalidate the text extraction, but require review of the value.
 - PDFs keep the text extraction but are never presented as visually proven.

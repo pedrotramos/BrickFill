@@ -189,6 +189,108 @@ def _digest(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
+def _same_capture_page(first: Any, second: Any) -> bool:
+    """Ignore query and fragment changes from page UI (tabs, variants, tracking) while rejecting another document."""
+    a, b = urlsplit(str(first or "")), urlsplit(str(second or ""))
+    return (a.scheme.casefold(), a.netloc.casefold(), a.path.rstrip("/")) == (
+        b.scheme.casefold(),
+        b.netloc.casefold(),
+        b.path.rstrip("/"),
+    )
+
+
+def _single_color(content: bytes) -> bool:
+    """A capture with one flat color (a blank white page) shows nothing a reviewer can check."""
+    with Image.open(io.BytesIO(content)) as image:
+        low, high = image.convert("L").getextrema()
+    return high - low <= 2
+
+
+def crop_screenshot(
+    archive: EvidenceArchive,
+    evidence: VisualEvidence,
+    value: str,
+    screenshot: bytes,
+    geometry: dict[str, Any],
+    previous: dict[str, Any] | None,
+    crop_directory: str,
+    viewport: bool = False,
+    secret: str = "",
+) -> VisualEvidence:
+    """Crop the unique visible block with the value; ``viewport`` crops a screenshot of the visible window only.
+
+    One scale, from the width, maps layout pixels to image pixels. The image may show less than the layout: Firecrawl
+    renders in a very tall window (1920x100000) and returns only the content height, or only the first screen of a
+    full-page request. Only the part of the layout the image shows can be cropped; a block below it fails (and the
+    focused capture tries again).
+    """
+    # The model quotes the markdown of the page; the match is made on the visible text (the stored excerpt is kept).
+    excerpt = _visible_excerpt(evidence.excerpt)
+    cells = table_cells(evidence.excerpt)
+    try:
+        if "blocks" not in geometry:
+            raise KeyError("blocks")
+        boxes = _quoted_blocks(geometry, excerpt, value, cells)
+        if len(boxes) != 1:
+            evidence.capture_status = "AMBIGUOUS" if boxes else "NO_MATCH"
+            evidence.capture_error = "A unique visible excerpt containing the explicit value was not found."
+            return evidence
+        moved = (
+            viewport
+            and previous is not None
+            and any(
+                abs(float(previous.get(axis, 0)) - float(geometry.get(axis, 0))) > STABLE_TOLERANCE_PX
+                for axis in ("scrollX", "scrollY")
+            )
+        )
+        if moved or not _stable(next(iter(boxes)), geometry, previous, excerpt, value, cells):
+            evidence.capture_status = "SCREENSHOT_ONLY"
+            evidence.capture_error = "The excerpt moved while the page was captured; check the full screenshot."
+            return evidence
+        with Image.open(io.BytesIO(screenshot)) as image:
+            if viewport:
+                # A viewport screenshot shows the window at the scroll position of the text map.
+                width, height = float(geometry["viewportWidth"]), float(geometry["viewportHeight"])
+                offset_x, offset_y = float(geometry["scrollX"]), float(geometry["scrollY"])
+            else:
+                width = float(max(geometry["width"], geometry.get("viewportWidth", 0)))
+                height = float(geometry["height"])
+                offset_x = offset_y = 0.0
+            if not (math.isfinite(width) and math.isfinite(height)) or width <= 0 or height <= 0:
+                raise ValueError("Screenshot dimensions do not match the rendered document")
+            scale = image.width / width
+            if not (math.isfinite(scale) and scale > 0):
+                raise ValueError("Screenshot dimensions do not match the rendered document")
+            visible_height = min(height, image.height / scale)
+            left, top, box_width, box_height = next(iter(boxes))
+            left, top = left - offset_x, top - offset_y
+            if not all(math.isfinite(item) for item in (left, top, box_width, box_height)):
+                raise ValueError("Invalid crop coordinates")
+            if left < 0 or top < 0 or box_width <= 0 or box_height <= 0:
+                raise ValueError("Visible excerpt is outside the screenshot")
+            if left + box_width > width + 1 or top + box_height > visible_height + 1:
+                raise ValueError("Screenshot does not contain the complete excerpt")
+            padding = 12 * scale
+            crop_box = [
+                max(0, math.floor(left * scale - padding)),
+                max(0, math.floor(top * scale - padding)),
+                min(image.width, math.ceil((left + box_width) * scale + padding)),
+                min(image.height, math.ceil((top + box_height) * scale + padding)),
+            ]
+            buffer = io.BytesIO()
+            image.crop(tuple(crop_box)).save(buffer, format="PNG")
+        content = buffer.getvalue()
+        evidence.crop_path = archive.write(f"{crop_directory}/{evidence.evidence_id}.png", content)
+        evidence.crop_box = crop_box
+        evidence.crop_sha256 = _digest(content)
+        evidence.capture_status = "COMPLETE"
+        evidence.capture_error = None
+    except (DatabricksError, OSError, ValueError, KeyError, TypeError, OverflowError) as exc:
+        evidence.capture_status = "FAILED"
+        evidence.capture_error = safe_exception_message(exc, secret)
+    return evidence
+
+
 class EvidenceArchive:
     def __init__(self, root: str, workspace: Any = None) -> None:
         self.root = root.rstrip("/")
@@ -237,7 +339,7 @@ class PageCapture:
 
 @dataclass
 class FocusShot:
-    """One value of a focused capture: what reveal.js did, the two text maps and the viewport screenshot."""
+    """One value of a focused capture: what reveal.js did, the two text maps and the full-page screenshot."""
 
     reveal: dict[str, Any]
     before: dict[str, Any]
@@ -409,7 +511,10 @@ class CaptureCollector:
             screenshot_url = screenshots[-1] if screenshots else data.get("screenshot")
             page.screenshot, page.screenshot_path = await self._store_screenshot(screenshot_url, f"{directory}/page")
             page.screenshot_sha256 = _digest(page.screenshot)
-            page.status = "SCREENSHOT_ONLY"
+            if _single_color(page.screenshot):
+                # archived above for the audit (same capture_id directory), but never shown as the page's capture
+                page.screenshot = page.screenshot_path = page.screenshot_sha256 = None
+                raise ValueError("Firecrawl returned a blank screenshot; the page was not rendered")
             returns = actions.get("javascriptReturns") or []
             maps = [self._geometry(item) for item in returns[-2:]]
             if len(maps) != 2 or not maps[1].get("blocks"):
@@ -421,7 +526,7 @@ class CaptureCollector:
             # The cookie and expansion scripts run right after the research actions; their href is the page address.
             expansion = sum(1 for item in original_actions if item.get("type") == "executeJavascript")
             start = self._geometry(returns[expansion]) if len(returns) > expansion else maps[0]
-            if any(item.get("href") != start.get("href") for item in maps):
+            if not all(_same_capture_page(item.get("href"), start.get("href")) for item in maps):
                 raise ValueError("The page changed address during the capture")
             page.previous_geometry = maps[0]
             page.geometry = maps[1]
@@ -556,71 +661,9 @@ class CaptureCollector:
         crop_directory: str,
         viewport: bool = False,
     ) -> VisualEvidence:
-        """Crop the unique visible block with the value; ``viewport`` crops a screenshot of the visible window only."""
-        # The model quotes the markdown of the page; the match is made on the visible text (the stored excerpt is kept).
-        excerpt = _visible_excerpt(evidence.excerpt)
-        cells = table_cells(evidence.excerpt)
-        try:
-            if "blocks" not in geometry:
-                raise KeyError("blocks")
-            boxes = _quoted_blocks(geometry, excerpt, value, cells)
-            if len(boxes) != 1:
-                evidence.capture_status = "AMBIGUOUS" if boxes else "NO_MATCH"
-                evidence.capture_error = "A unique visible excerpt containing the explicit value was not found."
-                return evidence
-            moved = (
-                viewport
-                and previous is not None
-                and any(
-                    abs(float(previous.get(axis, 0)) - float(geometry.get(axis, 0))) > STABLE_TOLERANCE_PX
-                    for axis in ("scrollX", "scrollY")
-                )
-            )
-            if moved or not _stable(next(iter(boxes)), geometry, previous, excerpt, value, cells):
-                evidence.capture_status = "SCREENSHOT_ONLY"
-                evidence.capture_error = "The excerpt moved while the page was captured; check the full screenshot."
-                return evidence
-            with Image.open(io.BytesIO(screenshot)) as image:
-                if viewport:
-                    # A viewport screenshot shows the window at the scroll position of the text map.
-                    width, height = geometry["viewportWidth"], geometry["viewportHeight"]
-                    offset_x, offset_y = float(geometry["scrollX"]), float(geometry["scrollY"])
-                else:
-                    width = max(geometry["width"], geometry.get("viewportWidth", 0))
-                    height = geometry["height"]
-                    offset_x = offset_y = 0.0
-                if width <= 0 or height <= 0:
-                    raise ValueError("Screenshot dimensions do not match the rendered document")
-                scale = image.width / width
-                if abs(image.height - height * scale) > 1:
-                    raise ValueError("Screenshot dimensions do not match the rendered document")
-                left, top, box_width, box_height = next(iter(boxes))
-                left, top = left - offset_x, top - offset_y
-                if not all(math.isfinite(item) for item in (left, top, box_width, box_height)):
-                    raise ValueError("Invalid crop coordinates")
-                if left < 0 or top < 0 or box_width <= 0 or box_height <= 0:
-                    raise ValueError("Visible excerpt is outside the screenshot")
-                if left + box_width > width + 1 or top + box_height > height + 1:
-                    raise ValueError("Screenshot does not contain the complete excerpt")
-                padding = 12 * scale
-                crop_box = [
-                    max(0, math.floor(left * scale - padding)),
-                    max(0, math.floor(top * scale - padding)),
-                    min(image.width, math.ceil((left + box_width) * scale + padding)),
-                    min(image.height, math.ceil((top + box_height) * scale + padding)),
-                ]
-                buffer = io.BytesIO()
-                image.crop(tuple(crop_box)).save(buffer, format="PNG")
-            content = buffer.getvalue()
-            evidence.crop_path = self.archive.write(f"{crop_directory}/{evidence.evidence_id}.png", content)
-            evidence.crop_box = crop_box
-            evidence.crop_sha256 = _digest(content)
-            evidence.capture_status = "COMPLETE"
-            evidence.capture_error = None
-        except (DatabricksError, OSError, ValueError, KeyError, TypeError, OverflowError) as exc:
-            evidence.capture_status = "FAILED"
-            evidence.capture_error = safe_exception_message(exc, self.api_key)
-        return evidence
+        return crop_screenshot(
+            self.archive, evidence, value, screenshot, geometry, previous, crop_directory, viewport, self.api_key
+        )
 
     def attach(self, result: ProductEnrichment) -> list[ValidationIssue]:
         """Crop every attribute value from the full-page captures; run ``focus`` afterwards for what is left."""
@@ -670,7 +713,7 @@ class CaptureCollector:
         """Second capture for values that are on the page but were not cropped from the full-page screenshot.
 
         For each such value, the page's own control is clicked when the value sits in a collapsed section or tab
-        (reveal.js), the value is centered and a screenshot of the visible window is taken between two text maps.
+        (reveal.js), the value is scrolled to and a full-page screenshot is taken between two text maps.
         The window is not resized, so the text map and the image describe the same layout. One paid scrape per page
         covers all of its values. A value that still cannot be shown gets NOT_VISIBLE with the reason.
         """
@@ -725,7 +768,9 @@ class CaptureCollector:
                 {"type": "executeJavascript", "script": _script("scroll", target["index"])},
                 {"type": "wait", "milliseconds": 300},
                 {"type": "executeJavascript", "script": DOM_SCRIPT},
-                {"type": "screenshot", "fullPage": False, "quality": 100},
+                # full page: in Firecrawl's 1920x100000 window the page never scrolls, and a screenshot of the
+                # visible window is cut to its first 1080 px, leaving out any value below them
+                {"type": "screenshot", "fullPage": True, "quality": 100},
                 {"type": "executeJavascript", "script": DOM_SCRIPT},
             ]
         payload: dict[str, Any] = {"url": page.url, "formats": ["markdown"], "maxAge": 0, "actions": actions}
@@ -764,7 +809,9 @@ class CaptureCollector:
                 else:
                     shot.problem = "The value is in the page source but in no displayed element (e.g. structured data)."
                 continue
-            if any(item.get("href") != page.geometry.get("href") for item in (reveal, before, after)):
+            if not all(
+                _same_capture_page(item.get("href"), page.geometry.get("href")) for item in (reveal, before, after)
+            ):
                 shot.problem = "The page changed address while the section was opened."
                 continue
             try:
@@ -792,9 +839,7 @@ class CaptureCollector:
                 self._not_visible(evidence, shot.problem or "Focused screenshot is unavailable.")
                 continue
             attempt = evidence.model_copy(update={"crop_path": None, "crop_box": None, "crop_sha256": None})
-            self._crop_image(
-                attempt, value, shot.screenshot, shot.after, shot.before, f"{directory}/crops", viewport=True
-            )
+            self._crop_image(attempt, value, shot.screenshot, shot.after, shot.before, f"{directory}/crops")
             if attempt.capture_status == "COMPLETE":
                 evidence.capture_id = capture_id
                 evidence.captured_at = captured_at

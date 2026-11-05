@@ -561,8 +561,8 @@ Menus, links that leave the page, cart, login and tabs are not touched.
 If a value is on the page but not in the crop, **focused capture** takes over. Typical causes are a collapsed section
 or tab, or a page that changed height during the capture. Focused capture:
 - runs a second extraction of the same page: one per page, covering all of its values;
-- clicks the page's own control that opens the section (accordion header, tab or `<summary>`), centers the value and
-  takes a screenshot of the visible area;
+- clicks the page's own control that opens the section (accordion header, tab or `<summary>`), scrolls to the value
+  and takes a full-page screenshot;
 - keeps the window size unchanged, so the text map and the image describe the same layout;
 - points the evidence at that screenshot, and records in `coordinates.json` what was clicked (`revealedBy`).
 
@@ -579,6 +579,7 @@ never cited or captured.
 | `AMBIGUOUS` | The value appears in more than one place and the excerpt doesn't identify which. |
 | `SCREENSHOT_ONLY` | The page moved during the capture (carousel, banner). |
 | `UNSUPPORTED` | The source is a PDF: only the extracted text exists. |
+| `FAILED` | The capture or the crop failed; the reason is in `capture_error` (for example a blank screenshot, when the page did not render). |
 
 In every case except `COMPLETE`, the reviewer checks the value in the page screenshot or attaches manual evidence
 (step 8).
@@ -816,6 +817,7 @@ What it costs and how to check it is in [docs/finops.md](finops.md). Suggested r
 | The source contract job can't read the retailer's tables | The jobs SP lacks `SELECT` on `adapter_source_schema` | Step 1.3 |
 | The job can't read the secret | The secret is not in `secret_catalog`.`secret_schema`, has another name than `firecrawl_secret_key`, or the jobs SP lacks `READ SECRET` | Step 5 |
 | Many `SCREENSHOT_ONLY` | The page changes during capture (carousels, banners) | Human review on the screenshot, manual evidence or recapture (9.2) |
+| `capture_error` with "blank screenshot" | The page did not render for Firecrawl (WAF block, page hidden by a script, interrupted load) | Recapture (9.2) later, or manual evidence |
 | `NOT_VISIBLE` | The value only exists in structured data, or the section doesn't open | Check `capture_error`; the reviewer uses the page screenshot or attaches manual evidence |
 | `capture_error` with "did not load the same content" | The site blocked focused capture (anti-bot) | Recapture (9.2) later, or manual evidence |
 | `load_lakebase` fails to connect | The jobs SP's Postgres role doesn't exist | Check `postgres_roles` in the step 4 deploy |

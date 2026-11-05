@@ -218,7 +218,8 @@
       "SCREENSHOT_ONLY": "The page changed during the capture — check the full screenshot",
       "UNSUPPORTED": "Source without visual capture (PDF) — review needed",
       "NOT_CAPTURED": "Source not captured — review needed",
-      "FAILED": "Capture failed — review needed"
+      "FAILED": "Capture failed — review needed",
+      "BLANK": "The page did not render (blank screenshot) — review needed"
     },
     "capturedAt": "Captured {{date}}",
     "sourceValue": "Value at the source: {{value}}",
