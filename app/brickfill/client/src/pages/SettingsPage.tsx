@@ -209,20 +209,24 @@ function OverrideFields({
             }}
           />
         );
+      case 'sections':
+        return null; // edited on the Category templates screen
     }
   };
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {Object.entries(manifest.overrides).map(([key, spec]) => (
-        <div className="space-y-1.5" key={key}>
-          <Label htmlFor={`${idPrefix}-${key}`}>{overrideLabel(key)}</Label>
-          {renderField(key, spec)}
-          {i18n.exists(`settings:overrides.${key}.help`) ? (
-            <p className="text-xs text-muted-foreground">{t(`settings:overrides.${key}.help`)}</p>
-          ) : null}
-        </div>
-      ))}
+      {Object.entries(manifest.overrides)
+        .filter(([, spec]) => spec.group !== 'template')
+        .map(([key, spec]) => (
+          <div className="space-y-1.5" key={key}>
+            <Label htmlFor={`${idPrefix}-${key}`}>{overrideLabel(key)}</Label>
+            {renderField(key, spec)}
+            {i18n.exists(`settings:overrides.${key}.help`) ? (
+              <p className="text-xs text-muted-foreground">{t(`settings:overrides.${key}.help`)}</p>
+            ) : null}
+          </div>
+        ))}
     </div>
   );
 }

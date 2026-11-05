@@ -1,0 +1,31 @@
+{
+  "title": "Agent instructions",
+  "subtitle": "Additional instructions about style and emphasis for the enrichment agent (for example “always mention the warranty”, “avoid the term X”). The fixed rules on sources, evidence, format and safety stay in the code and cannot be replaced.",
+  "reload": "Reload instructions",
+  "conflict": "Your changes were not saved because someone else changed the instructions first.",
+  "saved": "Saved. The next enrichment batch uses this version.",
+  "readOnly": {
+    "title": "Read-only",
+    "description": "Only the configured administrators can change the agent instructions.",
+    "noEditors": "Nobody can change the agent instructions yet: set AGENT_INSTRUCTIONS_EDITORS (or SETTINGS_EDITORS) in the app deployment."
+  },
+  "editor": {
+    "title": "Active instructions",
+    "description": "Sent to the agent after its fixed rules, in a delimited section. They adjust style and emphasis only; where they conflict with the fixed rules, the fixed rules win.",
+    "label": "Instructions",
+    "placeholder": "One instruction per line, in plain language.",
+    "count": "{{length}} / {{max}} characters",
+    "save": "Save new version",
+    "guard": "Each result records the version it was generated with. Page content is still untrusted, whatever these instructions say."
+  },
+  "history": {
+    "title": "Versions",
+    "description": "Every save and every restore creates a new version; restoring never rewrites history.",
+    "empty": "No version saved yet.",
+    "version": "Version {{version}}",
+    "active": "Active",
+    "restoredFrom": "Restored from version {{version}}",
+    "emptyBody": "(empty: no additional instructions)",
+    "restore": "Restore this version"
+  }
+}

@@ -38,8 +38,10 @@ run_id = dbutils.widgets.get("run_id").strip()
 
 # MAGIC %md
 # MAGIC ## Load
-# MAGIC Order: create the schema/tables, load the children (attributes, facts, issues), upsert the `product_enrichment`
-# MAGIC marker, remove superseded runs, then grant read access to the app role (if it already exists).
+# MAGIC Order: create the schema/tables, sync the attribute requirements of the source (for the app's Attributes screen;
+# MAGIC the team's choices live in the app's own table and are never touched), load the children (attributes, facts,
+# MAGIC issues), upsert the `product_enrichment` marker, remove superseded runs, then grant read access to the app role
+# MAGIC (if it already exists).
 
 # COMMAND ----------
 

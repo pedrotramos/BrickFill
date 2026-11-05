@@ -49,14 +49,19 @@ neutral:
 
 Profiles can also declare:
 
-- **`category_rules`:** facts that must appear for some categories, matched by id or name. Labels are semantic keys
+- **`category_rules`:** facts that must appear for some categories, matched by id, name or synonym (names and synonyms
+  are compared without accents or case; a synonym matches whichever level's name it equals). Labels are semantic keys
   translated by the locale packs:
 
   ```json
   "category_rules": [
-    {"match": {"category_names": ["Appliances"]}, "required_fact_labels": ["warranty", "height", "width", "depth", "weight"]}
+    {"match": {"category_names": ["Appliances"], "synonyms": ["Home appliances"]}, "required_fact_labels": ["warranty", "height", "width", "depth", "weight"]}
   ]
   ```
+- **`required_fact_labels` / `optional_fact_labels`:** facts every product of the profile must show, or shows when the
+  sources state them.
+- **`fact_sheet.layout`:** an exact fact-sheet structure (`[{"section": "key_features", "fields": ["Power"]}]`). With a
+  layout, the fact sheet has only those sections (`FACT_SHEET_EXTRA_SECTION` flags any other).
 
 - **`meta_description.required_suffixes`:** a call to action the meta description must end with, e.g.
   `["Shop now!"]`. When set, it is enforced by the `META_SUFFIX` rule and added to the prompt.
@@ -109,6 +114,69 @@ The app shows the content language of each product as a badge.
 - **Who can edit:** `settings_editors` (app bundle) is a comma-separated allowlist of e-mails. When it is `none` (the default), every
   app user can edit, and each change is audited with the user's identity.
 
+## Category templates
+
+The **Category templates** page (`/templates`) holds the content model of each product type, so the content team can
+adjust, for example, the model of a hair dryer without a pull request:
+
+- the product type's name and the departments, categories and subcategories of the source it covers, plus
+  **synonyms** (other names the sources use), compared without accents or case;
+- the **title formula**: parts in order, such as `Product type + Brand + Model + Speed + Temperature + Power + Color +
+  Voltage`, with a live example. Parts are the profile's keys or any name; the agent fills each part only with a
+  verified value and leaves out the others;
+- the **fact-sheet structure**: sections and fields in order, and no other section;
+- the facts always shown, required and optional; and whether the template is active.
+
+A template is one more settings layer, saved as override keys (`title_order`, `fact_sheet_layout`,
+`fact_sheet_must_include`, `required_fact_labels`, `optional_fact_labels`). Each product gets the most specific
+active template (subcategory, then category, then department; ties by id):
+
+```
+subcategory > category > department > category template > global settings > job parameters > profile file
+```
+
+The template applied is in each product's provenance (`template:<id>@r<revision>`) and in `settings_hash`, so the
+audit shows which version of the template produced each result. Every save sends the revision it read; a save over
+someone else's change answers 409. The history keeps the revision, author, date and every field before and after.
+
+**Initial load.** To bring templates from another tool, put a JSON list of templates
+(`[{"id", "name", "match", "overrides", "active"}]`) in `app/brickfill/config/` and set `category_templates_seed` to
+its file name. At start the app inserts the templates whose id does not exist yet; restarts insert nothing again,
+and templates edited in the app are never overwritten.
+
+Every title, whatever the template, separates its parts with spaces: a hyphen or dash between words
+(`Deep Repair for - Damaged Hair`) is flagged by `TITLE_HYPHEN_SEPARATOR`.
+
+## Attribute requirements
+
+The **Attributes** page (`/attributes`) shows the attributes of each subcategory (found by name, id or synonym, with
+its department and category) and lets the team mark each one **Required** or **Optional**, or follow the source:
+
+- the source's `is_required` is synced to Lakebase by the load job (`enrichment.attribute_requirement_source`,
+  replaced at every load: new pairs appear, pairs that left the source disappear);
+- the team's choice is kept apart (`brickfill_app.attribute_requirement_override`), so a sync never overwrites it; a
+  choice whose attribute left the source stays listed until it is cleared;
+- **effective requirement = team choice → source `is_required` → `attributes_required_default`.** The enrichment job
+  reads the choices at the start of every batch and uses the effective value in the attribute definitions the agent
+  receives and in `MISSING_REQUIRED_ATTRIBUTE`. `product_attribute.required_origin` records where each value came
+  from (`override`, `source` or `default`).
+
+Every change is versioned (409 on a concurrent change) and recorded in the history.
+
+## Agent instructions
+
+The **Agent instructions** page (`/instructions`) holds additional instructions about style and emphasis ("always
+mention the warranty", "avoid the term X"), up to 4,000 characters:
+
+- every save creates a version, and "restore" creates a new version with an older text: history is never rewritten;
+- the prompt places them in a delimited section **after** the fixed rules, stating that they cannot change the
+  language, source, evidence, editorial, format or safety rules, and that page content stays untrusted; the text
+  cannot close its own section;
+- each result records `instructions_version` (and `prompt_version`) in `product_enrichment`, and the instruction hash
+  is part of the rules identity, so the prompt cache follows the version;
+- only `agent_instructions_editors` may edit them (e-mails; `none` falls back to `settings_editors`). Unlike Settings,
+  nobody may edit them while both are `none`.
+
 ## Bundle variables
 
 **Platform bundle** (`databricks.yml`): `content_language` (`en`), `catalog_language` (empty), `content_profile`
@@ -121,7 +189,9 @@ optional values use `none` for "not set":
 | Variable | Env | Default | Effect |
 | --- | --- | --- | --- |
 | `content_language`, `catalog_language`, `content_profile`, `market` | `CONTENT_LANGUAGE_DEFAULT`, `CATALOG_LANGUAGE_DEFAULT`, `CONTENT_PROFILE_DEFAULT`, `MARKET_DEFAULT` | same as the platform bundle (`none` where the platform bundle is empty) | Shown on Settings when nothing was saved yet |
-| `settings_editors` | `SETTINGS_EDITORS` | `none` | Who may edit Settings |
+| `settings_editors` | `SETTINGS_EDITORS` | `none` | Who may edit Settings, category templates and attribute requirements |
+| `agent_instructions_editors` | `AGENT_INSTRUCTIONS_EDITORS` | `none` | Who may edit the agent instructions (`none`: `settings_editors`; nobody when both are `none`) |
+| `category_templates_seed` | `CATEGORY_TEMPLATES_SEED` | `none` | JSON file in `config/` with templates inserted once at start (initial load) |
 | `ui_default_language` | `UI_DEFAULT_LANGUAGE` | `en` | UI language when the browser matches none of the shipped languages |
 | `brand_customer_name` | `BRAND_CUSTOMER_NAME` | `none` | Co-branding: the header reads "BrickFill · for &lt;name&gt;" |
 | `brand_customer_logo_url` | `BRAND_CUSTOMER_LOGO_URL` | `none` | Customer logo next to the BrickFill mark (https or same-origin only) |

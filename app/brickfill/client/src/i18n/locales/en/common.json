@@ -11,7 +11,10 @@
     "catalog": "Catalog",
     "settings": "Settings",
     "open": "Open navigation",
-    "skip": "Skip to content"
+    "skip": "Skip to content",
+    "templates": "Category templates",
+    "attributes": "Attributes",
+    "instructions": "Agent instructions"
   },
   "footer": {
     "product": "BrickFill · catalog enrichment accelerator",
@@ -61,5 +64,11 @@
     "penalties": "Deductions: 10 points per critical error, such as an invalid GTIN, a missing required attribute or a value without a source (up to 40); 3 per other error (up to 12); 0.5 per warning (up to 5). Pre-approved out-of-vocabulary values cost nothing.",
     "coverage": "Required coverage is the share of required attributes that have a value with evidence.",
     "averaged": "Here both numbers are the average of the products already enriched; products not enriched yet are not counted."
+  },
+  "categoryPicker": {
+    "search": "Search by name, identifier or synonym",
+    "empty": "Nothing found.",
+    "more_one": "{{count}} more: refine the search",
+    "more_other": "{{count}} more: refine the search"
   }
 }

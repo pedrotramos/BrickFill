@@ -18,6 +18,13 @@ export interface CatalogQueries {
     last_updated_at: string | null;
   };
   categories: { category_id: string; category: string };
+  category_tree: import('./category-tree').CategoryTreeRow;
+  attribute_requirement_summary: {
+    subcategory_id: string;
+    attribute_count: number;
+    required_count: number;
+    override_count: number;
+  };
   issue_codes: { issue_code: string; severity: string | null; product_count: number };
   next_in_queue: { ean: string; display_title: string; remaining: number };
   product_attributes: {

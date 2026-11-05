@@ -10,7 +10,16 @@ from datetime import UTC, datetime
 from typing import Any, TypeVar
 
 from databricks.sdk.runtime import dbutils, spark
-from pyspark.sql.types import BooleanType, DoubleType, LongType, StringType, StructField, StructType, TimestampType
+from pyspark.sql.types import (
+    BooleanType,
+    DoubleType,
+    IntegerType,
+    LongType,
+    StringType,
+    StructField,
+    StructType,
+    TimestampType,
+)
 
 from brickfill.agent import CatalogResearchAgent
 from brickfill.content.loader import EffectiveRules, effective_rules
@@ -28,7 +37,14 @@ from brickfill.models import (
 from brickfill.pdf_evidence import DocumentParser
 from brickfill.quality import quality_score, validate_enrichment
 from brickfill.secrets import firecrawl_api_key
-from brickfill.settings import EffectiveSettings, JobDefaults, SettingsSnapshot, read_settings, resolve
+from brickfill.settings import (
+    EffectiveSettings,
+    JobDefaults,
+    SettingsSnapshot,
+    read_settings,
+    required_flag,
+    resolve,
+)
 from brickfill.visual_evidence import (
     EVIDENCE_COLUMNS,
     CaptureCollector,
@@ -61,10 +77,12 @@ def _append(rows: list[dict[str, Any]], schema: StructType, table: str) -> None:
         spark.createDataFrame(rows, schema=schema).write.mode("append").saveAsTable(table)
 
 
-def _definitions(namespace: str, seed: ProductSeed) -> list[AttributeDefinition]:
+def _definitions(
+    namespace: str, seed: ProductSeed, overrides: dict[tuple[str, str], bool] | None = None
+) -> list[AttributeDefinition]:
     # Values come from the retailer's tables: bind them as parameters, never interpolate them into the SQL.
     rows = spark.sql(
-        f"""SELECT attribute_code, attribute_name, required, attribute_description, value_type, unit,
+        f"""SELECT attribute_code, attribute_name, required, source_required, attribute_description, value_type, unit,
                attribute_role, allows_free_text
         FROM {namespace}.attribute_definition
         WHERE subcategory_id = :subcategory_id
@@ -88,11 +106,15 @@ def _definitions(namespace: str, seed: ProductSeed) -> list[AttributeDefinition]
     definitions: list[AttributeDefinition] = []
     for row in rows:
         code = str(row["attribute_code"])
+        required, origin = required_flag(
+            overrides or {}, seed.subcategory_id, code, row["required"], row["source_required"]
+        )
         definitions.append(
             AttributeDefinition(
                 code=code,
                 name=row["attribute_name"],
-                required=bool(row["required"]),
+                required=required,
+                required_origin=origin,
                 vocabulary=vocabulary_by_code.get(code, []),
                 description=row["attribute_description"] or "",
                 value_type=row["value_type"] or "text",
@@ -101,7 +123,8 @@ def _definitions(namespace: str, seed: ProductSeed) -> list[AttributeDefinition]
                 allows_free_text=bool(row["allows_free_text"]),
             )
         )
-    return definitions
+    # required ones first, as the SQL ordered them before the overrides
+    return sorted(definitions, key=lambda item: not item.required)
 
 
 async def _run_one(
@@ -110,11 +133,12 @@ async def _run_one(
     namespace: str,
     seed: ProductSeed,
     rules: EffectiveRules,
+    required_overrides: dict[tuple[str, str], bool] | None = None,
 ) -> tuple[ProductSeed, ProductEnrichment | None, list[ValidationIssue], str | None]:
     async with semaphore:
         try:
             # spark.sql blocks; run it off the event loop so the other products keep waiting on the model in parallel
-            definitions = await asyncio.to_thread(_definitions, namespace, seed)
+            definitions = await asyncio.to_thread(_definitions, namespace, seed, required_overrides)
             result = await agent.enrich(seed, definitions, rules)
             issues = validate_enrichment(seed, result, definitions, rules)
             if agent.capture_collector is not None:
@@ -171,6 +195,8 @@ def _schemas() -> dict[str, StructType]:
                 StructField("content_language", StringType(), True),
                 StructField("content_profile", StringType(), True),
                 StructField("settings_hash", StringType(), True),
+                StructField("prompt_version", StringType(), True),
+                StructField("instructions_version", IntegerType(), True),
             ]
         ),
         "fact": StructType(
@@ -206,6 +232,7 @@ def _schemas() -> dict[str, StructType]:
                 StructField("applicability_reason", StringType(), True),
                 StructField("rejection_code", StringType(), True),
                 StructField("applicability_code", StringType(), True),
+                StructField("required_origin", StringType(), True),
             ]
         ),
         "issue": StructType(
@@ -339,12 +366,15 @@ class RulesResolver:
         settings = resolve(self.snapshot, self.defaults, seed)
         self.by_ean[seed.ean] = settings
         if settings.key not in self._rules:
+            instructions = self.snapshot.instructions or {}
             self._rules[settings.key] = effective_rules(
                 settings.content_profile,
                 settings.overrides,
                 content_language=settings.content_language,
                 catalog_language=settings.catalog_language,
                 market=settings.market or None,
+                agent_instructions=instructions.get("body", ""),
+                agent_instructions_version=instructions.get("version"),
             )
         return self._rules[settings.key]
 
@@ -408,7 +438,10 @@ def research(
         await agent.check_model()
         async with collector:
             return await asyncio.gather(
-                *(_run_one(semaphore, agent, namespace, seed, rules[seed.ean]) for seed in seeds)
+                *(
+                    _run_one(semaphore, agent, namespace, seed, rules[seed.ean], rules_for.snapshot.attribute_overrides)
+                    for seed in seeds
+                )
             )
 
     return _run_async(run_all())
@@ -427,6 +460,8 @@ def build_rows(
             "content_language": settings.content_language if settings else None,
             "content_profile": settings.content_profile if settings else None,
             "settings_hash": settings.hash if settings else None,
+            "prompt_version": PROMPT_VERSION,
+            "instructions_version": settings.instructions_version if settings else None,
         }
 
     enrichment_rows: list[dict[str, Any]] = []
@@ -496,6 +531,7 @@ def build_rows(
                         "applicability_reason": attribute.applicability_reason,
                         "rejection_code": attribute.rejection_code,
                         "applicability_code": attribute.applicability_code,
+                        "required_origin": attribute.required_origin,
                     }
                 )
         else:

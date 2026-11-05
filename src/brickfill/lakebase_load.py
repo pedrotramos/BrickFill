@@ -13,7 +13,7 @@ and only then are the superseded runs removed, so readers always see a consisten
 from __future__ import annotations
 
 import uuid
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import Any
 
 from brickfill.identifiers import identifier as _identifier
@@ -47,6 +47,8 @@ ENRICHMENT_COLUMNS: dict[str, str] = {
     "content_language": "TEXT",
     "content_profile": "TEXT",
     "settings_hash": "TEXT",
+    "prompt_version": "TEXT",
+    "instructions_version": "INT",
     "error_count": "INT NOT NULL DEFAULT 0",
     "warning_count": "INT NOT NULL DEFAULT 0",
     "required_count": "INT NOT NULL DEFAULT 0",
@@ -74,6 +76,7 @@ ATTRIBUTE_COLUMNS: dict[str, str] = {
     "applicability_reason": "TEXT",
     "rejection_code": "TEXT",
     "applicability_code": "TEXT",
+    "required_origin": "TEXT",
 }
 FACT_COLUMNS: dict[str, str] = {
     "run_id": "TEXT NOT NULL",
@@ -97,6 +100,23 @@ ISSUE_COLUMNS: dict[str, str] = {
     "created_at": "TIMESTAMP",
     "params_json": "TEXT",
 }
+# The attributes of every subcategory and what the source says about their requirement, for the app's Attributes
+# screen. Replaced at every load; the team's choices live in the app's own attribute_requirement_override table, so a
+# sync never touches them.
+REQUIREMENT_COLUMNS: dict[str, str] = {
+    "subcategory_id": "TEXT NOT NULL",
+    "attribute_id": "TEXT NOT NULL",
+    "attribute_name": "TEXT",
+    "category_id": "TEXT",
+    "subcategory": "TEXT",
+    "source_required": "BOOLEAN",  # is_required as the source has it (NULL: not informed)
+    "required": "BOOLEAN",  # source_required, or attributes_required_default when NULL
+    "sort_order": "INT",
+}
+# Delta columns added by this release. The prepare step of the next enrichment ALTERs them into existing tables; until
+# then (a workspace upgraded before that run) the load reads them as NULL instead of failing. Any other missing
+# column still fails the load.
+LATE_COLUMNS = frozenset({"prompt_version", "instructions_version", "required_origin", "source_required"})
 CHILD_TABLES: dict[str, dict[str, str]] = {
     "product_attribute": ATTRIBUTE_COLUMNS,
     "product_fact": FACT_COLUMNS,
@@ -131,7 +151,60 @@ def ddl_statements(schema: str) -> list[str]:
         f"CREATE INDEX IF NOT EXISTS product_enrichment_category_idx ON {schema}.product_enrichment (category)",
         *[table(name, columns, ", PRIMARY KEY (ean, run_id, row_id)") for name, columns in CHILD_TABLES.items()],
         *[statement for name, columns in CHILD_TABLES.items() for statement in added_columns(name, columns)],
+        table(
+            "attribute_requirement_source",
+            {**REQUIREMENT_COLUMNS, "synced_at": "TIMESTAMPTZ NOT NULL DEFAULT NOW()"},
+            ", PRIMARY KEY (subcategory_id, attribute_id)",
+        ),
     ]
+
+
+def _column(name: str, available: set[str] | None, prefix: str = "") -> str:
+    """``name`` as selected from a Delta table with ``available`` columns (None: assume they all exist)."""
+    if available is not None and name in LATE_COLUMNS and name.lower() not in available:
+        return f"NULL AS {name}"
+    return f"{prefix}{name}"
+
+
+def requirement_query(namespace: str, available: set[str] | None = None) -> str:
+    """Spark SQL for the attribute requirements of the source (the ``attribute_definition`` the prepare step wrote)."""
+    return (
+        "SELECT subcategory_id, attribute_code AS attribute_id, attribute_name, category_id, subcategory, "
+        f"{_column('source_required', available)}, required, sort_order FROM {namespace}.attribute_definition "
+        "ORDER BY subcategory_id, attribute_code"
+    )
+
+
+def _available_columns(spark, table: str) -> set[str]:
+    return {name.lower() for name in spark.table(table).schema.fieldNames()}
+
+
+def sync_attribute_requirements(connection, namespace: str, schema: str) -> int:
+    """Replace the source's attribute requirements in one transaction: new pairs appear, pairs that left the source
+    disappear, and the overrides the team saved in the app (another table) are never touched."""
+    from databricks.sdk.runtime import spark
+
+    try:
+        available = _available_columns(spark, f"{namespace}.attribute_definition")
+        query = requirement_query(namespace, available)
+        rows = [tuple(row[c] for c in REQUIREMENT_COLUMNS) for row in spark.sql(query).collect()]
+    except Exception as exc:  # noqa: BLE001 - before the first prepare run there is nothing to sync
+        print(f"WARNING: attribute requirements not synced: {exc}")
+        return 0
+    names = ", ".join(REQUIREMENT_COLUMNS)
+    placeholders = ", ".join(["%s"] * len(REQUIREMENT_COLUMNS))
+    try:
+        connection.execute(f"DELETE FROM {schema}.attribute_requirement_source")
+        for batch in batches(rows):
+            with connection.cursor() as cursor:
+                cursor.executemany(
+                    f"INSERT INTO {schema}.attribute_requirement_source ({names}) VALUES ({placeholders})", batch
+                )
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    return len(rows)
 
 
 def upsert_statement(schema: str, table: str, columns: Sequence[str], conflict: Sequence[str]) -> str:
@@ -163,16 +236,19 @@ def grant_statements(schema: str, role: str) -> list[str]:
     ]
 
 
-def source_queries(namespace: str, run_id: str = "") -> dict[str, str]:
+def source_queries(namespace: str, run_id: str = "", available: Mapping[str, set[str]] | None = None) -> dict[str, str]:
     """Spark SQL for the latest run of each enriched product, one statement per Lakebase table.
 
     With ``run_id``, only the products whose latest run is that one (the products the job has just enriched).
+    ``available`` maps each Delta table (``product_catalog`` for the enrichment row) to its columns, so the
+    :data:`LATE_COLUMNS` it lacks are read as NULL.
     """
     # validated as a UUID before it is placed in the SQL text
     latest = f"c.run_id = '{uuid.UUID(run_id)}'" if run_id else "c.run_id IS NOT NULL"
+    columns_of = (lambda table: available.get(table)) if available is not None else (lambda table: None)
 
     def child(table: str, columns: Sequence[str], order: str) -> str:
-        selected = ", ".join(f"t.{c}" for c in columns if c != "row_id")
+        selected = ", ".join(_column(c, columns_of(table), "t.") for c in columns if c != "row_id")
         return (
             f"SELECT {selected}, ROW_NUMBER() OVER (PARTITION BY t.run_id, t.ean ORDER BY {order}) AS row_id "
             f"FROM {namespace}.{table} t JOIN {namespace}.product_catalog c ON t.run_id = c.run_id AND t.ean = c.ean "
@@ -181,7 +257,8 @@ def source_queries(namespace: str, run_id: str = "") -> dict[str, str]:
 
     return {
         "product_enrichment": (
-            f"SELECT {', '.join(ENRICHMENT_COLUMNS)} FROM {namespace}.product_catalog c WHERE {latest} ORDER BY ean"
+            f"SELECT {', '.join(_column(c, columns_of('product_catalog')) for c in ENRICHMENT_COLUMNS)} "
+            f"FROM {namespace}.product_catalog c WHERE {latest} ORDER BY ean"
         ),
         "product_attribute": child("product_attribute", list(ATTRIBUTE_COLUMNS), "t.attribute_code, t.attribute_name"),
         "product_fact": child("product_fact", list(FACT_COLUMNS), "t.fact_name, t.fact_value"),
@@ -224,7 +301,10 @@ def load_results(connection, namespace: str, schema: str, run_id: str = "") -> d
     publication marker, then the cleanup."""
     from databricks.sdk.runtime import spark  # imported late: the SQL builders above are tested without Spark
 
-    queries = source_queries(namespace, run_id)
+    available = {
+        table: _available_columns(spark, f"{namespace}.{table}") for table in ("product_catalog", *CHILD_TABLES)
+    }
+    queries = source_queries(namespace, run_id, available)
     counts: dict[str, int] = {}
     for table in (*CHILD_TABLES, "product_enrichment"):
         columns = ENRICHMENT_COLUMNS if table == "product_enrichment" else CHILD_TABLES[table]
@@ -265,14 +345,17 @@ def run(
     """
     if scope not in ("all", "run"):
         raise ValueError(f'scope must be "all" or "run"; received {scope!r}')
-    if scope == "run" and not run_id:
-        print("The enrichment run enriched no product; nothing to load")
-        return {}
     namespace = f"`{_identifier(catalog)}`.`{_identifier(schema)}`"
     target = results_schema(results_schema_name)
     with connect(endpoint, database) as connection:
         prepare_schema(connection, target)
-        counts = load_results(connection, namespace, target, run_id if scope == "run" else "")
+        requirements = sync_attribute_requirements(connection, namespace, target)
+        if scope == "run" and not run_id:
+            print("The enrichment run enriched no product; nothing to load")
+            counts = {}
+        else:
+            counts = load_results(connection, namespace, target, run_id if scope == "run" else "")
+        counts["attribute_requirement_source"] = requirements
         if app_role:
             grant_app_read(connection, target, app_role)
     print(f"Loaded into Lakebase schema {target}: {counts}")

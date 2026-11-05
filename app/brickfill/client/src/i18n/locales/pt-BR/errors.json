@@ -34,5 +34,19 @@
   "INVALID_SETTINGS": "Há configurações inválidas. Confira os valores e tente de novo.",
   "NOT_FOUND": "Não encontrado.",
   "INTERNAL_ERROR": "Erro inesperado. Tente de novo.",
-  "NETWORK_ERROR": "Não foi possível falar com o servidor do BrickFill. Verifique sua conexão e tente de novo."
+  "NETWORK_ERROR": "Não foi possível falar com o servidor do BrickFill. Verifique sua conexão e tente de novo.",
+  "INSTRUCTIONS_LOAD_FAILED": "Não foi possível carregar as instruções do agente.",
+  "INSTRUCTIONS_SAVE_FAILED": "Não foi possível salvar as instruções do agente.",
+  "INSTRUCTIONS_VERSION_CONFLICT": "Outra pessoa alterou as instruções do agente. Recarregue e tente de novo.",
+  "INSTRUCTIONS_FORBIDDEN": "Você não tem permissão para alterar as instruções do agente.",
+  "INVALID_INSTRUCTIONS": "Instruções do agente inválidas.",
+  "TEMPLATES_LOAD_FAILED": "Não foi possível carregar os modelos de categoria.",
+  "TEMPLATE_SAVE_FAILED": "Não foi possível salvar o modelo de categoria.",
+  "TEMPLATE_VERSION_CONFLICT": "Outra pessoa alterou este modelo de categoria. Recarregue e tente de novo.",
+  "TEMPLATE_EXISTS": "Já existe um modelo de categoria com este identificador.",
+  "INVALID_TEMPLATE": "Modelo de categoria inválido.",
+  "REQUIREMENTS_LOAD_FAILED": "Não foi possível carregar a obrigatoriedade dos atributos.",
+  "REQUIREMENT_SAVE_FAILED": "Não foi possível salvar a obrigatoriedade do atributo.",
+  "REQUIREMENT_VERSION_CONFLICT": "Outra pessoa alterou a obrigatoriedade deste atributo. Recarregue e tente de novo.",
+  "INVALID_REQUIREMENT": "Obrigatoriedade de atributo inválida."
 }

@@ -62,6 +62,14 @@
       "title": "Falta la marca en el título",
       "message": "El título generado debe contener la marca verificada."
     },
+    "TITLE_HYPHEN_SEPARATOR": {
+      "title": "Guion como separador en el título",
+      "message": "El título separa palabras con un guion o una raya: “{{fragment}}”. Use espacios entre las partes del título."
+    },
+    "FACT_SHEET_EXTRA_SECTION": {
+      "title": "Sección fuera de la plantilla de la categoría",
+      "message": "La ficha técnica tiene una sección que la plantilla de la categoría no prevé: “{{section}}”."
+    },
     "DESCRIPTION_LINK": {
       "title": "Enlace en la descripción",
       "message": "La descripción breve no puede contener enlaces."

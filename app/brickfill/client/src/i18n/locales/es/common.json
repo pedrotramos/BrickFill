@@ -11,7 +11,10 @@
     "catalog": "Catálogo",
     "settings": "Configuración",
     "open": "Abrir navegación",
-    "skip": "Saltar al contenido"
+    "skip": "Saltar al contenido",
+    "templates": "Plantillas de categoría",
+    "attributes": "Atributos",
+    "instructions": "Instrucciones del agente"
   },
   "footer": {
     "product": "BrickFill · acelerador de enriquecimiento de catálogo",
@@ -61,5 +64,11 @@
     "penalties": "Descuentos: 10 puntos por error crítico, como un GTIN inválido, un atributo obligatorio ausente o un valor sin fuente (hasta 40); 3 por otro error (hasta 12); 0,5 por alerta (hasta 5). Los valores fuera del vocabulario preaprobados no descuentan.",
     "coverage": "La cobertura obligatoria es la proporción de atributos obligatorios que tienen un valor con evidencia.",
     "averaged": "Aquí ambos números son el promedio de los productos ya enriquecidos; los que aún no se enriquecieron no cuentan."
+  },
+  "categoryPicker": {
+    "search": "Busque por nombre, identificador o sinónimo",
+    "empty": "No se encontró nada.",
+    "more_one": "{{count}} más: afine la búsqueda",
+    "more_other": "{{count}} más: afine la búsqueda"
   }
 }

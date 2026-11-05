@@ -1,0 +1,40 @@
+{
+  "title": "Atributos",
+  "subtitle": "Marque cada atributo de uma subcategoria como obrigatório ou opcional. A sua escolha prevalece sobre a flag da origem e sobrevive a todas as sincronizações; o próximo lote de enriquecimento a usa nas definições do agente e na checagem de atributo obrigatório ausente.",
+  "reload": "Recarregar atributos",
+  "conflict": "Outra pessoa alterou este atributo antes da sua alteração. Recarregue e tente de novo.",
+  "required": "Obrigatório",
+  "optional": "Opcional",
+  "picker": {
+    "title": "Subcategoria",
+    "description": "Busque por nome, identificador ou sinônimo; o caminho mostra o departamento e a categoria.",
+    "label": "Subcategoria",
+    "placeholder": "Escolha uma subcategoria",
+    "counts": "{{attributes}} atributos · {{required}} obrigatórios · {{overrides}} escolhas do time"
+  },
+  "table": {
+    "title": "Atributos da subcategoria",
+    "description": "Origem: o is_required do varejista (ou o padrão do deploy quando a origem não informa). Efetivo: o que o próximo lote usa.",
+    "search": "Filtrar atributos",
+    "empty": "Ainda não há atributos para esta subcategoria. Eles aparecem depois que o job de carga sincroniza a origem.",
+    "attribute": "Atributo",
+    "source": "Origem",
+    "choice": "Escolha do time",
+    "effective": "Efetivo",
+    "updated": "Alterado por",
+    "notInSource": "não está mais na origem",
+    "sourceDefault": "não informado: padrão do deploy",
+    "choiceFor": "Obrigatoriedade de {{name}}"
+  },
+  "choice": {
+    "follow": "Seguir a origem",
+    "required": "Obrigatório",
+    "optional": "Opcional"
+  },
+  "history": {
+    "title": "Histórico",
+    "description": "Alterações na obrigatoriedade desta subcategoria.",
+    "empty": "Nenhuma alteração ainda.",
+    "revision": "revisão {{revision}}"
+  }
+}

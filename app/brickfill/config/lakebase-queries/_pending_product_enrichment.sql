@@ -26,6 +26,8 @@ SELECT
   NULL::text AS content_language,
   NULL::text AS content_profile,
   NULL::text AS settings_hash,
+  NULL::text AS prompt_version,
+  NULL::int AS instructions_version,
   NULL::int AS error_count,
   NULL::int AS warning_count,
   NULL::int AS required_count,

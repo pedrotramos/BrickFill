@@ -7,11 +7,26 @@ import { z } from 'zod';
  * Generated from the pipeline's content packs (scripts/export_content_manifest.py at the repository root) into
  * config/content-manifest.json, because the app bundle does not ship the Python package.
  */
+/** "template": edited on the Category templates screen (title formula, fact-sheet structure, facts). */
+const Group = { group: z.literal('template').optional() };
 const OverrideSpec = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('integer'), minimum: z.number().int(), maximum: z.number().int() }),
-  z.object({ type: z.literal('boolean') }),
-  z.object({ type: z.literal('string_list'), max_items: z.number().int().positive(), max_length: z.number().int() }),
-  z.object({ type: z.literal('enum'), values: z.array(z.string()).min(1) }),
+  z.object({ type: z.literal('integer'), minimum: z.number().int(), maximum: z.number().int(), ...Group }),
+  z.object({ type: z.literal('boolean'), ...Group }),
+  z.object({
+    type: z.literal('string_list'),
+    min_items: z.number().int().min(0).optional(),
+    max_items: z.number().int().positive(),
+    max_length: z.number().int(),
+    ...Group,
+  }),
+  z.object({ type: z.literal('enum'), values: z.array(z.string()).min(1), ...Group }),
+  z.object({
+    type: z.literal('sections'),
+    max_items: z.number().int().positive(),
+    max_fields: z.number().int().positive(),
+    max_length: z.number().int().positive(),
+    ...Group,
+  }),
 ]);
 export type OverrideSpec = z.infer<typeof OverrideSpec>;
 
@@ -51,6 +66,11 @@ export const FALLBACK_MANIFEST: ContentManifest = {
     units: { type: 'enum', values: ['metric', 'imperial'] },
     image_min_width: { type: 'integer', minimum: 100, maximum: 5000 },
     image_min_height: { type: 'integer', minimum: 100, maximum: 5000 },
+    title_order: { type: 'string_list', min_items: 1, max_items: 15, max_length: 40, group: 'template' },
+    fact_sheet_layout: { type: 'sections', max_items: 12, max_fields: 30, max_length: 60, group: 'template' },
+    fact_sheet_must_include: { type: 'string_list', max_items: 20, max_length: 60, group: 'template' },
+    required_fact_labels: { type: 'string_list', max_items: 30, max_length: 60, group: 'template' },
+    optional_fact_labels: { type: 'string_list', max_items: 30, max_length: 60, group: 'template' },
   },
   profile_defaults: {
     default: {
@@ -64,6 +84,20 @@ export const FALLBACK_MANIFEST: ContentManifest = {
       units: 'metric',
       image_min_width: 1000,
       image_min_height: 1000,
+      title_order: [
+        'product_type',
+        'brand',
+        'model',
+        'key_feature',
+        'secondary_feature',
+        'color',
+        'variant',
+        'quantity',
+      ],
+      fact_sheet_layout: [],
+      fact_sheet_must_include: ['brand', 'supplier'],
+      required_fact_labels: [],
+      optional_fact_labels: [],
     },
   },
 };
@@ -83,10 +117,35 @@ function overrideValue(spec: OverrideSpec): z.ZodType {
     case 'boolean':
       return z.boolean();
     case 'string_list':
-      return z.array(z.string().trim().min(1).max(spec.max_length)).max(spec.max_items);
+      return z
+        .array(z.string().trim().min(1).max(spec.max_length))
+        .min(spec.min_items ?? 0)
+        .max(spec.max_items);
     case 'enum':
       return z.enum(spec.values as [string, ...string[]]);
+    case 'sections':
+      return z
+        .array(
+          z
+            .object({
+              section: z.string().trim().min(1).max(spec.max_length),
+              fields: z.array(z.string().trim().min(1).max(spec.max_length)).max(spec.max_fields),
+            })
+            .strict()
+        )
+        .max(spec.max_items)
+        .refine(
+          (sections) => new Set(sections.map((item) => item.section.toLowerCase())).size === sections.length,
+          'Fact-sheet sections must not repeat'
+        );
   }
+}
+
+/** Override keys edited on one screen: Settings ("settings") or Category templates ("template"). */
+export function overrideKeys(manifest: ContentManifest, group: 'settings' | 'template'): string[] {
+  return Object.entries(manifest.overrides)
+    .filter(([, spec]) => (spec.group === 'template') === (group === 'template'))
+    .map(([key]) => key);
 }
 
 /** Flat object with only the manifest's override keys, each validated by its spec; unknown keys are rejected. */

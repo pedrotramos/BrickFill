@@ -24,6 +24,8 @@ TEMPLATES: dict[str, str] = {
     "GTIN_PACKAGING_LEVEL_CONFLICT": "Code {candidate} was presented at the wrong packaging level ({level}).",
     "CATEGORY_REQUIRED_FACT": "Required fact for this category is missing from the fact sheet: {label}.",
     "TITLE_MISSING_BRAND": "The generated title must contain the verified brand.",
+    "TITLE_HYPHEN_SEPARATOR": "The title uses a hyphen or dash between words as a separator: {fragment}.",
+    "FACT_SHEET_EXTRA_SECTION": "Fact-sheet section outside the category template: {section}.",
     "DESCRIPTION_LINK": "The short description must not contain links.",
     "META_SUFFIX": "Meta description must end with: {suffixes}.",
     "FAQ_COUNT": "FAQ must have between {min} and {max} questions when there is enough information; received {actual}.",

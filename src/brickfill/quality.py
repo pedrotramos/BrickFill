@@ -159,6 +159,19 @@ def validate_enrichment(
 
     if profile.title.require_brand and result.verified_brand.casefold() not in result.generated_title.casefold():
         issues.add("TITLE_MISSING_BRAND", Severity.ERROR, "generated_title")
+    # "Deep Repair for - Damaged Hair": a spaced hyphen or dash between words is a separator, never part of a phrase
+    if separator := re.search(r"\S+\s[-\u2013\u2014]\s\S+", result.generated_title):
+        issues.add("TITLE_HYPHEN_SEPARATOR", Severity.WARNING, "generated_title", fragment=separator.group(0))
+
+    if profile.fact_sheet.layout:
+        allowed = {
+            key
+            for item in profile.fact_sheet.layout
+            for key in (search_key(item.section), search_key(rules.section_name(item.section)))
+        }
+        for section in result.fact_sheet:
+            if search_key(section.name) not in allowed:
+                issues.add("FACT_SHEET_EXTRA_SECTION", Severity.WARNING, "fact_sheet", section=section.name)
 
     short = result.short_description.casefold()
     if profile.short_description.forbid_links and ("http://" in short or "https://" in short):

@@ -10,14 +10,17 @@ from brickfill.lakebase_load import (
     ATTRIBUTE_COLUMNS,
     ENRICHMENT_COLUMNS,
     ISSUE_COLUMNS,
+    LATE_COLUMNS,
+    REQUIREMENT_COLUMNS,
     ddl_statements,
+    requirement_query,
     source_queries,
 )
 
 INTERFACE_CODES = {
     "INVALID_GTIN", "BRAND_TITLE_CONFLICT", "INVALID_LENGTH", "FACT_SHEET_MISSING_GTIN", "INVALID_ENRICHED_GTIN",
     "GTIN_LOGISTIC_RELATION_CONFLICT", "GTIN_PACKAGING_LEVEL_CONFLICT", "CATEGORY_REQUIRED_FACT",
-    "TITLE_MISSING_BRAND", "DESCRIPTION_LINK", "META_SUFFIX", "FAQ_COUNT", "UNRESOLVED_SOURCE_CONFLICT", "EMOJI",
+    "TITLE_MISSING_BRAND", "TITLE_HYPHEN_SEPARATOR", "FACT_SHEET_EXTRA_SECTION", "DESCRIPTION_LINK", "META_SUFFIX", "FAQ_COUNT", "UNRESOLVED_SOURCE_CONFLICT", "EMOJI",
     "PROMOTIONAL_LANGUAGE", "DUPLICATE_ATTRIBUTE", "MISSING_ATTRIBUTE_DEFINITION", "UNKNOWN_ATTRIBUTE",
     "VOCABULARY_VALUE_NOT_ALLOWED", "VOCABULARY_VALUE_PREAPPROVED", "VOCABULARY_VALUE_PENDING",
     "MISSING_REQUIRED_ATTRIBUTE", "UNCITED_ATTRIBUTE", "MISSING_ATTRIBUTE_OBSERVATION", "GENERIC_ATTRIBUTE_VALUE",
@@ -51,11 +54,34 @@ def test_source_queries_select_every_column():
             assert f"t.{column}" in queries["validation_issue"]
 
 
+def test_tables_written_before_this_release_load_without_the_new_columns():
+    # a workspace upgraded before its next enrichment: the prepare step has not ALTERed the Delta tables yet
+    old_attribute = {c for c in ATTRIBUTE_COLUMNS if c not in LATE_COLUMNS}
+    old_catalog = {c for c in ENRICHMENT_COLUMNS if c not in LATE_COLUMNS}
+    queries = source_queries("`c`.`s`", available={"product_attribute": old_attribute, "product_catalog": old_catalog})
+    assert (
+        "NULL AS required_origin" in queries["product_attribute"]
+        and "t.required_origin" not in queries["product_attribute"]
+    )
+    assert "NULL AS prompt_version" in queries["product_enrichment"]
+    assert "NULL AS instructions_version" in queries["product_enrichment"]
+    # tables the map does not cover, and columns of earlier releases, are selected as they are
+    assert "t.params_json" in queries["validation_issue"]
+    assert "NULL AS" not in source_queries("`c`.`s`", available={"product_attribute": set()})["product_enrichment"]
+    assert "t.attribute_code" in source_queries("`c`.`s`", available={"product_attribute": set()})["product_attribute"]
+    # once the prepare step added them, they are read again
+    full = source_queries("`c`.`s`", available={"product_attribute": set(ATTRIBUTE_COLUMNS)})
+    assert "t.required_origin" in full["product_attribute"]
+    assert "NULL AS source_required" in requirement_query("`c`.`s`", {"subcategory_id", "required"})
+    assert "NULL AS" not in requirement_query("`c`.`s`", {"source_required"})
+
+
 @pytest.mark.parametrize(
     ("table", "columns"),
     [
         ("product_enrichment", {**ENRICHMENT_COLUMNS, "loaded_at": "TIMESTAMPTZ"}),
         ("validation_issue", ISSUE_COLUMNS),
+        ("attribute_requirement_source", {**REQUIREMENT_COLUMNS, "synced_at": "TIMESTAMPTZ"}),
     ],
 )
 def test_app_stand_in_matches_the_results_table(table, columns):

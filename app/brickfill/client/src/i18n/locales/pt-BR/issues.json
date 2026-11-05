@@ -62,6 +62,14 @@
       "title": "Marca ausente no título",
       "message": "O título gerado deve conter a marca verificada."
     },
+    "TITLE_HYPHEN_SEPARATOR": {
+      "title": "Hífen como separador no título",
+      "message": "O título separa palavras com hífen ou travessão: “{{fragment}}”. Use espaços entre as partes do título."
+    },
+    "FACT_SHEET_EXTRA_SECTION": {
+      "title": "Seção fora do modelo da categoria",
+      "message": "A ficha técnica tem uma seção que o modelo da categoria não prevê: “{{section}}”."
+    },
     "DESCRIPTION_LINK": {
       "title": "Link na descrição",
       "message": "A descrição abreviada não pode conter links."

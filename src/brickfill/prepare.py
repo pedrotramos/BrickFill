@@ -74,7 +74,13 @@ def _write_table(rows: list[dict[str, Any]], schema: StructType, table: str) -> 
 # Columns added after the first release: ALTERed into existing tables, since CREATE TABLE IF NOT EXISTS keeps old ones.
 ADDED_COLUMNS: dict[str, dict[str, str]] = {
     "enrichment_run": {"settings_json": "STRING"},
-    "product_enrichment": {"content_language": "STRING", "content_profile": "STRING", "settings_hash": "STRING"},
+    "product_enrichment": {
+        "content_language": "STRING",
+        "content_profile": "STRING",
+        "settings_hash": "STRING",
+        "prompt_version": "STRING",
+        "instructions_version": "INT",
+    },
     "product_attribute": {
         "candidate_value": "STRING",
         "normalized_value": "STRING",
@@ -84,6 +90,7 @@ ADDED_COLUMNS: dict[str, dict[str, str]] = {
         "applicability_reason": "STRING",
         "rejection_code": "STRING",
         "applicability_code": "STRING",
+        "required_origin": "STRING",
     },
     "validation_issue": {"params_json": "STRING"},
 }
@@ -110,7 +117,8 @@ def initialize_output_tables(namespace: str) -> None:
           run_id STRING, ean STRING, generated_title STRING, short_description STRING,
           meta_description STRING, verified_brand STRING, model STRING, supplier STRING,
           quality_score DOUBLE, status STRING, result_json STRING, created_at TIMESTAMP,
-          content_language STRING, content_profile STRING, settings_hash STRING
+          content_language STRING, content_profile STRING, settings_hash STRING, prompt_version STRING,
+          instructions_version INT
         ) USING DELTA""",
         f"""CREATE TABLE IF NOT EXISTS {namespace}.product_fact (
           run_id STRING, ean STRING, fact_name STRING, fact_value STRING, normalized_value STRING,
@@ -121,7 +129,7 @@ def initialize_output_tables(namespace: str) -> None:
           required BOOLEAN, applicable BOOLEAN, confidence DOUBLE, evidence_urls_json STRING,
           observation STRING, created_at TIMESTAMP, candidate_value STRING, normalized_value STRING,
           mapping_status STRING, source_fact_names_json STRING, rejection_reason STRING,
-          applicability_reason STRING, rejection_code STRING, applicability_code STRING
+          applicability_reason STRING, rejection_code STRING, applicability_code STRING, required_origin STRING
         ) USING DELTA""",
         f"""CREATE TABLE IF NOT EXISTS {namespace}.validation_issue (
           run_id STRING, ean STRING, issue_code STRING, severity STRING, field STRING, message STRING,
@@ -160,7 +168,7 @@ def product_catalog_select(namespace: str) -> str:
                l.run_id, l.generated_title, l.short_description, l.meta_description,
                l.verified_brand, l.model, l.supplier, l.quality_score,
                COALESCE(l.status, 'PENDING') AS status, l.result_json, l.created_at,
-               l.content_language, l.content_profile, l.settings_hash,
+               l.content_language, l.content_profile, l.settings_hash, l.prompt_version, l.instructions_version,
                COALESCE(i.error_count, 0) AS error_count,
                COALESCE(i.warning_count, 0) AS warning_count,
                COALESCE(a.required_count, 0) AS required_count,
@@ -243,6 +251,7 @@ def run(
                 StructField("attribute_name", string, False),
                 StructField("attribute_description", string, True),
                 StructField("required", BooleanType(), False),
+                StructField("source_required", BooleanType(), True),
                 StructField("value_type", string, True),
                 StructField("unit", string, True),
                 StructField("attribute_role", string, True),

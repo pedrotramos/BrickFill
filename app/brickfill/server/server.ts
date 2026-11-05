@@ -2,6 +2,9 @@ import { createApp, files, lakebase, server } from '@databricks/appkit';
 import { manualEvidenceStore, setupCatalogRoutes } from './routes/catalog-routes';
 import { setupConfigRoutes } from './routes/config-routes';
 import { setupLakebaseQueryRoutes } from './routes/lakebase-query-routes';
+import { setupAgentInstructionsRoutes } from './routes/agent-instructions-routes';
+import { setupAttributeRequirementRoutes } from './routes/attribute-requirements-routes';
+import { setupCategoryTemplateRoutes } from './routes/category-templates-routes';
 import { setupSettingsRoutes } from './routes/settings-routes';
 import { createEvidenceReadPolicy, resolveEvidenceVolumePath } from './evidence-policy';
 import { MAX_SCREENSHOT_BYTES, createManualEvidencePolicy } from './manual-evidence';
@@ -35,7 +38,11 @@ createApp({
     appkit.server.extend((app) => setupStaticAssets(app));
     setupConfigRoutes(appkit);
     await setupCatalogRoutes(appkit, manualEvidenceStore(appkit, manualEvidenceRoot));
+    // settings first: it creates settings_event, the history the other editing screens share
     await setupSettingsRoutes(appkit);
+    await setupCategoryTemplateRoutes(appkit);
+    await setupAttributeRequirementRoutes(appkit);
+    await setupAgentInstructionsRoutes(appkit);
     setupLakebaseQueryRoutes(appkit);
   },
 }).catch(console.error);

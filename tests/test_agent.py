@@ -100,7 +100,7 @@ def run(monkeypatch, seed):
     monkeypatch.setattr(agent_module, "FirecrawlMCPClient", lambda *_args: mcp)
     monkeypatch.setattr(agent_module, "discover_sources_firecrawl", discover)
 
-    def run(answers: list[Message], definitions=(), structured: bool = False):
+    def run(answers: list[Message], definitions=(), structured: bool = False, rules=None):
         agent = CatalogResearchAgent.__new__(CatalogResearchAgent)
         agent.__dict__.update(
             model_endpoint="databricks-claude-sonnet-4-6",
@@ -116,7 +116,8 @@ def run(monkeypatch, seed):
             structured_output=structured,
             openai=ScriptedModel(answers),
         )
-        result = asyncio.run(agent.enrich(seed, list(definitions)))
+        arguments = (seed, list(definitions)) if rules is None else (seed, list(definitions), rules)
+        result = asyncio.run(agent.enrich(*arguments))
         return result, agent.openai.requests, mcp.calls
 
     return run
@@ -197,3 +198,22 @@ def test_tool_calls_past_the_limit_are_refused(run):
     assert len(mcp_calls) == 1 + 3  # prefetch + max_steps scrapes; the fourth is refused
     assert "Limit of 3 extraction rounds" in requests[-1]["messages"][-1]["content"][0]["text"]
     assert result.research_trace.tool_steps == 4
+
+
+def test_title_formula_of_a_category_template_reaches_the_model(run):
+    from brickfill.content.loader import effective_rules
+
+    rules = effective_rules(
+        overrides={
+            "title_order": ["product_type", "brand", "model", "Speed", "Temperature", "Power", "color", "Voltage"],
+            "fact_sheet_layout": [{"section": "key_features", "fields": ["Power", "Speeds"]}],
+        },
+        agent_instructions="Always mention the warranty.",
+        agent_instructions_version=3,
+    )
+    _result, requests, _calls = run([answer()], rules=rules)
+    sent = " ".join(json.dumps(requests[0], ensure_ascii=False).replace(chr(92) + chr(34), chr(34)).split())
+    assert "product type, brand, model, Speed, Temperature, Power, color, Voltage" in sent
+    assert "leave out every part without one" in sent
+    assert '"Key Features" (Power, Speeds)' in sent and "Use no other section" in sent
+    assert "Always mention the warranty." in sent and "(version 3)" in sent

@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider, useParams } from 'react-router';
 import { Button, Sheet, SheetContent, SheetHeader, SheetTitle } from '@databricks/appkit-ui/react';
-import { LayoutDashboard, Menu, PackageSearch, SlidersHorizontal } from 'lucide-react';
+import { Bot, LayoutDashboard, LayoutTemplate, ListChecks, Menu, PackageSearch, SlidersHorizontal } from 'lucide-react';
 import { useTranslation } from './i18n/react';
 import { AppConfigProvider } from './components/AppConfigProvider';
 import { ArchitectureModal } from './components/ArchitectureModal';
 import { BrandLogo } from './components/BrandLogo';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { useAppConfig } from './lib/app-config';
+import { AttributesPage } from './pages/AttributesPage';
 import { CatalogPage } from './pages/CatalogPage';
+import { InstructionsPage } from './pages/InstructionsPage';
 import { OverviewPage } from './pages/OverviewPage';
 import { ProductPage } from './pages/ProductPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { TemplatesPage } from './pages/TemplatesPage';
 
 /** Sidebar items as in the workspace: compact rows, the current page on a blue wash with blue text. */
 const itemClass =
@@ -38,6 +41,18 @@ function Navigation({ onClick }: { onClick?: () => void }) {
       <NavLink className={navClass} onClick={onClick} to="/settings">
         <SlidersHorizontal aria-hidden className="h-4 w-4" />
         {t('common:nav.settings')}
+      </NavLink>
+      <NavLink className={navClass} onClick={onClick} to="/templates">
+        <LayoutTemplate aria-hidden className="h-4 w-4" />
+        {t('common:nav.templates')}
+      </NavLink>
+      <NavLink className={navClass} onClick={onClick} to="/attributes">
+        <ListChecks aria-hidden className="h-4 w-4" />
+        {t('common:nav.attributes')}
+      </NavLink>
+      <NavLink className={navClass} onClick={onClick} to="/instructions">
+        <Bot aria-hidden className="h-4 w-4" />
+        {t('common:nav.instructions')}
       </NavLink>
     </nav>
   );
@@ -157,6 +172,9 @@ const router = createBrowserRouter([
       { path: '/catalog', element: <CatalogPage /> },
       { path: '/catalog/:ean', element: <ProductRoute /> },
       { path: '/settings', element: <SettingsPage /> },
+      { path: '/templates', element: <TemplatesPage /> },
+      { path: '/attributes', element: <AttributesPage /> },
+      { path: '/instructions', element: <InstructionsPage /> },
     ],
   },
 ]);

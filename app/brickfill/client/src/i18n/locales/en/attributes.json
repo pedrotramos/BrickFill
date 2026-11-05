@@ -1,0 +1,40 @@
+{
+  "title": "Attributes",
+  "subtitle": "Mark each attribute of a subcategory as required or optional. Your choice wins over the source's flag and survives every sync; the next enrichment batch uses it in the agent's definitions and in the missing-required-attribute check.",
+  "reload": "Reload attributes",
+  "conflict": "This attribute was changed by someone else before your change. Reload and try again.",
+  "required": "Required",
+  "optional": "Optional",
+  "picker": {
+    "title": "Subcategory",
+    "description": "Search by name, identifier or synonym; the path shows the department and category.",
+    "label": "Subcategory",
+    "placeholder": "Choose a subcategory",
+    "counts": "{{attributes}} attributes · {{required}} required · {{overrides}} team choices"
+  },
+  "table": {
+    "title": "Attributes of the subcategory",
+    "description": "Source: the retailer's is_required (or the deployment default when the source does not say). Effective: what the next batch uses.",
+    "search": "Filter attributes",
+    "empty": "No attributes for this subcategory yet. They appear after the load job syncs the source.",
+    "attribute": "Attribute",
+    "source": "Source",
+    "choice": "Team choice",
+    "effective": "Effective",
+    "updated": "Changed by",
+    "notInSource": "no longer in the source",
+    "sourceDefault": "not informed: deployment default",
+    "choiceFor": "Requirement of {{name}}"
+  },
+  "choice": {
+    "follow": "Follow the source",
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "history": {
+    "title": "History",
+    "description": "Changes to the requirements of this subcategory.",
+    "empty": "No changes yet.",
+    "revision": "revision {{revision}}"
+  }
+}

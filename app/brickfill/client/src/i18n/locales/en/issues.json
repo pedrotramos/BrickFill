@@ -62,6 +62,14 @@
       "title": "Brand missing from the title",
       "message": "The generated title must contain the verified brand."
     },
+    "TITLE_HYPHEN_SEPARATOR": {
+      "title": "Hyphen used as a separator in the title",
+      "message": "The title separates words with a hyphen or dash: “{{fragment}}”. Use spaces between the parts of the title."
+    },
+    "FACT_SHEET_EXTRA_SECTION": {
+      "title": "Section outside the category template",
+      "message": "The fact sheet has a section that the category template does not list: “{{section}}”."
+    },
     "DESCRIPTION_LINK": {
       "title": "Link in the description",
       "message": "The short description cannot contain links."
