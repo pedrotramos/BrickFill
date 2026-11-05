@@ -140,13 +140,15 @@
   "review": {
     "title": "Review decision",
     "status": "Decision",
-    "assignee": "Assignee",
+    "assignee": "Responsible",
+    "assigneeHint": "Recorded from your sign-in.",
+    "assigneeLast": "Last decision by {{actor}} on {{date}}. Saving records it under your sign-in.",
+    "assigneeUnknown": "Not identified: open the app through its Databricks Apps address",
     "notes": "Notes",
     "save": "Save decision",
     "staleDecision": "The previous decision ({{status}}) was made on an older enrichment result. Review this result and decide again.",
     "saved": "Review saved.",
     "description": "The decision applies to this result and the edits shown here.",
-    "assigneePlaceholder": "Who is reviewing this product",
     "notesPlaceholder": "What you checked, and why you decided",
     "options": {
       "PENDING": "No decision yet.",

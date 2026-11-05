@@ -169,7 +169,7 @@ Complete a retailer's product catalog with content and attributes that carry **v
   Attributes screen.
 
 **Created and written by the app** (`brickfill_app`):
-- `product_review`: review status (`PENDING`, `IN_REVIEW`, `APPROVED`, `REJECTED`), assignee, notes and the
+- `product_review`: review status (`PENDING`, `IN_REVIEW`, `APPROVED`, `REJECTED`), assignee (always the signed-in user who saved the decision, never a typed name), notes and the
   enrichment run the decision was made on (`run_id`). It is the review queue that sizes the daily batch.
 - `attribute_override`: edited values with reason and author. At most one active edit per product and attribute;
   earlier ones become inactive, for history.

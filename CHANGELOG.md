@@ -81,6 +81,9 @@ versions the canonical data contract separately.
 - A focused capture shows up to 9 values of a page per scrape (7 with `dismiss_overlays`), and a page with more values
   takes more scrapes instead of leaving the rest without a crop. The value is no longer scrolled to: in Firecrawl's
   1920×100000 window the page never scrolls.
+- The person responsible for a curation decision is the signed-in user (Databricks Apps), recorded by the server; the
+  review form shows it read-only, with who made the last decision when it was someone else, instead of a free-text
+  field.
 - The capture never clicks a control that opens a popup (`aria-haspopup`): a "see more" that opened the product
   sheet in a modal covered the description it had just expanded, so its values were never cropped. A focused capture
   now also opens what a visitor can open (a clipped description, accordions) before locating the values, as the
