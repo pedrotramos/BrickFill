@@ -1,6 +1,6 @@
 [project]
 name = "brickfill"
-version = "0.2.1"
+version = "0.3.0"
 description = "Evidence-first catalog enrichment agent for Databricks"
 license = "Apache-2.0"
 authors = [{ name = "Pedro Ramos" }]
