@@ -7,6 +7,8 @@ versions the canonical data contract separately.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-05
+
 ### Added
 
 - **One reference capture per attribute.** Each attribute shows a single capture of its value, from its most reputable
@@ -172,7 +174,8 @@ First public release.
 - `scripts/replay_capture.py`: replays the evidence crops of a past run from its archived text maps, without credits.
 - CI on GitHub Actions (Python, app, bundles, secret scanning) and a tag-driven release workflow.
 
-[Unreleased]: https://github.com/pedrotramos/BrickFill/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/pedrotramos/BrickFill/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/pedrotramos/BrickFill/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/pedrotramos/BrickFill/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pedrotramos/BrickFill/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pedrotramos/BrickFill/releases/tag/v0.1.0
