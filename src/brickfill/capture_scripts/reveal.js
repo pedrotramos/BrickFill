@@ -1,6 +1,6 @@
 // Finds the element that shows one value and, if it is hidden, opens it the way a visitor would: by clicking the
 // page's own control (accordion header, tab, <summary>, "show more"). Nothing is forced visible with CSS. The element
-// is marked with data-catalog-evidence-target so scroll.js can center it.
+// is marked with data-catalog-evidence-target.
 (target) => {
   const normalize = text => (text || "").replace(/\s+/g, " ").trim().toLocaleLowerCase();
   const value = normalize(target.value);

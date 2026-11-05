@@ -219,8 +219,8 @@ and the coordinates of the visible text (a DOM map returned by `executeJavascrip
 forced visible with CSS. The scripts:
 - decline the cookie banner;
 - with `dismiss_overlays: "true"` (off by default), also answer the other notices that cover the page, three passes in
-  a row (they count toward Firecrawl's 50 actions per scrape, so a focused capture then covers 5 values of a page
-  instead of 6) (welcome tours, location or region prompts, newsletters, notification requests, stacked dialogs). Layers are
+  a row (they count toward Firecrawl's 50 actions per scrape, so a focused capture then covers 8 values of a page
+  instead of 9) (welcome tours, location or region prompts, newsletters, notification requests, stacked dialogs). Layers are
   recognized by role (`dialog`, `aria-modal`), class or id (`modal`, `popup`, `overlay`, `consent`, `banner`) and
   text, and answered from a closed list of labels: refuse, skip, not now, confirm skipping the tour, cancel the
   location request, continue, close. Nothing is accepted or subscribed. A cookie layer with no answer button is hidden
@@ -230,10 +230,29 @@ forced visible with CSS. The scripts:
 - open `<details>`, `aria-expanded` accordions and "show more" buttons, in English, Portuguese and Spanish;
 - scroll the page to load lazy content.
 
-**Focused capture.** Values present in the page text but without a crop get a second extraction of the page.
-- For each value, `reveal.js` clicks the page's own control that opens the section or tab, scrolls to the value and
-  takes a full-page screenshot between two text maps. A viewport screenshot would not do: in Firecrawl's 1920×100000
-  window the page never scrolls, and the visible window comes back cut to its first 1080 px.
+**Reference capture.** Each attribute shows one capture of its value (`is_reference`), from its most reputable source
+that can show it; the other sources that state the same value are listed with it.
+- The sources of an attribute are ranked (`source_rank`) by tier (official, authorized distributor, recognized
+  retailer, other), then, within a tier, a source already cropped from its full-page capture first, then citation
+  order.
+- The first source with a complete crop is the reference. A higher-ranked source without a crop gets a focused
+  capture first; when it fails, the next source is tried, round after round, until one shows the value or no source
+  is left.
+- The reason a source has no crop is a language-neutral `capture_code` (for example `FIRECRAWL_REJECTED`, `HIDDEN`,
+  `BLOCKED`, `BUDGET`), translated by the app; `capture_error` keeps the detail, including Firecrawl's own explanation
+  of a refused request.
+
+**Focused capture.** A value present in the page text but without a crop gets a second extraction of the page.
+- For each value, `reveal.js` clicks the page's own control that opens the section or tab, then a full-page
+  screenshot is taken between two text maps. A viewport screenshot would not do: in Firecrawl's 1920×100000 window
+  the page never scrolls, and the visible window comes back cut to its first 1080 px.
+- One scrape (one credit) shows up to 9 values of a page (8 with `dismiss_overlays`); more values take more scrapes.
+  Room left in a page's last scrape is filled with the lower-ranked sources of other attributes on that page, so a
+  fallback is often ready before it is needed, at no extra cost.
+- `focus_max_credits` (6 by default) caps the focused scrapes of one product; the first scrape of every page comes
+  before the second scrape of any. A recapture uses its own `max_credits`.
+- A 429 is retried with backoff and a timeout or server error once; a 402 (no credits left) stops every further paid
+  request of the run.
 - The window is not resized, so image and coordinates describe the same layout.
 - When the value still doesn't show, the evidence gets `NOT_VISIBLE`, with the reason.
 

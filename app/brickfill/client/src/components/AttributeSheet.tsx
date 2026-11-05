@@ -27,11 +27,13 @@ import {
   Asterisk,
   BadgeCheck,
   Camera,
+  CameraOff,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
   FileCheck2,
   Image as ImageIcon,
+  Info,
   Pencil,
   PencilLine,
   Plus,
@@ -44,7 +46,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '../i18n/react';
 import { formatDate, formatPercent } from '../lib/formatters';
-import { captureLabelKey, evidenceFileUrl, hostname, type EvidenceState } from '../lib/evidence';
+import { captureReasonKey, evidenceFileUrl, hostname, type EvidenceState } from '../lib/evidence';
 import { issueMessage, issueTitle, type IssueRow } from '../lib/issues';
 import {
   type ManualEvidence,
@@ -69,6 +71,11 @@ export interface EvidenceReference {
   crop_path?: string | null;
   capture_status?: string;
   capture_error?: string | null;
+  capture_code?: string | null;
+  /** 1 = the most reputable source of the attribute (set by the job since reference captures). */
+  source_rank?: number | null;
+  /** The one capture shown for the value. */
+  is_reference?: boolean | null;
 }
 
 export interface HumanOverride {
@@ -91,7 +98,10 @@ export interface AttributeView {
   effectiveValue: string | null;
   confidence: number | string | null | undefined;
   override?: HumanOverride;
+  /** Sources that back the value, most reputable first. */
   references: EvidenceReference[];
+  /** The source whose crop is the value's reference capture, if any could show it. */
+  reference: EvidenceReference | null;
   manualEvidence: ManualEvidence[];
   captureExpected: boolean;
   evidence: EvidenceState;
@@ -103,15 +113,23 @@ export interface AttributeView {
 const SOURCE_TIERS = new Set(['official', 'authorized_distributor', 'recognized_retailer', 'other']);
 
 /** The backing of a value as one tag: on the page, to check, by text, none. */
-export function EvidenceTag({ attribute }: { attribute: Pick<AttributeView, 'evidence' | 'references'> }) {
+export function EvidenceTag({
+  attribute,
+}: {
+  attribute: Pick<AttributeView, 'evidence' | 'references' | 'reference'>;
+}) {
   const { t } = useTranslation();
   switch (attribute.evidence) {
-    case 'captured':
+    case 'captured': {
+      const host = attribute.reference ? hostname(attribute.reference.url) : null;
       return (
-        <ToneBadge icon={Camera} tone="success">
-          {t('product:evidenceState.captured')}
-        </ToneBadge>
+        <span title={host ? t('product:evidenceState.capturedFrom', { host }) : undefined}>
+          <ToneBadge icon={Camera} tone="success">
+            {t('product:evidenceState.captured')}
+          </ToneBadge>
+        </span>
       );
+    }
     case 'check':
       return (
         <ToneBadge icon={TriangleAlert} tone="warning">
@@ -155,6 +173,16 @@ export function AttributeTags({ attribute }: { attribute: AttributeView }) {
         </ToneBadge>
       ) : null}
     </>
+  );
+}
+
+function TierBadge({ tier }: { tier?: string | null }) {
+  const { t } = useTranslation();
+  if (!tier) return null;
+  return (
+    <ToneBadge icon={tier === 'official' ? BadgeCheck : undefined} tone={tier === 'official' ? 'success' : 'neutral'}>
+      {SOURCE_TIERS.has(tier) ? t(`product:audit.sourceTier.${tier}`) : tier}
+    </ToneBadge>
   );
 }
 
@@ -213,7 +241,8 @@ function Section({ title, action, children }: { title: string; action?: ReactNod
 
 /**
  * The review of one attribute, in a side sheet: what the agent proposed and what is published, the checks it
- * failed, every source with its crop, the reviewer's own evidence, and the edit of the value with its evidence.
+ * failed, the one reference capture of the value (from its most reputable source that could show it), every source
+ * that backs the value, the reviewer's own evidence, and the edit of the value with its evidence.
  * One sheet for the whole list: ‹ › walk through the attributes without closing it.
  */
 export function AttributeSheet({
@@ -323,10 +352,16 @@ export function AttributeSheet({
     setRestoreError(error);
     if (!error) setRestoreOpen(false);
   };
-  const captureLabel = (reference: EvidenceReference) =>
-    t(
-      `product:audit.capture.${captureLabelKey(reference.capture_status, reference.capture_error, attribute.captureExpected)}`
-    );
+  const reasonText = (source: EvidenceReference) => {
+    const key = captureReasonKey(source);
+    return key ? t(`product:audit.reason.${key}`) : '';
+  };
+  const reference = attribute.reference;
+  const best = attribute.references[0];
+  const referenceIndex = reference ? attribute.references.indexOf(reference) : -1;
+  // an edited value is shown by the reviewer's own capture; so is an AI value no source could show
+  const manualReference =
+    attribute.override || !reference ? (attribute.manualEvidence.find((item) => item.screenshot_path) ?? null) : null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -538,103 +573,191 @@ export function AttributeSheet({
 
             {!editing ? (
               <>
-                <Section title={t('product:audit.sources.title')}>
-                  <p className="-mt-1 text-sm text-muted-foreground">{t('product:audit.sources.description')}</p>
-                  {attribute.references.length ? (
-                    <ul className="space-y-3">
-                      {attribute.references.map((reference, index) => (
-                        <li
-                          className="overflow-hidden rounded-lg border"
-                          key={reference.evidence_id ?? `${reference.url}-${index}`}
-                        >
-                          {reference.crop_path ? (
-                            <EvidenceImage
-                              attributeName={attribute.name}
-                              key={reference.crop_path}
-                              path={reference.crop_path}
-                            />
+                <Section title={t('product:audit.referenceCapture.title')}>
+                  {manualReference?.screenshot_path ? (
+                    <figure className="overflow-hidden rounded-lg border">
+                      <EvidenceImage
+                        attributeName={attribute.name}
+                        key={manualReference.screenshot_path}
+                        kind="manual"
+                        path={manualReference.screenshot_path}
+                        url={manualEvidenceFileUrl}
+                      />
+                      <figcaption className="space-y-2 border-t p-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <ToneBadge icon={UserCheck} tone="info">
+                            {t('product:audit.manual.badge')}
+                          </ToneBadge>
+                          <span className="text-xs text-muted-foreground">
+                            {manualReference.created_by} · {formatDate(manualReference.created_at)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {attribute.override
+                            ? t('product:audit.referenceCapture.manualForEdit')
+                            : t('product:audit.referenceCapture.manualForAi')}
+                        </p>
+                      </figcaption>
+                    </figure>
+                  ) : reference?.crop_path ? (
+                    <figure className="overflow-hidden rounded-lg border">
+                      <EvidenceImage
+                        attributeName={attribute.name}
+                        key={reference.crop_path}
+                        path={reference.crop_path}
+                      />
+                      <figcaption className="space-y-2 border-t p-4">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <TierBadge tier={reference.source_tier} />
+                          <span className="text-xs text-muted-foreground">
+                            {hostname(reference.url) ?? t('product:audit.externalReference')}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium leading-6">{reference.source_title || attribute.name}</p>
+                        {best && best !== reference ? (
+                          <p className="flex gap-2 text-xs leading-5 text-muted-foreground">
+                            <Info aria-hidden className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                            {t('product:audit.referenceCapture.fallback', {
+                              host: hostname(best.url) ?? t('product:audit.externalReference'),
+                              reason: reasonText(best),
+                            })}
+                          </p>
+                        ) : null}
+                        <div className="flex flex-wrap items-center gap-x-1 gap-y-1 pt-1 text-xs text-muted-foreground">
+                          <Button asChild className="-ml-2.5" size="sm" variant="ghost">
+                            <a href={reference.url} rel="noreferrer" target="_blank">
+                              {t('product:audit.openPage')}
+                              <ExternalLink aria-hidden className="ml-1 h-3.5 w-3.5" />
+                            </a>
+                          </Button>
+                          {reference.screenshot_path ? (
+                            <Button asChild size="sm" variant="ghost">
+                              <a href={evidenceFileUrl(reference.screenshot_path)} rel="noreferrer" target="_blank">
+                                {t('product:audit.openScreenshot')}
+                                <ExternalLink aria-hidden className="ml-1 h-3.5 w-3.5" />
+                              </a>
+                            </Button>
                           ) : null}
-                          <div className={`space-y-2 p-4 ${reference.crop_path ? 'border-t' : ''}`}>
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              {reference.source_tier ? (
-                                <ToneBadge
-                                  icon={reference.source_tier === 'official' ? BadgeCheck : undefined}
-                                  tone={reference.source_tier === 'official' ? 'success' : 'neutral'}
-                                >
-                                  {SOURCE_TIERS.has(reference.source_tier)
-                                    ? t(`product:audit.sourceTier.${reference.source_tier}`)
-                                    : reference.source_tier}
-                                </ToneBadge>
-                              ) : null}
-                              {reference.capture_status === 'COMPLETE' ? (
-                                <ToneBadge icon={Camera} tone="success">
-                                  {captureLabel(reference)}
-                                </ToneBadge>
-                              ) : reference.capture_status || attribute.captureExpected ? (
-                                <ToneBadge icon={TriangleAlert} tone="warning">
-                                  {captureLabel(reference)}
-                                </ToneBadge>
-                              ) : (
-                                <ToneBadge tone="quiet">{captureLabel(reference)}</ToneBadge>
-                              )}
-                              <span className="text-xs text-muted-foreground">
-                                {hostname(reference.url) ?? t('product:audit.externalReference')}
-                              </span>
-                            </div>
-                            <p className="text-sm font-medium leading-6">{reference.source_title || attribute.name}</p>
-                            {reference.fact_value ? (
-                              <p className="text-sm text-muted-foreground">
-                                {t('product:audit.sourceValue', { value: reference.fact_value })}
-                              </p>
-                            ) : null}
-                            {reference.excerpt ? (
-                              <blockquote className="border-l-0 text-sm leading-6 text-foreground/80">
-                                “{reference.excerpt}”
-                              </blockquote>
-                            ) : (
-                              <p className="text-sm text-muted-foreground">{t('product:audit.noExcerpt')}</p>
-                            )}
-                            {!reference.crop_path && reference.screenshot_path ? (
-                              <p className="text-xs text-muted-foreground">{t('product:audit.noCropSeePage')}</p>
-                            ) : !reference.crop_path && (reference.capture_status || attribute.captureExpected) ? (
-                              <p className="text-xs text-muted-foreground">{t('product:audit.noCropTextKept')}</p>
-                            ) : null}
-                            {reference.capture_error ? (
-                              <p className="text-xs break-words text-muted-foreground">
-                                {t('product:audit.technicalDetail', { detail: reference.capture_error })}
-                              </p>
-                            ) : null}
-                            <div className="flex flex-wrap items-center gap-x-1 gap-y-1 pt-1 text-xs text-muted-foreground">
-                              <Button asChild className="-ml-2.5" size="sm" variant="ghost">
-                                <a href={reference.url} rel="noreferrer" target="_blank">
-                                  {t('product:audit.openReference')}
-                                  <ExternalLink aria-hidden className="ml-1 h-3.5 w-3.5" />
-                                </a>
-                              </Button>
-                              {reference.screenshot_path ? (
-                                <Button asChild size="sm" variant="ghost">
-                                  <a href={evidenceFileUrl(reference.screenshot_path)} rel="noreferrer" target="_blank">
-                                    {t('product:audit.openScreenshot')}
-                                    <ExternalLink aria-hidden className="ml-1 h-3.5 w-3.5" />
-                                  </a>
-                                </Button>
-                              ) : null}
-                              {reference.captured_at ? (
-                                <span className="ml-auto tabular-nums">
-                                  {t('product:audit.capturedAt', { date: formatDate(reference.captured_at) })}
-                                </span>
-                              ) : null}
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                          {reference.captured_at ? (
+                            <span className="ml-auto tabular-nums">
+                              {t('product:audit.capturedAt', { date: formatDate(reference.captured_at) })}
+                            </span>
+                          ) : null}
+                        </div>
+                      </figcaption>
+                    </figure>
+                  ) : attribute.references.length ? (
+                    <div className="space-y-3 rounded-lg border border-dashed p-4">
+                      <p className="flex items-center gap-2 text-sm font-medium">
+                        <CameraOff aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        {t('product:audit.referenceCapture.none')}
+                      </p>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        {attribute.captureExpected && best
+                          ? t('product:audit.referenceCapture.noneReason', {
+                              host: hostname(best.url) ?? t('product:audit.externalReference'),
+                              reason: reasonText(best),
+                            })
+                          : t('product:audit.referenceCapture.legacy')}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {onAddEvidence ? (
+                          <Button size="sm" variant="outline" onClick={() => setDraft(draft ?? emptyDraft)}>
+                            <Plus aria-hidden className="mr-1 h-4 w-4" />
+                            {t('product:audit.referenceCapture.attach')}
+                          </Button>
+                        ) : null}
+                        {best?.screenshot_path ? (
+                          <Button asChild size="sm" variant="ghost">
+                            <a href={evidenceFileUrl(best.screenshot_path)} rel="noreferrer" target="_blank">
+                              {t('product:audit.referenceCapture.openPageCapture', {
+                                host: hostname(best.url) ?? t('product:audit.externalReference'),
+                              })}
+                              <ExternalLink aria-hidden className="ml-1 h-3.5 w-3.5" />
+                            </a>
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
                   ) : (
                     <p className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
                       {t('product:audit.noUrls')}
                     </p>
                   )}
                 </Section>
+
+                {attribute.references.length ? (
+                  <Section
+                    action={
+                      <span className="text-xs text-muted-foreground tabular-nums">{attribute.references.length}</span>
+                    }
+                    title={t('product:audit.sources.title')}
+                  >
+                    <p className="-mt-1 text-sm text-muted-foreground">{t('product:audit.sources.description')}</p>
+                    <ol className="divide-y rounded-lg border">
+                      {attribute.references.map((source, index) => {
+                        const isReference = source === reference && !manualReference;
+                        const failed = attribute.captureExpected && (referenceIndex < 0 || index < referenceIndex);
+                        const host = hostname(source.url) ?? t('product:audit.externalReference');
+                        return (
+                          <li className="space-y-1.5 p-4" key={source.evidence_id ?? `${source.url}-${index}`}>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                                <span className="w-4 text-xs text-muted-foreground tabular-nums">{index + 1}</span>
+                                <TierBadge tier={source.source_tier} />
+                                <a
+                                  className="inline-flex min-w-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                  href={source.url}
+                                  rel="noreferrer"
+                                  target="_blank"
+                                >
+                                  <span className="truncate">{host}</span>
+                                  <ExternalLink aria-hidden className="h-3 w-3 shrink-0" />
+                                </a>
+                              </div>
+                              {isReference ? (
+                                <ToneBadge icon={Camera} tone="success">
+                                  {t('product:audit.sources.reference')}
+                                </ToneBadge>
+                              ) : null}
+                            </div>
+                            {source.source_title ? (
+                              <p className="pl-5.5 text-sm font-medium leading-6 break-words">{source.source_title}</p>
+                            ) : null}
+                            <div className="space-y-1.5 pl-5.5">
+                              {source.fact_value ? (
+                                <p className="text-sm text-muted-foreground">
+                                  {t('product:audit.sourceValue', { value: source.fact_value })}
+                                </p>
+                              ) : null}
+                              {source.excerpt ? (
+                                <blockquote
+                                  className="line-clamp-2 text-sm leading-6 text-foreground/80"
+                                  title={source.excerpt}
+                                >
+                                  “{source.excerpt}”
+                                </blockquote>
+                              ) : null}
+                              {failed && captureReasonKey(source) ? (
+                                <p className="text-xs text-muted-foreground">
+                                  {t('product:audit.sources.notCaptured', { reason: reasonText(source) })}
+                                </p>
+                              ) : null}
+                              {failed && source.capture_error ? (
+                                <details className="text-xs text-muted-foreground">
+                                  <summary className="cursor-pointer select-none hover:text-foreground">
+                                    {t('product:audit.sources.technical')}
+                                  </summary>
+                                  <p className="mt-1 font-mono break-words">{source.capture_error}</p>
+                                </details>
+                              ) : null}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </Section>
+                ) : null}
 
                 <Section
                   action={
@@ -654,7 +777,7 @@ export function AttributeSheet({
                     <ul className="space-y-3">
                       {attribute.manualEvidence.map((item) => (
                         <li className="overflow-hidden rounded-lg border" key={item.id}>
-                          {item.screenshot_path ? (
+                          {item.screenshot_path && item !== manualReference ? (
                             <EvidenceImage
                               attributeName={attribute.name}
                               kind="manual"
@@ -662,11 +785,18 @@ export function AttributeSheet({
                               url={manualEvidenceFileUrl}
                             />
                           ) : null}
-                          <div className={`space-y-2 p-4 ${item.screenshot_path ? 'border-t' : ''}`}>
+                          <div
+                            className={`space-y-2 p-4 ${item.screenshot_path && item !== manualReference ? 'border-t' : ''}`}
+                          >
                             <div className="flex flex-wrap items-center gap-2">
                               <ToneBadge icon={UserCheck} tone="info">
                                 {t('product:audit.manual.badge')}
                               </ToneBadge>
+                              {item === manualReference ? (
+                                <ToneBadge icon={Camera} tone="success">
+                                  {t('product:audit.sources.reference')}
+                                </ToneBadge>
+                              ) : null}
                               <span className="text-xs text-muted-foreground">
                                 {item.created_by} · {formatDate(item.created_at)}
                               </span>

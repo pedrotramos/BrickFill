@@ -237,8 +237,43 @@
       "confirm": "Restaurar valor da IA"
     },
     "sources": {
-      "title": "Fontes consultadas",
-      "description": "Confira a captura preservada. A página original pode ter mudado desde a consulta."
+      "title": "Fontes que embasam o valor",
+      "description": "Da mais confiável para a menos confiável. A captura de referência vem da primeira que conseguiu mostrar o valor.",
+      "reference": "Captura de referência",
+      "notCaptured": "Não capturada: {{reason}}.",
+      "technical": "Detalhes técnicos"
+    },
+    "referenceCapture": {
+      "title": "Captura de referência",
+      "fallback": "A fonte mais confiável ({{host}}) não pôde ser capturada: {{reason}}. Esta captura vem da próxima fonte da lista.",
+      "manualForEdit": "Anexada pela curadoria para o valor editado.",
+      "manualForAi": "Anexada pela curadoria: nenhuma fonte conseguiu mostrar o valor.",
+      "none": "Sem captura de referência",
+      "noneReason": "Nenhuma fonte conseguiu mostrar o valor. Na mais confiável ({{host}}), {{reason}}. Confira as fontes abaixo ou anexe uma evidência.",
+      "legacy": "Este enriquecimento é anterior às capturas visuais: as fontes abaixo embasam o valor por texto.",
+      "attach": "Anexar evidência",
+      "openPageCapture": "Abrir a captura de {{host}}"
+    },
+    "reason": {
+      "PAGE_NOT_CAPTURED": "a página não pôde ser capturada",
+      "UNSUPPORTED": "a fonte não tem captura visual",
+      "NO_MATCH": "o valor não foi localizado na captura",
+      "AMBIGUOUS": "o valor aparece em mais de um lugar da página",
+      "UNSTABLE": "a página mudou durante a captura",
+      "CROP_FAILED": "o recorte falhou",
+      "NOT_ON_PAGE": "o valor não está no texto da página",
+      "HIDDEN": "o valor continuou oculto depois de abrir a seção",
+      "STRUCTURED_DATA_ONLY": "o valor só aparece nos dados da página, não na parte visível",
+      "BLOCKED": "o site bloqueou a captura focada",
+      "PAGE_CHANGED": "a página mudou de endereço ao abrir a seção",
+      "FIRECRAWL_REJECTED": "o serviço de captura recusou a solicitação",
+      "OUT_OF_CREDITS": "os créditos de captura acabaram",
+      "BUDGET": "o limite de capturas do produto foi atingido",
+      "FOCUS_FAILED": "a captura focada falhou",
+      "TOO_MANY": "havia valores demais na página para uma captura",
+      "BLANK": "a página não foi renderizada (captura em branco)",
+      "PDF_FAILED": "o recorte do PDF falhou",
+      "TEXT_ONLY": "a fonte embasa o valor apenas por texto"
     },
     "sourceTier": {
       "official": "Fonte oficial",
@@ -247,28 +282,10 @@
       "other": "Outra fonte"
     },
     "externalReference": "Referência externa",
-    "capture": {
-      "COMPLETE": "Evidência visual completa",
-      "LEGACY": "Evidência textual legada",
-      "INCOMPLETE": "Captura incompleta — revisão necessária",
-      "NOT_VISIBLE": "Valor não exibido pela página — revisão necessária",
-      "NO_MATCH": "Valor não encontrado na captura — revisão necessária",
-      "AMBIGUOUS": "Valor aparece em mais de um lugar — revisão necessária",
-      "SCREENSHOT_ONLY": "Página mudou durante a captura — confira a captura completa",
-      "UNSUPPORTED": "Fonte sem captura visual (PDF) — revisão necessária",
-      "NOT_CAPTURED": "Fonte não capturada — revisão necessária",
-      "FAILED": "Falha na captura — revisão necessária",
-      "BLANK": "A página não foi renderizada (captura em branco) — revisão necessária",
-      "PDF_FAILED": "Falha no recorte do PDF — confira a página do PDF"
-    },
     "capturedAt": "Capturada em {{date}}",
     "sourceValue": "Valor na fonte: {{value}}",
-    "noExcerpt": "A URL foi vinculada ao atributo, mas não há trecho capturado para esta referência.",
-    "noCropSeePage": "Não há um recorte legível e inequívoco deste valor. Confira o valor na captura da página abaixo.",
-    "noCropTextKept": "Não há um recorte legível e inequívoco deste valor. A evidência textual foi preservada.",
-    "technicalDetail": "Detalhe técnico: {{detail}}",
     "openScreenshot": "Abrir captura completa",
-    "openReference": "Abrir referência",
+    "openPage": "Abrir página",
     "noUrls": "Nenhuma URL foi associada a este atributo. Não aprove um valor preenchido sem validar uma fonte externa.",
     "manual": {
       "title": "Evidências manuais",
@@ -299,6 +316,7 @@
   "loading": "Carregando o produto…",
   "evidenceState": {
     "captured": "Na página",
-    "check": "Verificar captura"
+    "check": "Verificar captura",
+    "capturedFrom": "Capturado de {{host}}"
   }
 }

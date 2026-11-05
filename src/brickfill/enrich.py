@@ -406,6 +406,7 @@ def research(
     pdf_parser: DocumentParser | None = None,
     pdf_parser_max_pages: int = 20,
     dismiss_overlays: bool = False,
+    focus_max_credits: int | None = 6,
 ) -> list[tuple[ProductSeed, ProductEnrichment | None, list[ValidationIssue], str | None]]:
     """Research, validate and capture visual evidence for every seed (concurrently).
 
@@ -413,6 +414,8 @@ def research(
     of the run shares ``firecrawl_concurrency`` slots, the limit of the Firecrawl plan (2 on the free plan).
     ``rules_for`` gives each product its language, profile and market (job parameters and app settings).
     ``pdf_parser`` reads scanned PDFs (``ai_parse_document``); without it they are kept for human review.
+    ``focus_max_credits`` caps the focused captures (one credit each) that give each product's attributes a reference
+    capture from their most reputable source.
     """
     rules_for = rules_for or RulesResolver(SettingsSnapshot(), JobDefaults())
     # Resolved before any paid request, so an unknown language or profile fails the run immediately.
@@ -431,6 +434,7 @@ def research(
         pdf_parser=pdf_parser,
         pdf_parser_max_pages=pdf_parser_max_pages,
         dismiss_overlays=dismiss_overlays,
+        focus_max_credits=focus_max_credits,
     )
     agent.capture_collector = collector
 

@@ -71,7 +71,15 @@ import { ApiError, ensureOk, errorText, queryErrorText } from '../lib/api-errors
 import { formatDate, formatPercent } from '../lib/formatters';
 import { attributeReason, fieldLabel, issueMessage, issueTitle, type IssueRow } from '../lib/issues';
 import { languageLabel } from '../i18n/languages';
-import { attributeCodeOf, evidenceFileUrl, evidenceState, hostname } from '../lib/evidence';
+import {
+  attributeCodeOf,
+  evidenceFileUrl,
+  evidenceState,
+  hostname,
+  distinctSources,
+  rankReferences,
+  referenceOf,
+} from '../lib/evidence';
 import { matchesSearch } from '../lib/search';
 import {
   type ManualEvidence,
@@ -515,7 +523,9 @@ export function ProductPage() {
     const effectiveValue = override?.value ?? attribute.attribute_value ?? null;
     const candidateOnly = !effectiveValue && Boolean(attribute.candidate_value);
     const outOfVocabulary = attribute.mapping_status === 'OUT_OF_VOCAB';
-    const references = referencesFor(attribute);
+    const ranked = rankReferences(referencesFor(attribute));
+    const reference = referenceOf(ranked);
+    const references = distinctSources(ranked, reference);
     const manualEvidence = manualEvidenceFor(attribute.attribute_code);
     const captureExpected = expectsCapture(attribute.attribute_code);
     return {
@@ -533,6 +543,7 @@ export function ProductPage() {
       confidence: attribute.confidence as number | string | null | undefined,
       override,
       references,
+      reference,
       manualEvidence,
       captureExpected,
       evidence: evidenceState({

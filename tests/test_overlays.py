@@ -18,6 +18,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from tenacity import wait_none
 
 from brickfill.models import VisualEvidence
 from brickfill.visual_evidence import (
@@ -65,6 +66,7 @@ def scraped_actions(tmp_path: Path, dismiss_overlays: bool, monkeypatch, request
                 "key", EvidenceArchive(str(tmp_path)), "run", http_client=http, dismiss_overlays=dismiss_overlays
             ) as collector,
         ):
+            collector.retry_wait = wait_none()
             await collector.scrape({"url": "https://shop.example.com/p/1", "actions": requested or []})
 
     asyncio.run(go())
@@ -93,7 +95,7 @@ def test_full_page_scrape_stays_within_firecrawl_action_limit(tmp_path, monkeypa
     assert actions[0] == requested[0]  # the agent's actions still run first
 
 
-@pytest.mark.parametrize(("dismiss_overlays", "shown"), [(False, 6), (True, 5)])
+@pytest.mark.parametrize(("dismiss_overlays", "shown"), [(False, 9), (True, 8)])
 def test_focused_scrape_stays_within_firecrawl_action_limit(tmp_path, monkeypatch, dismiss_overlays, shown):
     from test_capture import PAGE_URL, capture, firecrawl, png, text_map
 
@@ -101,7 +103,7 @@ def test_focused_scrape_stays_within_firecrawl_action_limit(tmp_path, monkeypatc
     collector = capture(tmp_path, firecrawl(png(1920, 2499), [geometry, geometry]))
     collector.dismiss_overlays = dismiss_overlays
     page = collector.pages[PAGE_URL]
-    page.source_text = " ".join(f"Value {index} W" for index in range(8))
+    page.source_text = " ".join(f"Value {index} W" for index in range(10))
     sent: list[dict] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -115,12 +117,13 @@ def test_focused_scrape_stays_within_firecrawl_action_limit(tmp_path, monkeypatc
             ),
             f"{index} W",
         )
-        for index in range(8)
+        for index in range(10)
     ]
 
     async def go():
         async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
             collector._http = http
+            collector.retry_wait = wait_none()
             await collector._focus_page(page, items)
 
     asyncio.run(go())

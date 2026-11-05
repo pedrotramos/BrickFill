@@ -11,7 +11,7 @@ from brickfill.contract_check import schema_issues
 from brickfill.identifiers import identifier as _identifier
 from brickfill.identifiers import qualified_table as _qualified_table
 from brickfill.normalize import normalize_sources
-from brickfill.visual_evidence import EVIDENCE_COLUMNS
+from brickfill.visual_evidence import EVIDENCE_ADDED_COLUMNS, EVIDENCE_COLUMNS
 
 __all__ = ["_identifier", "_qualified_table", "initialize_output_tables", "run"]
 
@@ -93,6 +93,7 @@ ADDED_COLUMNS: dict[str, dict[str, str]] = {
         "required_origin": "STRING",
     },
     "validation_issue": {"params_json": "STRING"},
+    "product_attribute_evidence": EVIDENCE_ADDED_COLUMNS,
 }
 
 

@@ -96,3 +96,20 @@ def test_pending_reviews_count_every_result_without_a_decision_for_it():
         "not-enriched": Decision("run-0", CREATED),
     }
     assert pending_reviews(latest, closed) == 2
+
+
+def test_ai_evidence_lists_the_reference_capture_first():
+    sql = _compact(merge_statement(NAMESPACE, DESTINATION))
+    assert (
+        "'position', CASE WHEN COALESCE(e.is_reference, false) THEN 0 ELSE 1000 END + COALESCE(e.source_rank, 999)"
+        in sql
+    )
+    assert "'is_reference', COALESCE(e.is_reference, false))))), entry -> entry.item) AS items" in sql
+    # every evidence shape carries the flag, so the AI and manual lists concatenate
+    assert sql.count("'is_reference', false") == 3
+
+
+def test_an_evidence_table_without_the_reference_columns_still_publishes():
+    sql = _compact(merge_statement(NAMESPACE, DESTINATION, reference_columns=False))
+    assert "e.is_reference" not in sql and "e.source_rank" not in sql
+    assert "COALESCE(CAST(NULL AS INT), 999)" in sql

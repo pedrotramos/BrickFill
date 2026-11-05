@@ -183,7 +183,7 @@ def test_focused_capture_shoots_the_full_page_in_the_tall_window(tmp_path):
             return httpx.Response(200, content=png(1920, 2499))
         sent.append(json.loads(request.content))
         reveal = {"href": PAGE_URL, "found": True, "revealedBy": []}
-        returns = [{"href": PAGE_URL}, reveal, {"href": PAGE_URL}, low, low]
+        returns = [{"href": PAGE_URL}, reveal, low, low]
         data = {
             "markdown": "Power: 750 W",
             "metadata": {"url": PAGE_URL, "statusCode": 200, "creditsUsed": 1},

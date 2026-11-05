@@ -560,11 +560,17 @@ Before the full-page screenshot, the capture scripts act like a visitor:
 
 Menus, links that leave the page, cart, login and tabs are not touched.
 
+Each attribute gets **one reference capture**: the crop of its most reputable source (official, then authorized
+distributor, recognized retailer, other) that can show the value. The app shows that capture and lists every source
+that states the same value, marking which one the capture comes from. When the best source has no crop, focused
+capture tries it, and then the next source, until one shows the value.
+
 If a value is on the page but not in the crop, **focused capture** takes over. Typical causes are a collapsed section
 or tab, or a page that changed height during the capture. Focused capture:
-- runs a second extraction of the same page: one per page, covering all of its values;
-- clicks the page's own control that opens the section (accordion header, tab or `<summary>`), scrolls to the value
-  and takes a full-page screenshot;
+- runs a second extraction of the same page: one scrape (1 credit) shows up to 9 values (8 with `dismiss_overlays`),
+  more values take more scrapes, and `focus_max_credits` (6 by default) caps the focused scrapes of each product;
+- clicks the page's own control that opens the section (accordion header, tab or `<summary>`) and takes a full-page
+  screenshot;
 - keeps the window size unchanged, so the text map and the image describe the same layout;
 - points the evidence at that screenshot, and records in `coordinates.json` what was clicked (`revealedBy`).
 
@@ -584,7 +590,8 @@ never cited or captured.
 | `FAILED` | The capture or the crop failed; the reason is in `capture_error` (for example a blank screenshot, when the page did not render). |
 
 In every case except `COMPLETE`, the reviewer checks the value in the page screenshot or attaches manual evidence
-(step 8).
+(step 8). `capture_code` says why in a language-neutral code (the app shows it in plain words), and `is_reference`
+marks the one capture shown for the attribute.
 
 ## 8. App
 
@@ -822,6 +829,8 @@ What it costs and how to check it is in [docs/finops.md](finops.md). Suggested r
 | `capture_error` with "blank screenshot" | The page did not render for Firecrawl (WAF block, page hidden by a script, interrupted load) | Recapture (9.2) later, or manual evidence |
 | `NOT_VISIBLE` | The value only exists in structured data, or the section doesn't open | Check `capture_error`; the reviewer uses the page screenshot or attaches manual evidence |
 | `capture_error` with "did not load the same content" | The site blocked focused capture (anti-bot) | Recapture (9.2) later, or manual evidence |
+| `capture_code` `BUDGET` on many attributes | The product's sources needed more focused scrapes than `focus_max_credits` | Raise `focus_max_credits`, recapture (9.2) the attributes, or manual evidence |
+| `capture_code` `FIRECRAWL_REJECTED` | Firecrawl refused the scrape; its explanation is in `capture_error` | Open a ticket with the `capture_error` |
 | `load_lakebase` fails to connect | The jobs SP's Postgres role doesn't exist | Check `postgres_roles` in the step 4 deploy |
 | The app opens empty or with a query error | The app SP's grants are missing | `bundle run grant_access` (step 8) |
 | App: `permission denied for schema enrichment` | Missing Lakebase grant | `bundle run grant_access` |

@@ -470,6 +470,7 @@ The job names start with `BrickFill ·` (in development mode, prefixed with `[de
 | `max_products` | Hard cap of products per run |
 | `use_native_web_search: "false"` (default) | Discovery through Firecrawl search (~4 credits per product), the same path in every cloud |
 | `firecrawl_concurrency` | Simultaneous Firecrawl requests (2 on the free plan). Changes only the duration |
+| `focus_max_credits` (default 6) | Focused scrapes (1 credit each) per product that give every attribute a reference capture from its most reputable source, with fallback to the next one. Only sources without a crop use them; up to 9 values per scrape |
 | PDF sources (already applied) | PDFs cited by the agent are downloaded directly: no Firecrawl credit, no focused capture |
 | `pdf_ocr: "false"` (default) | Scanned PDFs are kept for human review. `"true"` reads them with `ai_parse_document` (AI Functions, billed per page), at most `pdf_ocr_max_pages` pages per document |
 | `performance_target: STANDARD` (already applied) | Half the DBUs of performance optimized, with 10–15 min more to start. Switch modes only for urgent reprocessing (section 2) |
