@@ -52,6 +52,7 @@ import {
   Save,
   Search,
   TriangleAlert,
+  UserCheck,
   type LucideIcon,
 } from 'lucide-react';
 import { useTranslation } from '../i18n/react';
@@ -71,7 +72,15 @@ import { ApiError, ensureOk, errorText, queryErrorText } from '../lib/api-errors
 import { formatDate, formatPercent } from '../lib/formatters';
 import { attributeReason, fieldLabel, issueMessage, issueTitle, type IssueRow } from '../lib/issues';
 import { languageLabel } from '../i18n/languages';
-import { attributeCodeOf, evidenceFileUrl, evidenceState, hostname } from '../lib/evidence';
+import {
+  attributeCodeOf,
+  evidenceFileUrl,
+  evidenceState,
+  hostname,
+  distinctSources,
+  rankReferences,
+  referenceOf,
+} from '../lib/evidence';
 import { matchesSearch } from '../lib/search';
 import {
   type ManualEvidence,
@@ -120,6 +129,8 @@ interface ReviewState {
   /** Run of the result shown, and the latest audit event: a decision is saved against both. */
   currentRunId: string | null;
   lastEventId: string | null;
+  /** The signed-in user a decision is recorded as (null when the app could not identify them). */
+  currentUser?: string | null;
 }
 type EvidenceItem = EvidenceReference;
 interface VisualAttribute {
@@ -314,7 +325,6 @@ export function ProductPage() {
   }, [ean, recaptureRun, refreshToken, t]);
   const [reviewStatus, setReviewStatus] = useState<Review['status']>('PENDING');
   const [notes, setNotes] = useState('');
-  const [assignee, setAssignee] = useState('');
   const [savingReview, setSavingReview] = useState(false);
   const [removingOverrideCode, setRemovingOverrideCode] = useState<string | null>(null);
   const [attributeFilter, setAttributeFilter] = useState<AttributeFilter>('relevant');
@@ -326,7 +336,7 @@ export function ProductPage() {
 
   /**
    * Reads the review, edits, evidence and history. The status always follows the server (an edit can reopen an
-   * approval); the notes and assignee being typed are kept unless `resetDraft` (first load, after saving the review).
+   * approval); the notes being typed are kept unless `resetDraft` (first load, after saving the review).
    */
   const loadReview = useCallback(
     async (resetDraft: boolean) => {
@@ -341,7 +351,6 @@ export function ProductPage() {
         setReviewStatus(isStaleDecision(payload.review) ? 'PENDING' : (payload.review?.status ?? 'PENDING'));
         if (resetDraft) {
           setNotes(payload.review?.notes ?? '');
-          setAssignee(payload.review?.assignee ?? '');
         }
       } catch (error) {
         setLoadError(errorText(error, 'errors:REVIEW_LOAD_FAILED'));
@@ -380,7 +389,6 @@ export function ProductPage() {
         // the decision is made on the result and the edits this page shows
         body: JSON.stringify({
           status: reviewStatus,
-          assignee,
           notes,
           runId: reviewState.currentRunId,
           basedOnEventId: reviewState.lastEventId,
@@ -515,7 +523,9 @@ export function ProductPage() {
     const effectiveValue = override?.value ?? attribute.attribute_value ?? null;
     const candidateOnly = !effectiveValue && Boolean(attribute.candidate_value);
     const outOfVocabulary = attribute.mapping_status === 'OUT_OF_VOCAB';
-    const references = referencesFor(attribute);
+    const ranked = rankReferences(referencesFor(attribute));
+    const reference = referenceOf(ranked);
+    const references = distinctSources(ranked, reference);
     const manualEvidence = manualEvidenceFor(attribute.attribute_code);
     const captureExpected = expectsCapture(attribute.attribute_code);
     return {
@@ -533,6 +543,7 @@ export function ProductPage() {
       confidence: attribute.confidence as number | string | null | undefined,
       override,
       references,
+      reference,
       manualEvidence,
       captureExpected,
       evidence: evidenceState({
@@ -1190,16 +1201,28 @@ export function ProductPage() {
                     </RadioGroup>
                   </fieldset>
                   <div className="space-y-1.5">
-                    <Label htmlFor="assignee">{t('product:review.assignee')}</Label>
-                    <Input
-                      id="assignee"
-                      placeholder={t('product:review.assigneePlaceholder')}
-                      value={assignee}
-                      onChange={(event) => {
-                        setAssignee(event.target.value);
-                        setReviewSaved(false);
-                      }}
-                    />
+                    <p className="text-sm font-medium" id="assignee-label">
+                      {t('product:review.assignee')}
+                    </p>
+                    <div
+                      aria-labelledby="assignee-label"
+                      className="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2 text-sm"
+                    >
+                      <UserCheck aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      {reviewState.currentUser ? (
+                        <span className="min-w-0 truncate">{reviewState.currentUser}</span>
+                      ) : (
+                        <span className="text-muted-foreground">{t('product:review.assigneeUnknown')}</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {reviewState.review?.updated_by && reviewState.review.updated_by !== reviewState.currentUser
+                        ? t('product:review.assigneeLast', {
+                            actor: reviewState.review.updated_by,
+                            date: formatDate(reviewState.review.updated_at),
+                          })
+                        : t('product:review.assigneeHint')}
+                    </p>
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="notes">{t('product:review.notes')}</Label>

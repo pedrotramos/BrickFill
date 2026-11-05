@@ -168,6 +168,9 @@ variables:
   dismiss_overlays:
     description: '"true" also closes welcome tours, location or region prompts, newsletters and stacked dialogs before the screenshots (capture_scripts/overlays.js); "false" only refuses the cookie banner'
     default: "false"
+  focus_max_credits:
+    description: Focused captures (1 Firecrawl credit each) one product may use so every attribute gets a reference capture from its most reputable source, trying the next source when one fails; "0" turns the focused capture off
+    default: "6"
   pdf_ocr:
     description: '"true" reads scanned PDFs (no text layer) with ai_parse_document, billed per page; "false" keeps them for human review'
     default: "false"

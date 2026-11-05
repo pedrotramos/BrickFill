@@ -78,6 +78,9 @@ resources:
         # Also close notices other than the cookie banner before the screenshots (welcome tours, region prompts...).
         - name: dismiss_overlays
           default: ${var.dismiss_overlays}
+        # Focused captures (1 credit each) per product to give every attribute a reference capture, with fallback.
+        - name: focus_max_credits
+          default: ${var.focus_max_credits}
         - name: pdf_ocr
           default: ${var.pdf_ocr}
         - name: pdf_ocr_max_pages
@@ -129,6 +132,7 @@ resources:
               ean: "{{job.parameters.ean}}"
               evidence_volume: "{{job.parameters.evidence_volume}}"
               dismiss_overlays: "{{job.parameters.dismiss_overlays}}"
+              focus_max_credits: "{{job.parameters.focus_max_credits}}"
               pdf_ocr: "{{job.parameters.pdf_ocr}}"
               pdf_ocr_max_pages: "{{job.parameters.pdf_ocr_max_pages}}"
               reviewers: "{{job.parameters.reviewers}}"

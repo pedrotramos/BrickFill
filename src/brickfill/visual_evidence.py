@@ -18,11 +18,18 @@ from urllib.parse import urlsplit
 import httpx
 from databricks.sdk.errors import DatabricksError
 from PIL import Image
-from tenacity import AsyncRetrying, retry_if_exception, stop_after_attempt, wait_exponential
+from tenacity import AsyncRetrying, stop_after_attempt, wait_exponential
 
 from brickfill.errors import safe_exception_message
 from brickfill.issues import make
-from brickfill.models import ProductEnrichment, Severity, ValidationIssue, VisualEvidence
+from brickfill.models import (
+    TIER_RANK,
+    CatalogAttribute,
+    ProductEnrichment,
+    Severity,
+    ValidationIssue,
+    VisualEvidence,
+)
 from brickfill.pdf_evidence import DocumentParser, PdfRefused, PdfSource, fetch_pdf, locate
 from brickfill.research import canonicalize_url
 
@@ -56,7 +63,12 @@ EVIDENCE_COLUMNS = {
     "crop_sha256": "STRING",
     "capture_status": "STRING",
     "capture_error": "STRING",
+    "capture_code": "STRING",
+    "source_rank": "INT",
+    "is_reference": "BOOLEAN",
 }
+# Columns of product_attribute_evidence added after its first release (prepare ALTERs them into existing tables).
+EVIDENCE_ADDED_COLUMNS = {name: EVIDENCE_COLUMNS[name] for name in ("capture_code", "source_rank", "is_reference")}
 
 CAPTURE_SCRIPTS = Path(__file__).parent / "capture_scripts"
 _NO_LIMIT = contextlib.nullcontext()
@@ -111,9 +123,73 @@ def crop_value(excerpt: str | None, *values: str | None) -> str:
 STABLE_TOLERANCE_PX = 2.0
 # Values that the focused capture tries again (a full-page FAILED only counts when the page itself was captured).
 FOCUS_STATUSES = {"NO_MATCH", "AMBIGUOUS", "SCREENSHOT_ONLY", "FAILED"}
-MAX_FOCUS_TARGETS = 6  # one paid scrape per page
-FOCUS_ACTIONS_PER_VALUE = 7
+MAX_FOCUS_TARGETS = 9  # values one focused scrape (one credit) shows; more values take more scrapes
+FOCUS_ACTIONS_PER_VALUE = 5
 FIRECRAWL_MAX_ACTIONS = 50  # Firecrawl refuses a scrape with more actions (HTTP 400)
+# Answers worth one more try (timeout, server errors); 429 (too many simultaneous requests) is retried with backoff.
+RETRY_ONCE_STATUSES = {408, 500, 502, 503, 504}
+# capture_code of a crop that did not come out of the full-page capture, by capture_status.
+STATUS_CODES = {
+    "NO_MATCH": "NO_MATCH",
+    "AMBIGUOUS": "AMBIGUOUS",
+    "SCREENSHOT_ONLY": "UNSTABLE",
+    "FAILED": "CROP_FAILED",
+    "UNSUPPORTED": "UNSUPPORTED",
+    "NOT_CAPTURED": "PAGE_NOT_CAPTURED",
+}
+
+
+class FirecrawlError(httpx.HTTPStatusError):
+    """Firecrawl refused a request; the message is Firecrawl's own explanation (its JSON ``error``) when it sent one."""
+
+    def __init__(self, response: httpx.Response) -> None:
+        self.status_code = response.status_code
+        self.reason = _firecrawl_reason(response)
+        super().__init__(
+            f"Firecrawl answered HTTP {response.status_code}: {self.reason}",
+            request=response.request,
+            response=response,
+        )
+
+
+def _firecrawl_reason(response: httpx.Response) -> str:
+    try:
+        document = response.json()
+    except ValueError:
+        document = None
+    if isinstance(document, dict):
+        parts = [document.get(name) for name in ("error", "message")]
+        details = document.get("details")
+        if isinstance(details, list):
+            parts += [item.get("message") if isinstance(item, dict) else item for item in details[:3]]
+        text = "; ".join(dict.fromkeys(str(part).strip() for part in parts if part))
+        if text:
+            return text[:500]
+    return response.reason_phrase or "no explanation"
+
+
+def _retry_firecrawl(state: Any) -> bool:
+    error = state.outcome.exception() if state.outcome is not None and state.outcome.failed else None
+    if not isinstance(error, FirecrawlError):
+        return False
+    return error.status_code == 429 or (error.status_code in RETRY_ONCE_STATUSES and state.attempt_number == 1)
+
+
+def rank_references(attribute: CatalogAttribute) -> None:
+    """Order an attribute's sources by reputation (tier), a crop already taken first within a tier, then citation."""
+    attribute.visual_evidence.sort(
+        key=lambda item: (TIER_RANK.get(item.source_tier, len(TIER_RANK)), item.capture_status != "COMPLETE")
+    )
+    for rank, item in enumerate(attribute.visual_evidence, start=1):
+        item.source_rank = rank
+
+
+def select_reference(attribute: CatalogAttribute) -> VisualEvidence | None:
+    """Mark the one capture shown for the value: the first complete crop in the ranking (the most reputable one)."""
+    reference = next((item for item in attribute.visual_evidence if item.capture_status == "COMPLETE"), None)
+    for item in attribute.visual_evidence:
+        item.is_reference = item is reference
+    return reference
 
 
 def table_cells(excerpt: str | None) -> list[str]:
@@ -355,6 +431,7 @@ class FocusShot:
     path: str | None = None
     coordinates_path: str | None = None
     problem: str | None = None
+    code: str = "FOCUS_FAILED"
     # The focused page did not load the same content (blocked, changed): not proof that the value is invisible.
     unavailable: bool = False
 
@@ -372,9 +449,12 @@ class CaptureCollector:
         pdf_parser: DocumentParser | None = None,
         pdf_parser_max_pages: int = 20,
         dismiss_overlays: bool = False,
+        focus_max_credits: int | None = None,
     ) -> None:
         if max_credits is not None and max_credits < 1:
             raise ValueError("Credit budget must be positive")
+        if focus_max_credits is not None and focus_max_credits < 0:
+            raise ValueError("Focused capture budget cannot be negative")
         # Every Firecrawl request of the run (scrapes here, searches through the MCP client) shares these slots: the
         # plan caps simultaneous requests (2 on the free plan) and answers 429 above it.
         self.slots = asyncio.Semaphore(max(1, concurrency)) if concurrency else None
@@ -397,6 +477,10 @@ class CaptureCollector:
         self.pdf_parser_max_pages = pdf_parser_max_pages
         # Also close welcome tours, location prompts, newsletters and stacked dialogs (capture_scripts/overlays.js).
         self.dismiss_overlays = dismiss_overlays
+        # Focused scrapes (one credit each) one product may use to give its attributes a reference capture.
+        self.focus_max_credits = focus_max_credits
+        # Firecrawl answered 402: no further paid request is sent in this run.
+        self.out_of_credits = False
 
     def _dismiss_actions(self) -> list[dict[str, Any]]:
         """Refuse the cookie banner, then (with ``dismiss_overlays``) answer the other notices a few times."""
@@ -412,10 +496,20 @@ class CaptureCollector:
                 ]
         return actions
 
+    def _focus_actions(self) -> list[dict[str, Any]]:
+        """Start of a focused scrape: the notices, then what a visitor can open (a clipped description, accordions),
+        as in the full-page capture, so a value shown only after "show more" is in place before it is located."""
+        return [
+            {"type": "wait", "milliseconds": 1000},
+            *self._dismiss_actions(),
+            {"type": "executeJavascript", "script": EXPAND_SCRIPT},
+            {"type": "wait", "milliseconds": 800},
+        ]
+
     @property
     def _focus_limit(self) -> int:
         """Values one focused scrape can show: with ``dismiss_overlays`` its notice passes leave room for fewer."""
-        room = FIRECRAWL_MAX_ACTIONS - 1 - len(self._dismiss_actions())
+        room = FIRECRAWL_MAX_ACTIONS - len(self._focus_actions())
         return min(MAX_FOCUS_TARGETS, room // FOCUS_ACTIONS_PER_VALUE)
 
     @property
@@ -524,6 +618,10 @@ class CaptureCollector:
             payload["actions"] = [*original_actions, *capture_actions]
         if self._budget_exhausted():
             page.error = "Recapture credit budget exhausted; no paid request was made."
+            page.tool_payload = self._error_payload(page.error)
+            return page
+        if self.out_of_credits:
+            page.error = "Firecrawl has no credits left; no paid request was made."
             page.tool_payload = self._error_payload(page.error)
             return page
         if self.max_credits is not None:
@@ -657,16 +755,16 @@ class CaptureCollector:
     async def _post_scrape(self, payload: dict[str, Any], page: PageCapture | None = None) -> dict[str, Any]:
         """One paid Firecrawl scrape; the attempt is counted before the request so a failure still uses the budget.
 
-        A 429 (too many simultaneous requests for the plan) is not charged and is retried with exponential backoff.
+        A 429 (too many simultaneous requests for the plan) is not charged and is retried with exponential backoff; a
+        timeout or server error is tried once more. Any other refusal raises :class:`FirecrawlError` with Firecrawl's
+        explanation, and a 402 (no credits left) stops the paid requests of the run.
         """
         self.attempts += 1
         if self._http is None:
             raise RuntimeError("CaptureCollector must be used as an async context manager")
         http = self._http
         async for attempt in AsyncRetrying(
-            retry=retry_if_exception(
-                lambda exc: isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429
-            ),
+            retry=_retry_firecrawl,
             wait=self.retry_wait,
             stop=stop_after_attempt(4),
             reraise=True,
@@ -678,7 +776,10 @@ class CaptureCollector:
                         headers={"Authorization": f"Bearer {self.api_key}"},
                         json=payload,
                     )
-                response.raise_for_status()
+                if response.status_code == 402:
+                    self.out_of_credits = True
+                if response.status_code >= 400:
+                    raise FirecrawlError(response)
         document = response.json()
         if not document.get("success") or not isinstance(document.get("data"), dict):
             raise ValueError("Firecrawl extraction did not succeed")
@@ -732,6 +833,18 @@ class CaptureCollector:
             return b"".join(parts)
 
     def crop(self, evidence: VisualEvidence, value: str, label: str = "") -> VisualEvidence:
+        """Crop the value from the source's full-page capture; ``capture_code`` says why when there is no crop."""
+        self._crop_source(evidence, value, label)
+        evidence.capture_code = None if evidence.capture_status == "COMPLETE" else self._crop_code(evidence)
+        return evidence
+
+    def _crop_code(self, evidence: VisualEvidence) -> str | None:
+        page = self.pages.get(canonicalize_url(evidence.url) or "")
+        if page is None or page.status == "FAILED":
+            return "PAGE_NOT_CAPTURED"
+        return STATUS_CODES.get(evidence.capture_status)
+
+    def _crop_source(self, evidence: VisualEvidence, value: str, label: str) -> VisualEvidence:
         page = self.pages.get(canonicalize_url(evidence.url) or "")
         if page is None:
             evidence.capture_status = "NOT_CAPTURED"
@@ -850,45 +963,174 @@ class CaptureCollector:
                     attribute.visual_evidence.append(self.crop(reference, value, attribute.name or fact.name))
                     if reference.captured_at is not None:
                         source.retrieved_at = reference.captured_at
+            rank_references(attribute)
+            select_reference(attribute)
         return visual_issues(result)
 
     async def focus(self, result: ProductEnrichment) -> None:
-        """Second capture for values that are on the page but were not cropped from the full-page screenshot.
+        """Give every attribute one reference capture: its most reputable source that can show the value.
 
-        For each such value, the page's own control is clicked when the value sits in a collapsed section or tab
-        (reveal.js), the value is scrolled to and a full-page screenshot is taken between two text maps.
-        The window is not resized, so the text map and the image describe the same layout. One paid scrape per page
-        covers all of its values. A value that still cannot be shown gets NOT_VISIBLE with the reason.
+        The sources of an attribute are ranked by ``attach``. Round after round, each attribute without a reference
+        tries its next source: a crop already taken from the full-page capture is used as is; otherwise the value is
+        opened and shot in a focused capture of that page (reveal.js clicks the page's own control when the value
+        sits in a collapsed section or tab, then a full-page screenshot is taken between two text maps). One paid
+        scrape covers up to ``_focus_limit`` values of a page; room left in a page's last scrape is filled with the
+        lower-ranked sources of other attributes on that page, at no extra cost, so a fallback is often ready before
+        it is needed. ``focus_max_credits`` caps the focused scrapes of one product (``max_credits`` in a recapture).
         """
-        pending: dict[str, list[tuple[VisualEvidence, str]]] = {}
+        tried: set[str] = set()  # evidence ids already focused, or that a focused capture cannot show
+        spent = 0
+        while True:
+            queue: dict[str, list[tuple[VisualEvidence, str]]] = {}
+            targets: dict[str, str] = {}  # attribute code -> page url of this round's source
+            for attribute in result.attributes:
+                target = self._next_target(attribute, tried)
+                if target is not None:
+                    url = canonicalize_url(target[0].url) or ""
+                    queue.setdefault(url, []).append(target)
+                    targets[attribute.code] = url
+            if not queue:
+                break
+            lots_by_page = {url: self._lots(self.pages[url], items) for url, items in queue.items()}
+            for url, lots in lots_by_page.items():
+                self._fill_with_reserves(self.pages[url], lots, result, targets, tried)
+            # first scrapes of every page before the second scrape of any, so the budget reaches every page
+            order = [
+                (url, lot)
+                for depth in range(max(len(lots) for lots in lots_by_page.values()))
+                for url, lots in lots_by_page.items()
+                if depth < len(lots)
+                for lot in [lots[depth]]
+            ]
+            room = self._focus_room(spent)
+            planned, dropped = order[:room], order[room:]
+            own = {evidence.evidence_id for items in queue.values() for evidence, _value in items}
+            for _url, lot in planned:
+                tried.update(evidence.evidence_id for evidence, _value in lot)
+            for _url, lot in dropped:
+                # only the round's own sources count as attempted; a reserve in a dropped scrape stays available
+                for evidence, _value in lot:
+                    if evidence.evidence_id in own:
+                        tried.add(evidence.evidence_id)
+                        self._skip_for_budget(evidence)
+            spent += len(planned)
+            if self.max_credits is not None:
+                # credit-limited recapture: one scrape at a time so the budget is checked before every paid request
+                for url, lot in planned:
+                    await self._focus_page(self.pages[url], lot)
+            else:
+                await asyncio.gather(*(self._focus_page(self.pages[url], lot) for url, lot in planned))
         for attribute in result.attributes:
+            select_reference(attribute)
+
+    def _focus_room(self, spent: int) -> int:
+        """Focused scrapes still allowed for this product."""
+        if self.out_of_credits:
+            return 0
+        room = None if self.focus_max_credits is None else self.focus_max_credits - spent
+        if self.max_credits is not None:
+            left = self.max_credits - max(self.attempts, self.reported_credits)
+            room = left if room is None else min(room, left)
+        return max(0, room) if room is not None else 1_000_000
+
+    def _skip_for_budget(self, evidence: VisualEvidence) -> None:
+        if self.out_of_credits:
+            evidence.capture_code = "OUT_OF_CREDITS"
+            evidence.capture_error = "Firecrawl has no credits left; no focused capture was taken."
+        else:
+            evidence.capture_code = "BUDGET"
+            evidence.capture_error = "The focused capture budget of this product was used up before this source."
+
+    def _focus_value(self, attribute: CatalogAttribute, evidence: VisualEvidence) -> str | None:
+        """What a focused capture of this source would look for, or ``None`` (with the reason) when it cannot help."""
+        page = self.pages.get(canonicalize_url(evidence.url) or "")
+        if evidence.capture_status not in FOCUS_STATUSES:
+            return None
+        if page is None or page.status != "CAPTURED":
+            evidence.capture_code = "PAGE_NOT_CAPTURED"
+            return None
+        if page.pdf is not None:
+            return None  # a PDF has no focused capture: its pages are complete already
+        value = crop_value(evidence.excerpt, evidence.fact_value, attribute.candidate_value, attribute.value) or (
+            attribute.candidate_value or attribute.value or ""
+        )
+        if not _contains(page.source_text, value):
+            # not on the page at all: no paid request (the full screenshot stays as evidence)
+            evidence.capture_code = "NOT_ON_PAGE"
+            return None
+        return value
+
+    def _next_target(self, attribute: CatalogAttribute, tried: set[str]) -> tuple[VisualEvidence, str] | None:
+        """The attribute's best source still worth a focused capture; ``None`` once a crop is ready or none is left."""
+        for evidence in attribute.visual_evidence:  # ranked by reputation
+            if evidence.capture_status == "COMPLETE":
+                return None  # the most reputable source that shows the value is already cropped
+            if evidence.evidence_id in tried:
+                continue
+            value = self._focus_value(attribute, evidence)
+            if value is None:
+                tried.add(evidence.evidence_id)
+                continue
+            return evidence, value
+        return None
+
+    def _lot_key(self, page: PageCapture, evidence: VisualEvidence, value: str) -> tuple[str, str]:
+        needle = _visible_excerpt(evidence.excerpt).strip()
+        if needle and not _contains(page.source_text, needle):
+            needle = ""  # an excerpt that is not literally on the page cannot locate the element
+        return needle, value
+
+    def _lots(
+        self, page: PageCapture, items: list[tuple[VisualEvidence, str]]
+    ) -> list[list[tuple[VisualEvidence, str]]]:
+        """Split a page's values into focused scrapes of at most ``_focus_limit`` distinct values each."""
+        lots: list[dict[tuple[str, str], list[tuple[VisualEvidence, str]]]] = []
+        for evidence, value in items:
+            key = self._lot_key(page, evidence, value)
+            lot = next((lot for lot in lots if key in lot), None)
+            if lot is None:
+                if not lots or len(lots[-1]) >= self._focus_limit:
+                    lots.append({})
+                lot = lots[-1]
+            lot.setdefault(key, []).append((evidence, value))
+        return [[item for group in lot.values() for item in group] for lot in lots]
+
+    def _fill_with_reserves(
+        self,
+        page: PageCapture,
+        lots: list[list[tuple[VisualEvidence, str]]],
+        result: ProductEnrichment,
+        targets: dict[str, str],
+        tried: set[str],
+    ) -> None:
+        """Room left in the page's last scrape: the lower-ranked sources on this page of attributes still waiting."""
+        last = lots[-1]
+        keys = {self._lot_key(page, evidence, value) for evidence, value in last}
+        url = canonicalize_url(page.url) or ""
+        for attribute in result.attributes:
+            current = targets.get(attribute.code)
+            if current is None or current == url:
+                continue
             for evidence in attribute.visual_evidence:
+                if evidence.evidence_id in tried or canonicalize_url(evidence.url) != url:
+                    continue
                 if evidence.capture_status not in FOCUS_STATUSES:
                     continue
-                url = canonicalize_url(evidence.url) or ""
-                page = self.pages.get(url)
-                value = crop_value(
-                    evidence.excerpt, evidence.fact_value, attribute.candidate_value, attribute.value
-                ) or (attribute.candidate_value or attribute.value or "")
-                if page is None or page.status != "CAPTURED" or page.pdf is not None:
-                    continue  # a PDF has no focused capture: its pages are complete already
-                if not _contains(page.source_text, value):
-                    continue  # not on the page at all: no paid request (the full screenshot stays as evidence)
-                pending.setdefault(url, []).append((evidence, value))
-        if self.max_credits is not None:
-            # credit-limited recapture: one page at a time so the budget is checked before every paid request
-            for url, items in pending.items():
-                await self._focus_page(self.pages[url], items)
-            return
-        await asyncio.gather(*(self._focus_page(self.pages[url], items) for url, items in pending.items()))
+                value = self._focus_value(attribute, evidence)
+                if value is None:
+                    continue
+                key = self._lot_key(page, evidence, value)
+                if key not in keys and len(keys) >= self._focus_limit:
+                    return
+                keys.add(key)
+                last.append((evidence, value))
+                break  # one reserve per attribute and page
 
     async def _focus_page(self, page: PageCapture, items: list[tuple[VisualEvidence, str]]) -> None:
         targets: list[dict[str, Any]] = []
         assigned: list[tuple[VisualEvidence, str, int | None]] = []
         for evidence, value in items:
-            needle = _visible_excerpt(evidence.excerpt).strip()
-            if needle and not _contains(page.source_text, needle):
-                needle = ""  # an excerpt that is not literally on the page cannot locate the element
+            needle, _value = self._lot_key(page, evidence, value)
             key = {"needle": needle, "value": value}
             index = next((item["index"] for item in targets if {k: item[k] for k in key} == key), None)
             if index is None and len(targets) < self._focus_limit:
@@ -899,18 +1141,20 @@ class CaptureCollector:
             return
         if self._budget_exhausted():
             for evidence, _value, _index in assigned:
-                self._not_visible(evidence, "Recapture credit budget exhausted before the focused capture.")
+                self._not_visible(evidence, "Recapture credit budget exhausted before the focused capture.", "BUDGET")
             return
-        actions: list[dict[str, Any]] = [{"type": "wait", "milliseconds": 1000}, *self._dismiss_actions()]
+        if self.out_of_credits:
+            for evidence, _value, _index in assigned:
+                self._skip_for_budget(evidence)
+            return
+        actions = self._focus_actions()
         for target in targets:
             actions += [
                 {"type": "executeJavascript", "script": _script("reveal", target)},
-                {"type": "wait", "milliseconds": 700},
-                {"type": "executeJavascript", "script": _script("scroll", target["index"])},
-                {"type": "wait", "milliseconds": 300},
+                {"type": "wait", "milliseconds": 1000},
                 {"type": "executeJavascript", "script": DOM_SCRIPT},
-                # full page: in Firecrawl's 1920x100000 window the page never scrolls, and a screenshot of the
-                # visible window is cut to its first 1080 px, leaving out any value below them
+                # full page: in Firecrawl's 1920x100000 window the page never scrolls (so the value is not scrolled
+                # to), and a screenshot of the visible window is cut to its first 1080 px, leaving out any value below
                 {"type": "screenshot", "fullPage": True, "quality": 100},
                 {"type": "executeJavascript", "script": DOM_SCRIPT},
             ]
@@ -923,13 +1167,18 @@ class CaptureCollector:
             data = await self._post_scrape(payload, page)
             returns = (data.get("actions") or {}).get("javascriptReturns") or []
             screenshots = (data.get("actions") or {}).get("screenshots") or []
-            returns = returns[self._dismiss_returns :]  # the cookie banner refusal (and the other notices)
-            if len(returns) != 4 * len(targets) or len(screenshots) != len(targets):
+            # the cookie banner refusal (and the other notices), then the expansion
+            returns = returns[self._dismiss_returns + 1 :]
+            if len(returns) != 3 * len(targets) or len(screenshots) != len(targets):
                 raise ValueError("Firecrawl did not return every focused capture")
         except (httpx.HTTPError, DatabricksError, OSError, ValueError, KeyError, TypeError) as exc:
             reason = f"Focused capture failed: {safe_exception_message(exc, self.api_key)}"
+            if isinstance(exc, FirecrawlError):
+                code = "OUT_OF_CREDITS" if exc.status_code == 402 else "FIRECRAWL_REJECTED"
+            else:
+                code = "FOCUS_FAILED"
             for evidence, _value, _index in assigned:
-                evidence.capture_error = reason
+                evidence.capture_error, evidence.capture_code = reason, code
             return
         captured_at = datetime.now(UTC)
         focused_text = _source_text(data)
@@ -937,7 +1186,7 @@ class CaptureCollector:
         for target in targets:
             index = target["index"]
             try:
-                reveal, _scroll, before, after = (self._geometry(item) for item in returns[4 * index : 4 * index + 4])
+                reveal, before, after = (self._geometry(item) for item in returns[3 * index : 3 * index + 3])
             except (ValueError, TypeError):
                 shots[index] = FocusShot(reveal={}, before={}, after={}, problem="Invalid focused text map.")
                 continue
@@ -945,15 +1194,16 @@ class CaptureCollector:
             shots[index] = shot
             if not reveal.get("found"):
                 if not _contains(focused_text, target["value"]):
-                    shot.unavailable = True
+                    shot.unavailable, shot.code = True, "BLOCKED"
                     shot.problem = "The page did not load the same content in the focused capture (blocked or changed)."
                 else:
+                    shot.code = "STRUCTURED_DATA_ONLY"
                     shot.problem = "The value is in the page source but in no displayed element (e.g. structured data)."
                 continue
             if not all(
                 _same_capture_page(item.get("href"), page.geometry.get("href")) for item in (reveal, before, after)
             ):
-                shot.problem = "The page changed address while the section was opened."
+                shot.problem, shot.code = "The page changed address while the section was opened.", "PAGE_CHANGED"
                 continue
             try:
                 shot.screenshot, shot.path = await self._store_screenshot(
@@ -970,14 +1220,16 @@ class CaptureCollector:
                 shot.problem = f"Focused screenshot failed: {safe_exception_message(exc, self.api_key)}"
         for evidence, value, index in assigned:
             if index is None:
+                # focus() splits a page's values into scrapes of _focus_limit; this only guards a direct call
                 evidence.capture_error = "Too many values on this page for one focused capture; check the screenshot."
+                evidence.capture_code = "TOO_MANY"
                 continue
             shot = shots[index]
             if shot.unavailable:
-                evidence.capture_error = f"Focused capture: {shot.problem}"
+                evidence.capture_error, evidence.capture_code = f"Focused capture: {shot.problem}", shot.code
                 continue
             if shot.problem is not None or shot.screenshot is None:
-                self._not_visible(evidence, shot.problem or "Focused screenshot is unavailable.")
+                self._not_visible(evidence, shot.problem or "Focused screenshot is unavailable.", shot.code)
                 continue
             attempt = evidence.model_copy(update={"crop_path": None, "crop_box": None, "crop_sha256": None})
             self._crop_image(attempt, value, shot.screenshot, shot.after, shot.before, f"{directory}/crops")
@@ -990,17 +1242,21 @@ class CaptureCollector:
                 evidence.crop_path = attempt.crop_path
                 evidence.crop_box = attempt.crop_box
                 evidence.crop_sha256 = attempt.crop_sha256
-                evidence.capture_status, evidence.capture_error = "COMPLETE", None
+                evidence.capture_status, evidence.capture_error, evidence.capture_code = "COMPLETE", None, None
             elif attempt.capture_status == "NO_MATCH":
                 how = ", ".join(shot.reveal.get("revealedBy") or []) or "no page control"
-                self._not_visible(evidence, f"The value stayed hidden or covered after opening the section ({how}).")
+                self._not_visible(
+                    evidence, f"The value stayed hidden or covered after opening the section ({how}).", "HIDDEN"
+                )
             else:
                 evidence.capture_error = f"Focused capture: {attempt.capture_error}"
+                evidence.capture_code = STATUS_CODES.get(attempt.capture_status, "FOCUS_FAILED")
 
     @staticmethod
-    def _not_visible(evidence: VisualEvidence, reason: str) -> None:
+    def _not_visible(evidence: VisualEvidence, reason: str, code: str = "HIDDEN") -> None:
         evidence.capture_status = "NOT_VISIBLE"
         evidence.capture_error = reason
+        evidence.capture_code = code
 
 
 def visual_issues(result: ProductEnrichment) -> list[ValidationIssue]:
@@ -1012,7 +1268,7 @@ def visual_issues(result: ProductEnrichment) -> list[ValidationIssue]:
             attribute=attribute.name or attribute.code,
         )
         for attribute in result.attributes
-        if attribute.value and not any(item.capture_status == "COMPLETE" for item in attribute.visual_evidence)
+        if attribute.value and not any(item.is_reference for item in attribute.visual_evidence)
     ]
 
 

@@ -68,7 +68,7 @@ interface AppKitWithLakebase {
 const RunId = z.string().max(100).nullable().optional().default(null);
 const ReviewBody = z.object({
   status: z.enum(['PENDING', 'IN_REVIEW', 'APPROVED', 'REJECTED']),
-  assignee: z.string().max(200).optional().default(''),
+  // no assignee: the person responsible for a decision is always the signed-in user, never a typed name
   notes: z.string().max(4000).optional().default(''),
   runId: RunId,
   /** Latest audit event the page showed (review-state lastEventId): a newer one means the product changed. */
@@ -326,6 +326,8 @@ export async function setupCatalogRoutes(appkit: AppKitWithLakebase, manualEvide
           evidence: evidence.rows,
           currentRunId: current?.runId ?? null,
           lastEventId: lastEventOf(lastEvent.rows),
+          // who a decision saved now is recorded as (the Databricks Apps sign-in); null when not identified
+          currentUser: reviewer(req)?.email ?? null,
         });
       } catch (error) {
         console.error('Failed to load review state', error);
@@ -365,7 +367,7 @@ export async function setupCatalogRoutes(appkit: AppKitWithLakebase, manualEvide
                status = EXCLUDED.status, assignee = EXCLUDED.assignee, notes = EXCLUDED.notes,
                updated_by = EXCLUDED.updated_by, updated_at = NOW(), run_id = EXCLUDED.run_id
              RETURNING product_ean, status, assignee, notes, updated_by, updated_at, run_id`,
-            [ean.data, body.data.status, body.data.assignee, body.data.notes, user.email, run?.runId ?? null]
+            [ean.data, body.data.status, user.email, body.data.notes, user.email, run?.runId ?? null]
           );
           await client.query(
             `INSERT INTO ${S}.audit_event

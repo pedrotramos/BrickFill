@@ -9,6 +9,16 @@ versions the canonical data contract separately.
 
 ### Added
 
+- **One reference capture per attribute.** Each attribute shows a single capture of its value, from its most reputable
+  source that can show it (official, authorized distributor, recognized retailer, other; within a tier, a source
+  already cropped first). When that source has no crop, the focused capture tries it and then the next source, round
+  after round, so an attribute is left without a capture only when no source can show the value. The attribute review
+  lists every source that backs the value, in that order, and marks which one the capture comes from; a fallback says
+  why the more reputable source could not be captured, in plain words. New evidence columns `is_reference`,
+  `source_rank` and `capture_code` (ALTERed into existing tables), and the published evidence lists the reference
+  capture first.
+- `focus_max_credits` job parameter (6 by default): the focused scrapes (1 credit each) one product may use.
+
 - Searchable category pickers: the catalog filter, the Settings scopes, the category templates and the Attributes
   screen find a category by name, identifier or synonym (from the category templates), ignoring accents and case.
 - `dismiss_overlays` job parameter (off by default): before the screenshots, also answer the notices beyond the
@@ -16,7 +26,7 @@ versions the canonical data contract separately.
   from a closed list of labels and never accepting anything, with safeguards so the page itself is never hidden.
   Checked on synthetic pages at window heights 1080 and 100000 (`tests/test_overlays.py`, with Chrome and
   `BRICKFILL_BROWSER_TESTS=1`). Its passes take room under Firecrawl's limit of 50 actions per scrape, so a focused
-  capture shows at most 5 values of a page with it (6 without).
+  capture shows at most 7 values of a page with it (9 without).
 - Every scrape stays within Firecrawl's 50 actions: actions the agent asks for beyond the room the capture leaves are
   dropped instead of failing the scrape with HTTP 400.
 
@@ -68,6 +78,18 @@ versions the canonical data contract separately.
 
 ### Changed
 
+- A focused capture shows up to 9 values of a page per scrape (7 with `dismiss_overlays`), and a page with more values
+  takes more scrapes instead of leaving the rest without a crop. The value is no longer scrolled to: in Firecrawl's
+  1920×100000 window the page never scrolls.
+- The person responsible for a curation decision is the signed-in user (Databricks Apps), recorded by the server; the
+  review form shows it read-only, with who made the last decision when it was someone else, instead of a free-text
+  field.
+- The capture never clicks a control that opens a popup (`aria-haspopup`): a "see more" that opened the product
+  sheet in a modal covered the description it had just expanded, so its values were never cropped. A focused capture
+  now also opens what a visitor can open (a clipped description, accordions) before locating the values, as the
+  full-page capture does.
+- A refused Firecrawl request keeps Firecrawl's own explanation in `capture_error`. Timeouts and server errors are
+  tried once more, and a 402 (no credits left) stops every further paid request of the run.
 - Category templates are edited on their own page (`/templates/<id>`) instead of a modal: the sections in panels, a
   sticky live preview (the title built from example values, with its length against the profile limit, and the
   fact-sheet outline), tag fields for synonyms, fields and facts, one search for departments, categories and

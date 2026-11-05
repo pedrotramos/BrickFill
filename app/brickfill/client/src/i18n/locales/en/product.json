@@ -140,13 +140,15 @@
   "review": {
     "title": "Review decision",
     "status": "Decision",
-    "assignee": "Assignee",
+    "assignee": "Responsible",
+    "assigneeHint": "Recorded from your sign-in.",
+    "assigneeLast": "Last decision by {{actor}} on {{date}}. Saving records it under your sign-in.",
+    "assigneeUnknown": "Not identified: open the app through its Databricks Apps address",
     "notes": "Notes",
     "save": "Save decision",
     "staleDecision": "The previous decision ({{status}}) was made on an older enrichment result. Review this result and decide again.",
     "saved": "Review saved.",
     "description": "The decision applies to this result and the edits shown here.",
-    "assigneePlaceholder": "Who is reviewing this product",
     "notesPlaceholder": "What you checked, and why you decided",
     "options": {
       "PENDING": "No decision yet.",
@@ -235,8 +237,43 @@
       "confirm": "Restore AI value"
     },
     "sources": {
-      "title": "Sources consulted",
-      "description": "Check the preserved capture. The original page may have changed since it was consulted."
+      "title": "Sources that back the value",
+      "description": "From the most to the least reputable. The reference capture comes from the first one that could show the value.",
+      "reference": "Reference capture",
+      "notCaptured": "Not captured: {{reason}}.",
+      "technical": "Technical details"
+    },
+    "referenceCapture": {
+      "title": "Reference capture",
+      "fallback": "The most reputable source ({{host}}) could not be captured: {{reason}}. This capture comes from the next source on the list.",
+      "manualForEdit": "Attached by a reviewer for the edited value.",
+      "manualForAi": "Attached by a reviewer: no source could show the value.",
+      "none": "No reference capture",
+      "noneReason": "No source could show the value. On the most reputable one ({{host}}), {{reason}}. Check the sources below or attach your own evidence.",
+      "legacy": "This enrichment predates visual captures: the sources below back the value by text.",
+      "attach": "Attach evidence",
+      "openPageCapture": "Open the capture of {{host}}"
+    },
+    "reason": {
+      "PAGE_NOT_CAPTURED": "the page could not be captured",
+      "UNSUPPORTED": "the source has no visual capture",
+      "NO_MATCH": "the value was not found in the capture",
+      "AMBIGUOUS": "the value appears in more than one place on the page",
+      "UNSTABLE": "the page changed while it was captured",
+      "CROP_FAILED": "the crop failed",
+      "NOT_ON_PAGE": "the value is not in the page text",
+      "HIDDEN": "the value stayed hidden after opening its section",
+      "STRUCTURED_DATA_ONLY": "the value is only in the page data, not on the visible page",
+      "BLOCKED": "the site blocked the focused capture",
+      "PAGE_CHANGED": "the page changed address when its section was opened",
+      "FIRECRAWL_REJECTED": "the capture service refused the request",
+      "OUT_OF_CREDITS": "the capture credits ran out",
+      "BUDGET": "the product's capture limit was reached",
+      "FOCUS_FAILED": "the focused capture failed",
+      "TOO_MANY": "the page had too many values for one capture",
+      "BLANK": "the page was not rendered (blank capture)",
+      "PDF_FAILED": "the PDF crop failed",
+      "TEXT_ONLY": "the source backs the value by text only"
     },
     "sourceTier": {
       "official": "Official source",
@@ -245,28 +282,10 @@
       "other": "Other source"
     },
     "externalReference": "External reference",
-    "capture": {
-      "COMPLETE": "Complete visual evidence",
-      "LEGACY": "Text-only evidence (legacy)",
-      "INCOMPLETE": "Incomplete capture — review needed",
-      "NOT_VISIBLE": "The page does not display the value — review needed",
-      "NO_MATCH": "Value not found in the capture — review needed",
-      "AMBIGUOUS": "The value appears in more than one place — review needed",
-      "SCREENSHOT_ONLY": "The page changed during the capture — check the full screenshot",
-      "UNSUPPORTED": "Source without visual capture (PDF) — review needed",
-      "NOT_CAPTURED": "Source not captured — review needed",
-      "FAILED": "Capture failed — review needed",
-      "BLANK": "The page did not render (blank screenshot) — review needed",
-      "PDF_FAILED": "PDF crop failed — check the PDF page"
-    },
     "capturedAt": "Captured {{date}}",
     "sourceValue": "Value at the source: {{value}}",
-    "noExcerpt": "The URL is linked to the attribute, but no excerpt was captured for this reference.",
-    "noCropSeePage": "There is no clear, unambiguous crop of this value. Check the value in the page screenshot below.",
-    "noCropTextKept": "There is no clear, unambiguous crop of this value. The text evidence was preserved.",
-    "technicalDetail": "Technical detail: {{detail}}",
     "openScreenshot": "Open full screenshot",
-    "openReference": "Open reference",
+    "openPage": "Open page",
     "noUrls": "No URL is linked to this attribute. Do not approve a filled value without validating an external source.",
     "manual": {
       "title": "Manual evidence",
@@ -297,6 +316,7 @@
   "loading": "Loading the product…",
   "evidenceState": {
     "captured": "On the page",
-    "check": "Check capture"
+    "check": "Check capture",
+    "capturedFrom": "Captured from {{host}}"
   }
 }

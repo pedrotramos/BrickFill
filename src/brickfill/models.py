@@ -14,6 +14,10 @@ class SourceTier(str, Enum):
     OTHER = "other"
 
 
+# Reputation of a source, highest first: the order in which an attribute's reference capture is chosen.
+TIER_RANK = {tier.value: rank for rank, tier in enumerate(SourceTier)}
+
+
 class ProductSeed(BaseModel):
     """One product to enrich, read from the canonical ``v_products`` view (``ean`` holds the view's ``gtin``)."""
 
@@ -95,6 +99,11 @@ class VisualEvidence(BaseModel):
     crop_sha256: str | None = None
     capture_status: str
     capture_error: str | None = None
+    # Language-neutral reason of a capture that is not COMPLETE (the app translates it; capture_error is the detail).
+    capture_code: str | None = None
+    # Position of the source in the attribute's ranking (1 = most reputable) and the one capture shown for the value.
+    source_rank: int | None = None
+    is_reference: bool = False
 
 
 class Fact(BaseModel):

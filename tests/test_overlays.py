@@ -18,6 +18,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from tenacity import wait_none
 
 from brickfill.models import VisualEvidence
 from brickfill.visual_evidence import (
@@ -65,6 +66,7 @@ def scraped_actions(tmp_path: Path, dismiss_overlays: bool, monkeypatch, request
                 "key", EvidenceArchive(str(tmp_path)), "run", http_client=http, dismiss_overlays=dismiss_overlays
             ) as collector,
         ):
+            collector.retry_wait = wait_none()
             await collector.scrape({"url": "https://shop.example.com/p/1", "actions": requested or []})
 
     asyncio.run(go())
@@ -93,7 +95,7 @@ def test_full_page_scrape_stays_within_firecrawl_action_limit(tmp_path, monkeypa
     assert actions[0] == requested[0]  # the agent's actions still run first
 
 
-@pytest.mark.parametrize(("dismiss_overlays", "shown"), [(False, 6), (True, 5)])
+@pytest.mark.parametrize(("dismiss_overlays", "shown"), [(False, 9), (True, 7)])
 def test_focused_scrape_stays_within_firecrawl_action_limit(tmp_path, monkeypatch, dismiss_overlays, shown):
     from test_capture import PAGE_URL, capture, firecrawl, png, text_map
 
@@ -101,7 +103,7 @@ def test_focused_scrape_stays_within_firecrawl_action_limit(tmp_path, monkeypatc
     collector = capture(tmp_path, firecrawl(png(1920, 2499), [geometry, geometry]))
     collector.dismiss_overlays = dismiss_overlays
     page = collector.pages[PAGE_URL]
-    page.source_text = " ".join(f"Value {index} W" for index in range(8))
+    page.source_text = " ".join(f"Value {index} W" for index in range(10))
     sent: list[dict] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -115,12 +117,13 @@ def test_focused_scrape_stays_within_firecrawl_action_limit(tmp_path, monkeypatc
             ),
             f"{index} W",
         )
-        for index in range(8)
+        for index in range(10)
     ]
 
     async def go():
         async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
             collector._http = http
+            collector.retry_wait = wait_none()
             await collector._focus_page(page, items)
 
     asyncio.run(go())
@@ -187,3 +190,54 @@ def test_overlays_on_synthetic_pages(name, height, tmp_path):
     done = [[action["kind"], action["label"]] for actions in result["passes"] for action in actions]
     # pages without handlers keep their notice, so a pass may answer it again: only the first answers count
     assert list(dict.fromkeys(map(tuple, done))) == [tuple(item) for item in EXPECTED[name]]
+
+
+def _expand_in_chrome(page: Path, tmp_path: Path) -> dict:
+    """Run expand.js on a synthetic page in Firecrawl's tall window; report open dialogs and whether a value shows."""
+    source = (CAPTURE_SCRIPTS / "expand.js").read_text(encoding="utf-8")
+    run = "\n".join(line for line in source.splitlines() if not line.startswith("//")).strip()
+    probe = f"""<script>window.addEventListener('load', () => setTimeout(() => {{
+  const expanded = JSON.parse(({run})());
+  setTimeout(() => {{
+    const value = [...document.querySelectorAll('p')].find(p => p.textContent.includes('180 cm'));
+    const box = value.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.left + 5, box.top + box.height / 2);
+    const clip = value.closest('#description').getBoundingClientRect();
+    const pre = document.createElement('pre'); pre.id = 'expand-result';
+    pre.textContent = JSON.stringify({{ clicks: expanded.clicks,
+      dialogs: document.querySelectorAll('[role=dialog]').length,
+      shown: value.contains(hit) && box.bottom <= clip.bottom + 1 }});
+    document.documentElement.appendChild(pre);
+  }}, 300);
+}}, 200));</script></body>"""
+    target = tmp_path / page.name
+    target.write_text(page.read_text(encoding="utf-8").replace("</body>", probe), encoding="utf-8")
+    dom = subprocess.run(
+        [
+            CHROME,
+            "--headless=new",
+            "--disable-gpu",
+            f"--user-data-dir={tmp_path / 'profile-expand'}",
+            "--window-size=1920,100000",
+            "--virtual-time-budget=8000",
+            "--dump-dom",
+            target.as_uri(),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    ).stdout
+    match = re.search(r'<pre id="expand-result">(.*?)</pre>', dom, re.DOTALL)
+    assert match, f"no result from {page.name}"
+    return json.loads(html.unescape(match.group(1)))
+
+
+@pytest.mark.skipif(
+    CHROME is None or os.environ.get("BRICKFILL_BROWSER_TESTS") != "1",
+    reason="needs Chrome and BRICKFILL_BROWSER_TESTS=1",
+)
+def test_expand_opens_the_description_but_never_a_dialog_over_it(tmp_path):
+    result = _expand_in_chrome(FIXTURES / "see-more-dialog.html", tmp_path)
+    # the "see more" with aria-haspopup=dialog stays closed; the description is unclipped and its value shows
+    assert result == {"clicks": 1, "dialogs": 0, "shown": True}

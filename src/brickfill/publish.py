@@ -12,7 +12,7 @@ def destination_ddl(destination_table: str) -> str:
       department STRING, category STRING, subcategory STRING,
       title STRING, short_description STRING, meta_description STRING,
       brand STRING, model STRING, supplier STRING,
-      attributes_json STRING COMMENT 'Array of {{code, name, value, source, evidence}}; source is AI, HUMAN, HUMAN_NO_EVIDENCE or MISSING; evidence is a list of {{origin, url, excerpt, screenshot_path, crop_path}} (origin AI or HUMAN)',
+      attributes_json STRING COMMENT 'Array of {{code, name, value, source, evidence}}; source is AI, HUMAN, HUMAN_NO_EVIDENCE or MISSING; evidence is a list of {{origin, url, excerpt, screenshot_path, crop_path, is_reference}} (origin AI or HUMAN; the AI reference capture first)',
       content_language STRING COMMENT 'Language the content was written in (en, pt-BR, es, ...)',
       run_id STRING, quality_score DOUBLE,
       approved_by STRING, approved_at TIMESTAMP, review_notes STRING
@@ -58,7 +58,7 @@ def _approved_ctes(namespace: str) -> str:
   )"""
 
 
-def merge_statement(namespace: str, destination_table: str) -> str:
+def merge_statement(namespace: str, destination_table: str, reference_columns: bool = True) -> str:
     """MERGE that makes the destination hold the products currently APPROVED in the app, and only them.
 
     The source has one row per approved or reopened product. A product leaves the destination only when it is
@@ -74,9 +74,14 @@ def merge_statement(namespace: str, destination_table: str) -> str:
     Every value carries its evidence: an AI value keeps the sources and captures of its enrichment run plus the
     manual evidence attached to it on that run; an edited value carries the manual evidence of that edit. An edit
     without evidence (made before evidence became mandatory) is published as HUMAN_NO_EVIDENCE.
+    The AI evidence of a value lists its reference capture first (``is_reference``: the one capture shown for the
+    value, from its most reputable source), then the other sources by reputation. ``reference_columns`` is False for
+    an evidence table the next enrichment has not upgraded yet (no reference is marked then).
     ``approved_review``, ``active_override`` and ``active_manual_evidence`` are temporary views over the app's
     Lakebase tables.
     """
+    is_reference = "COALESCE(e.is_reference, false)" if reference_columns else "false"
+    source_rank = "e.source_rank" if reference_columns else "CAST(NULL AS INT)"
     updates = ", ".join(f"target.{column} = source.{column}" for column in DESTINATION_COLUMNS)
     columns = ", ".join(DESTINATION_COLUMNS)
     values = ", ".join(f"source.{column}" for column in DESTINATION_COLUMNS)
@@ -91,9 +96,12 @@ USING (
     ) WHERE row_number = 1
   ), ai_evidence AS (
     SELECT e.ean, e.attribute_code,
-           collect_list(named_struct(
-             'origin', 'AI', 'url', e.url, 'excerpt', NULLIF(e.excerpt, ''),
-             'screenshot_path', NULLIF(e.screenshot_path, ''), 'crop_path', NULLIF(e.crop_path, ''))) AS items
+           transform(array_sort(collect_list(named_struct(
+             'position', CASE WHEN {is_reference} THEN 0 ELSE 1000 END + COALESCE({source_rank}, 999),
+             'item', named_struct(
+               'origin', 'AI', 'url', e.url, 'excerpt', NULLIF(e.excerpt, ''),
+               'screenshot_path', NULLIF(e.screenshot_path, ''), 'crop_path', NULLIF(e.crop_path, ''),
+               'is_reference', {is_reference})))), entry -> entry.item) AS items
     FROM {namespace}.product_attribute_evidence e
     JOIN latest l ON e.run_id = l.run_id AND e.ean = l.ean
     WHERE e.capture_mode = 'ENRICHMENT'
@@ -102,7 +110,7 @@ USING (
     SELECT product_ean AS ean, attribute_code, override_id,
            collect_list(named_struct(
              'origin', 'HUMAN', 'url', source_url, 'excerpt', excerpt,
-             'screenshot_path', screenshot_path, 'crop_path', CAST(NULL AS STRING))) AS items
+             'screenshot_path', screenshot_path, 'crop_path', CAST(NULL AS STRING), 'is_reference', false)) AS items
     FROM {MANUAL_EVIDENCE_VIEW}
     WHERE override_id IS NOT NULL
     GROUP BY product_ean, attribute_code, override_id
@@ -111,7 +119,7 @@ USING (
     SELECT e.product_ean AS ean, e.attribute_code,
            collect_list(named_struct(
              'origin', 'HUMAN', 'url', e.source_url, 'excerpt', e.excerpt,
-             'screenshot_path', e.screenshot_path, 'crop_path', CAST(NULL AS STRING))) AS items
+             'screenshot_path', e.screenshot_path, 'crop_path', CAST(NULL AS STRING), 'is_reference', false)) AS items
     FROM {MANUAL_EVIDENCE_VIEW} e
     JOIN latest l ON l.ean = e.product_ean
     WHERE e.override_id IS NULL
@@ -137,7 +145,8 @@ USING (
                  COALESCE(ai.items, transform(
                    from_json(a.evidence_urls_json, 'array<string>'),
                    url -> named_struct('origin', 'AI', 'url', url, 'excerpt', CAST(NULL AS STRING),
-                                       'screenshot_path', CAST(NULL AS STRING), 'crop_path', CAST(NULL AS STRING)))),
+                                       'screenshot_path', CAST(NULL AS STRING), 'crop_path', CAST(NULL AS STRING),
+                                       'is_reference', false))),
                  COALESCE(confirmed.items, array()))
              END))) AS items
     FROM {namespace}.product_attribute a
@@ -284,7 +293,8 @@ def run(
     approved, overrides, evidence = load_app_state(endpoint, database, lakebase_schema)
     plan = spark.sql(publication_plan(namespace, destination_table)).first()
     check_plan(plan["approved"], plan["published"], plan["reopened"])
-    spark.sql(merge_statement(namespace, destination_table))
+    evidence_columns = {name.lower() for name in spark.table(f"{namespace}.product_attribute_evidence").columns}
+    spark.sql(merge_statement(namespace, destination_table, {"is_reference", "source_rank"} <= evidence_columns))
     published = spark.table(_qualified_table(destination_table)).count()
     print(
         f"{approved} products approved in the app ({overrides} active edits, {evidence} manual evidence): "

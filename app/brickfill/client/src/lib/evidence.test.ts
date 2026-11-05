@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { attributeCodeOf, captureLabelKey, evidenceState, hostname } from './evidence';
+import {
+  attributeCodeOf,
+  captureReasonKey,
+  distinctSources,
+  evidenceState,
+  hostname,
+  rankReferences,
+  referenceOf,
+} from './evidence';
 
 describe('hostname', () => {
   it('shows the host of a source without www', () => {
@@ -13,27 +21,82 @@ describe('hostname', () => {
   });
 });
 
-describe('captureLabelKey', () => {
-  it('maps the job statuses', () => {
-    expect(captureLabelKey('COMPLETE', null, true)).toBe('COMPLETE');
-    expect(captureLabelKey('NO_MATCH', null, true)).toBe('NO_MATCH');
-    expect(captureLabelKey(null, null, false)).toBe('LEGACY');
-    expect(captureLabelKey(null, null, true)).toBe('INCOMPLETE');
-    expect(captureLabelKey('SOMETHING_NEW', null, true)).toBe('INCOMPLETE');
+describe('captureReasonKey', () => {
+  it('uses the code of the job', () => {
+    expect(captureReasonKey({ capture_status: 'COMPLETE' })).toBeNull();
+    expect(captureReasonKey({ capture_status: 'NO_MATCH', capture_code: 'FIRECRAWL_REJECTED' })).toBe(
+      'FIRECRAWL_REJECTED'
+    );
+    expect(captureReasonKey({ capture_status: 'NOT_VISIBLE', capture_code: 'BUDGET' })).toBe('BUDGET');
   });
 
-  it('labels a blank screenshot apart from other failures', () => {
-    expect(captureLabelKey('FAILED', 'Firecrawl returned a blank screenshot; the page was not rendered', true)).toBe(
+  it('reads the reason of runs before capture codes from their messages and statuses', () => {
+    expect(
+      captureReasonKey({
+        capture_status: 'AMBIGUOUS',
+        capture_error: "Focused capture failed: HTTPStatusError: Client error '400 Bad Request'",
+      })
+    ).toBe('FOCUS_FAILED');
+    expect(captureReasonKey({ capture_status: 'FAILED', capture_error: 'Firecrawl returned a blank screenshot' })).toBe(
       'BLANK'
     );
-    expect(captureLabelKey('FAILED', 'Missing rendered text coordinates', true)).toBe('FAILED');
-  });
-
-  it('labels PDF crop failures apart, but keeps the old text-only PDF label', () => {
-    expect(captureLabelKey('NO_MATCH', "PDF: the value was not found in the document's text.", true)).toBe(
+    expect(captureReasonKey({ capture_status: 'NO_MATCH', capture_error: 'PDF: the value was not found.' })).toBe(
       'PDF_FAILED'
     );
-    expect(captureLabelKey('UNSUPPORTED', 'PDF: text extracted by Firecrawl', true)).toBe('UNSUPPORTED');
+    expect(captureReasonKey({ capture_status: 'UNSUPPORTED', capture_error: 'PDF: text extracted' })).toBe(
+      'UNSUPPORTED'
+    );
+    expect(captureReasonKey({ capture_status: 'SCREENSHOT_ONLY' })).toBe('UNSTABLE');
+    expect(captureReasonKey({ capture_status: 'SOMETHING_NEW' })).toBe('CROP_FAILED');
+    expect(captureReasonKey({})).toBe('TEXT_ONLY');
+  });
+});
+
+describe('reference capture', () => {
+  const official = { url: 'o', source_tier: 'official', capture_status: 'NO_MATCH' };
+  const retailer = { url: 'r', source_tier: 'recognized_retailer', capture_status: 'COMPLETE' };
+  const croppedRetailer = { url: 'r2', source_tier: 'recognized_retailer', capture_status: 'NO_MATCH' };
+  const other = { url: 'x', source_tier: 'other', capture_status: 'COMPLETE' };
+
+  it('ranks older runs by reputation, a taken crop first within a tier', () => {
+    expect(rankReferences([other, croppedRetailer, retailer, official]).map((item) => item.url)).toEqual([
+      'o',
+      'r',
+      'r2',
+      'x',
+    ]);
+  });
+
+  it('keeps the order the job stored', () => {
+    const ranked = [
+      { ...other, source_rank: 2 },
+      { ...official, source_rank: 1 },
+    ];
+    expect(rankReferences(ranked).map((item) => item.url)).toEqual(['o', 'x']);
+  });
+
+  it('lists a passage quoted by two facts once, keeping the reference', () => {
+    const first = { url: 'https://a.example/p', excerpt: 'Voltage | 127V', fact_value: '127V', is_reference: false };
+    const second = { ...first, is_reference: true };
+    const other = { url: 'https://b.example/p', excerpt: 'Voltage | 127V', fact_value: '127V' };
+    expect(distinctSources([first, second, other], second)).toEqual([second, other]);
+  });
+
+  it('shows the source the job marked, else the most reputable crop', () => {
+    expect(
+      referenceOf([
+        { ...official, is_reference: false },
+        { ...other, is_reference: true },
+      ])?.url
+    ).toBe('x');
+    expect(
+      referenceOf([
+        { ...official, is_reference: false },
+        { ...retailer, is_reference: false },
+      ])
+    ).toBeNull();
+    expect(referenceOf([other, official, retailer])?.url).toBe('r');
+    expect(referenceOf([official])).toBeNull();
   });
 });
 
