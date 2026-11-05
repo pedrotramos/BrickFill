@@ -106,7 +106,7 @@ class FakeFirecrawl:
             status = self.refuse[url]
             return httpx.Response(status, json={"success": False, "error": f"Refused with {status}"})
         page_map = geometry(url, [label(code) for code in self.codes_by_page[url]])
-        returns = [{"href": url}]
+        returns = [{"href": url}, {"href": url, "clicks": 0}]  # the cookie banner, then the expansion
         for _target in targets:
             returns += [{"href": url, "found": True, "revealedBy": []}, page_map, page_map]
         data = {

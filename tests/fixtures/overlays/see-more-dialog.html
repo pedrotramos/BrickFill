@@ -1,0 +1,18 @@
+<!doctype html>
+<!-- Synthetic page for capture_scripts/expand.js: a "see more" that opens the product sheet in a modal over the
+     description (aria-haspopup=dialog, never clicked) and a "see more information" that unclips the description. -->
+<html lang="pt-BR"><head><meta charset="utf-8"><title>see-more-dialog.html</title>
+<style>body{margin:0;font:16px sans-serif}#description{max-height:60px;overflow:hidden}#description.open{max-height:none}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:10}
+.modal>div{background:#fff;margin:5% 20%;height:80%}</style></head>
+<body>
+<main id="product"><h1>Geladeira Acme 387L</h1>
+<section><h2>Características do produto</h2><p>Tipo de degelo: Frost Free</p>
+<button type="button" aria-haspopup="dialog" aria-expanded="false"
+  onclick="document.body.insertAdjacentHTML('beforeend', '<div class=modal role=dialog aria-modal=true><div>Características</div></div>')">Ver mais</button></section>
+<section><h2>Descrição do produto</h2>
+<div id="description"><p>Geladeira Acme 387L, frost free.</p><p>Benefícios: economia de energia.</p><p>Itens inclusos: manual.</p>
+<p>Altura sem Embalagem (Cm): 180 cm</p><p>Peso líquido (Kg): 57 kg</p></div>
+<button type="button" onclick="document.getElementById('description').classList.add('open'); this.textContent='Ver menos informações'">Ver mais informações</button></section>
+</main>
+</body></html>

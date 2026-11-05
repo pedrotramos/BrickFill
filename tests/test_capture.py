@@ -12,6 +12,7 @@ from PIL import Image, ImageDraw
 
 from brickfill.models import VisualEvidence
 from brickfill.visual_evidence import (
+    EXPAND_SCRIPT,
     CaptureCollector,
     EvidenceArchive,
     _same_capture_page,
@@ -183,7 +184,7 @@ def test_focused_capture_shoots_the_full_page_in_the_tall_window(tmp_path):
             return httpx.Response(200, content=png(1920, 2499))
         sent.append(json.loads(request.content))
         reveal = {"href": PAGE_URL, "found": True, "revealedBy": []}
-        returns = [{"href": PAGE_URL}, reveal, low, low]
+        returns = [{"href": PAGE_URL}, {"href": PAGE_URL}, reveal, low, low]
         data = {
             "markdown": "Power: 750 W",
             "metadata": {"url": PAGE_URL, "statusCode": 200, "creditsUsed": 1},
@@ -204,4 +205,6 @@ def test_focused_capture_shoots_the_full_page_in_the_tall_window(tmp_path):
     item = asyncio.run(go())
     shots = [action for action in sent[0]["actions"] if action["type"] == "screenshot"]
     assert shots == [{"type": "screenshot", "fullPage": True, "quality": 100}]
+    # what a visitor can open is opened first, as in the full-page capture
+    assert sent[0]["actions"][3] == {"type": "executeJavascript", "script": EXPAND_SCRIPT}
     assert item.capture_status == "COMPLETE", item.capture_error

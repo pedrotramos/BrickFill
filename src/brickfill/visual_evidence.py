@@ -496,10 +496,20 @@ class CaptureCollector:
                 ]
         return actions
 
+    def _focus_actions(self) -> list[dict[str, Any]]:
+        """Start of a focused scrape: the notices, then what a visitor can open (a clipped description, accordions),
+        as in the full-page capture, so a value shown only after "show more" is in place before it is located."""
+        return [
+            {"type": "wait", "milliseconds": 1000},
+            *self._dismiss_actions(),
+            {"type": "executeJavascript", "script": EXPAND_SCRIPT},
+            {"type": "wait", "milliseconds": 800},
+        ]
+
     @property
     def _focus_limit(self) -> int:
         """Values one focused scrape can show: with ``dismiss_overlays`` its notice passes leave room for fewer."""
-        room = FIRECRAWL_MAX_ACTIONS - 1 - len(self._dismiss_actions())
+        room = FIRECRAWL_MAX_ACTIONS - len(self._focus_actions())
         return min(MAX_FOCUS_TARGETS, room // FOCUS_ACTIONS_PER_VALUE)
 
     @property
@@ -1137,7 +1147,7 @@ class CaptureCollector:
             for evidence, _value, _index in assigned:
                 self._skip_for_budget(evidence)
             return
-        actions: list[dict[str, Any]] = [{"type": "wait", "milliseconds": 1000}, *self._dismiss_actions()]
+        actions = self._focus_actions()
         for target in targets:
             actions += [
                 {"type": "executeJavascript", "script": _script("reveal", target)},
@@ -1157,7 +1167,8 @@ class CaptureCollector:
             data = await self._post_scrape(payload, page)
             returns = (data.get("actions") or {}).get("javascriptReturns") or []
             screenshots = (data.get("actions") or {}).get("screenshots") or []
-            returns = returns[self._dismiss_returns :]  # the cookie banner refusal (and the other notices)
+            # the cookie banner refusal (and the other notices), then the expansion
+            returns = returns[self._dismiss_returns + 1 :]
             if len(returns) != 3 * len(targets) or len(screenshots) != len(targets):
                 raise ValueError("Firecrawl did not return every focused capture")
         except (httpx.HTTPError, DatabricksError, OSError, ValueError, KeyError, TypeError) as exc:

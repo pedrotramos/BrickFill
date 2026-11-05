@@ -73,8 +73,11 @@
       continue;
     }
     const control = controlFor(hidden);
-    // Never click the same control twice (it would close again) nor a link that leaves the page.
+    // Never click the same control twice (it would close again), a link that leaves the page, nor a control that
+    // opens a popup (a dialog over the page would cover the value instead of showing it).
     if (!control || clicked.has(control)) break;
+    const popup = control.getAttribute("aria-haspopup");
+    if (popup && popup !== "false") break;
     const href = control.tagName === "A" ? control.getAttribute("href") : null;
     if (href && !href.startsWith("#")) break;
     clicked.add(control);

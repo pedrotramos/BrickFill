@@ -555,7 +555,8 @@ Monthly cost by team size is in [docs/finops.md](finops.md#3-monthly-cost-by-rev
 
 Before the full-page screenshot, the capture scripts act like a visitor:
 1. decline the cookie banner (never accept);
-2. open `<details>`, `aria-expanded` accordions and "show more" buttons, in English, Portuguese and Spanish;
+2. open `<details>`, `aria-expanded` accordions and "show more" buttons, in English, Portuguese and Spanish (never a
+   control that opens a popup, such as a "see more" that shows the product sheet in a modal over the page);
 3. scroll to the end, to load lazy content.
 
 Menus, links that leave the page, cart, login and tabs are not touched.
@@ -567,7 +568,7 @@ capture tries it, and then the next source, until one shows the value.
 
 If a value is on the page but not in the crop, **focused capture** takes over. Typical causes are a collapsed section
 or tab, or a page that changed height during the capture. Focused capture:
-- runs a second extraction of the same page: one scrape (1 credit) shows up to 9 values (8 with `dismiss_overlays`),
+- runs a second extraction of the same page: one scrape (1 credit) shows up to 9 values (7 with `dismiss_overlays`),
   more values take more scrapes, and `focus_max_credits` (6 by default) caps the focused scrapes of each product;
 - clicks the page's own control that opens the section (accordion header, tab or `<summary>`) and takes a full-page
   screenshot;

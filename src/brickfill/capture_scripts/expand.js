@@ -1,6 +1,8 @@
 // Opens the content a visitor can open without leaving the page: closed <details>, controls marked
 // aria-expanded="false" and "show more" buttons. Navigation, menus, forms, carts, logins and cookie banners are
 // never touched, and tabs are left alone (only one panel can be shown at a time; the focused capture handles them).
+// A control that opens a popup (aria-haspopup: a dialog, menu or listbox) is never clicked: a dialog would cover
+// the page and hide the very values the capture needs (a "see more" that opens the product sheet in a modal).
 () => {
   const skipZone = "nav,header,footer,form,dialog,[role=menu],[role=menubar],[role=navigation],[role=dialog],[aria-modal=true]";
   const skipText = /carrinho|comprar|compre|adicionar|login|entrar|cadastr|minha conta|cookie|aceitar|menu|cart|buy|sign in|log in|account|checkout|carrito|añadir|agregar|iniciar sesión|mi cuenta|aceptar/i;
@@ -19,7 +21,7 @@
     const expandable = element.getAttribute("aria-expanded") === "false";
     if (!expandable && !moreText.test(text)) continue;
     if (!text || text.length > 120 || skipText.test(text) || element.closest(skipZone)) continue;
-    if (element.matches("input, select, textarea, [type=submit], [role=tab], [role=combobox], [aria-haspopup=menu], [aria-haspopup=listbox], [aria-haspopup=true]")) continue;
+    if (element.matches("input, select, textarea, [type=submit], [role=tab], [role=combobox], [aria-haspopup]:not([aria-haspopup=false])")) continue;
     const href = element.tagName === "A" ? element.getAttribute("href") : null;
     if (href && !href.startsWith("#")) continue;
     const rect = element.getBoundingClientRect();
