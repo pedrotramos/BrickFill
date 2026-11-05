@@ -17,6 +17,8 @@ import {
   EmptyTitle,
   Input,
   Label,
+  RadioGroup,
+  RadioGroupItem,
   Select,
   SelectContent,
   SelectItem,
@@ -40,35 +42,41 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
+  CircleCheck,
+  CircleX,
   ExternalLink,
+  Eye,
   Languages,
-  Pencil,
   PencilLine,
   RefreshCw,
   Save,
-  ShieldCheck,
+  Search,
   TriangleAlert,
+  type LucideIcon,
 } from 'lucide-react';
 import { useTranslation } from '../i18n/react';
 import type { TFunction } from '../i18n/translator';
-import { AttributeAudit } from '../components/AttributeAudit';
-import { ManualEvidenceForm } from '../components/ManualEvidenceForm';
-import type { EvidenceReference } from '../components/AttributeAudit';
+import {
+  AttributeSheet,
+  AttributeTags,
+  EvidenceTag,
+  type AttributeView,
+  type EvidenceReference,
+} from '../components/AttributeSheet';
 import { RefreshButton } from '../components/PageHeader';
 import { QualityInfo } from '../components/QualityInfo';
 import { StatusBadge, ToneBadge } from '../components/StatusBadge';
 import { useCatalogQuery } from '../lib/catalog-query';
 import { ApiError, ensureOk, errorText, queryErrorText } from '../lib/api-errors';
 import { formatDate, formatPercent } from '../lib/formatters';
-import { attributeReason, fieldLabel, issueMessage, issueTitle, severityLabel } from '../lib/issues';
+import { attributeReason, fieldLabel, issueMessage, issueTitle, type IssueRow } from '../lib/issues';
 import { languageLabel } from '../i18n/languages';
-import { evidenceFileUrl, hostname } from '../lib/evidence';
+import { attributeCodeOf, evidenceFileUrl, evidenceState, hostname } from '../lib/evidence';
+import { matchesSearch } from '../lib/search';
 import {
   type ManualEvidence,
   type ManualEvidenceDraft,
   addManualEvidence,
-  draftProblem,
-  emptyDraft,
   evidencePayload,
   removeManualEvidence,
 } from '../lib/manual-evidence';
@@ -204,6 +212,34 @@ const REVIEW_STATUSES = new Set(['PENDING', 'IN_REVIEW', 'APPROVED', 'REJECTED']
 /** Review states shown beside the enrichment status; PENDING (no review yet) adds nothing to it. */
 const REVIEW_DECISIONS = new Set(['IN_REVIEW', 'APPROVED', 'REJECTED']);
 
+/** The four decisions, as the review form offers them. */
+const DECISIONS: { status: Review['status']; icon?: LucideIcon; tone: string }[] = [
+  { status: 'PENDING', tone: 'text-muted-foreground' },
+  { status: 'IN_REVIEW', icon: Eye, tone: 'text-muted-foreground' },
+  { status: 'APPROVED', icon: CircleCheck, tone: 'text-success' },
+  { status: 'REJECTED', icon: CircleX, tone: 'text-destructive' },
+];
+
+/** Issues of the same rule and severity, shown once with every field they hit. */
+interface IssueGroup {
+  key: string;
+  code: string;
+  severity: string;
+  issues: IssueRow[];
+}
+
+function groupIssues(issues: readonly IssueRow[]): IssueGroup[] {
+  const groups = new Map<string, IssueGroup>();
+  for (const issue of issues) {
+    const severity = issue.severity ?? 'WARNING';
+    const key = `${severity}:${issue.issue_code}`;
+    const group = groups.get(key) ?? { key, code: issue.issue_code, severity, issues: [] };
+    group.issues.push(issue);
+    groups.set(key, group);
+  }
+  return [...groups.values()];
+}
+
 /** New value of a history event; review statuses are stored as codes and shown translated. */
 function historyValue(t: TFunction, event: AuditEvent): string {
   const value = event.after_value ?? '';
@@ -244,7 +280,6 @@ export function ProductPage() {
   // (evidence and restoring an edit report inside the audit panel, see AttributeAudit).
   const [loadError, setLoadError] = useState<string | null>(null);
   const [decisionError, setDecisionError] = useState<string | null>(null);
-  const [editError, setEditError] = useState<string | null>(null);
   const [reviewSaved, setReviewSaved] = useState(false);
 
   useEffect(() => {
@@ -281,13 +316,13 @@ export function ProductPage() {
   const [notes, setNotes] = useState('');
   const [assignee, setAssignee] = useState('');
   const [savingReview, setSavingReview] = useState(false);
-  const [editingCode, setEditingCode] = useState<string | null>(null);
-  const [overrideValue, setOverrideValue] = useState('');
-  const [overrideReason, setOverrideReason] = useState('');
-  const [overrideEvidence, setOverrideEvidence] = useState<ManualEvidenceDraft>(emptyDraft);
-  const [savingOverride, setSavingOverride] = useState(false);
   const [removingOverrideCode, setRemovingOverrideCode] = useState<string | null>(null);
   const [attributeFilter, setAttributeFilter] = useState<AttributeFilter>('relevant');
+  const [attributeSearch, setAttributeSearch] = useState('');
+  const [tab, setTab] = useState('content');
+  // one sheet for every attribute: the code shown, and whether it opened straight into the edit
+  const [sheetCode, setSheetCode] = useState<string | null>(null);
+  const [sheetEdit, setSheetEdit] = useState(false);
 
   /**
    * Reads the review, edits, evidence and history. The status always follows the server (an edit can reopen an
@@ -367,43 +402,26 @@ export function ProductPage() {
     }
   };
 
-  const beginOverride = (code: string, currentValue: string | null | undefined) => {
-    setEditingCode(code);
-    setEditError(null);
-    setOverrideValue(currentValue ?? '');
-    setOverrideReason('');
-    setOverrideEvidence(emptyDraft);
-  };
-  const canSaveOverride =
-    !savingOverride &&
-    Boolean(overrideValue.trim()) &&
-    overrideReason.trim().length >= 3 &&
-    !draftProblem(overrideEvidence);
-  const saveOverride = async (attributeCode: string, attributeName: string) => {
-    if (!canSaveOverride) return;
-    setSavingOverride(true);
-    setEditError(null);
+  const saveOverride = async (
+    attributeCode: string,
+    attributeName: string,
+    value: string,
+    reason: string,
+    draft: ManualEvidenceDraft
+  ): Promise<string | null> => {
     try {
       // Every human edit carries its own evidence: the screenshot is uploaded first, then the edit references it.
-      const evidence = await evidencePayload(ean, attributeCode, overrideEvidence);
+      const evidence = await evidencePayload(ean, attributeCode, draft);
       const response = await fetch(`/api/products/${ean}/attribute-overrides`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          attributeCode,
-          attributeName,
-          value: overrideValue.trim(),
-          reason: overrideReason.trim(),
-          evidence,
-        }),
+        body: JSON.stringify({ attributeCode, attributeName, value, reason, evidence }),
       });
       await ensureOk(response, 'errors:OVERRIDE_SAVE_FAILED');
-      setEditingCode(null);
       await loadReview(false);
+      return null;
     } catch (error) {
-      setEditError(errorText(error, 'errors:OVERRIDE_SAVE_FAILED'));
-    } finally {
-      setSavingOverride(false);
+      return errorText(error, 'errors:OVERRIDE_SAVE_FAILED');
     }
   };
 
@@ -415,7 +433,6 @@ export function ProductPage() {
         method: 'DELETE',
       });
       await ensureOk(response, 'errors:OVERRIDE_RESTORE_FAILED');
-      if (editingCode === attributeCode) setEditingCode(null);
       await loadReview(false);
       return null;
     } catch (error) {
@@ -488,21 +505,75 @@ export function ProductPage() {
     (recapture?.attributes ?? generated.attributes)?.some(
       (item) => item.code === code && item.visual_evidence !== undefined
     ) ?? false;
-  const visibleAttributes = useMemo(() => {
-    return (attributes.data ?? []).filter((attribute) => {
-      const required = asBoolean(attribute.required);
-      const applicable = asBoolean(attribute.applicable);
-      const hasOverride = reviewState.overrides.some((item) => item.attribute_code === attribute.attribute_code);
-      const filled = hasOverride || Boolean(attribute.attribute_value);
-      const candidate = attribute.mapping_status === 'OUT_OF_VOCAB' || (!filled && Boolean(attribute.candidate_value));
-      const requiredPending = required && !filled;
-      if (attributeFilter === 'filled') return filled;
-      if (attributeFilter === 'candidates') return candidate;
-      if (attributeFilter === 'required') return requiredPending;
-      if (attributeFilter === 'not_applicable') return !applicable;
-      return filled || candidate || requiredPending;
-    });
-  }, [attributeFilter, attributes.data, reviewState.overrides]);
+  const issuesByCode = new Map<string, IssueRow[]>();
+  for (const issue of issues.data ?? []) {
+    const code = attributeCodeOf(issue.field);
+    if (code) issuesByCode.set(code, [...(issuesByCode.get(code) ?? []), issue]);
+  }
+  const views: AttributeView[] = (attributes.data ?? []).map((attribute) => {
+    const override = overrideByCode.get(attribute.attribute_code);
+    const effectiveValue = override?.value ?? attribute.attribute_value ?? null;
+    const candidateOnly = !effectiveValue && Boolean(attribute.candidate_value);
+    const outOfVocabulary = attribute.mapping_status === 'OUT_OF_VOCAB';
+    const references = referencesFor(attribute);
+    const manualEvidence = manualEvidenceFor(attribute.attribute_code);
+    const captureExpected = expectsCapture(attribute.attribute_code);
+    return {
+      code: attribute.attribute_code,
+      name: attribute.attribute_name,
+      required: asBoolean(attribute.required),
+      applicable: asBoolean(attribute.applicable),
+      candidateOnly,
+      candidateLabel:
+        candidateOnly || outOfVocabulary
+          ? candidateStatusLabel(t, attribute.mapping_status, Boolean(effectiveValue))
+          : null,
+      aiValue: (candidateOnly ? attribute.candidate_value : attribute.attribute_value) ?? null,
+      effectiveValue,
+      confidence: attribute.confidence as number | string | null | undefined,
+      override,
+      references,
+      manualEvidence,
+      captureExpected,
+      evidence: evidenceState({
+        hasValue: Boolean(effectiveValue),
+        references,
+        manualCount: manualEvidence.length,
+        captureExpected,
+      }),
+      observation: attribute.observation ?? null,
+      reasons: reasonsFor(attribute),
+      issues: issuesByCode.get(attribute.attribute_code) ?? [],
+    };
+  });
+  const visibleAttributes = views.filter((view) => {
+    if (!matchesSearch(attributeSearch, [view.name, view.code, view.effectiveValue ?? '', view.aiValue ?? '']))
+      return false;
+    const filled = Boolean(view.effectiveValue);
+    const candidate = view.candidateLabel !== null;
+    const requiredPending = view.required && !filled;
+    if (attributeFilter === 'filled') return filled;
+    if (attributeFilter === 'candidates') return candidate;
+    if (attributeFilter === 'required') return requiredPending;
+    if (attributeFilter === 'not_applicable') return !view.applicable;
+    return filled || candidate || requiredPending;
+  });
+  const attributeCounts = {
+    total: views.length,
+    missing: views.filter((view) => view.required && !view.effectiveValue).length,
+    check: views.filter((view) => view.evidence === 'check' || view.evidence === 'missing').length,
+    edited: views.filter((view) => view.override).length,
+  };
+  const sheetIndex = visibleAttributes.findIndex((view) => view.code === sheetCode);
+  const sheetAttribute = views.find((view) => view.code === sheetCode) ?? null;
+  const openAttribute = (code: string, edit = false) => {
+    setSheetEdit(edit);
+    setSheetCode(code);
+  };
+  const attributeName = (code: string) => views.find((view) => view.code === code)?.name ?? code;
+  const issueGroups = groupIssues(issues.data ?? []);
+  const errorCount = (issues.data ?? []).filter((issue) => issue.severity === 'ERROR').length;
+  const warningCount = (issues.data ?? []).length - errorCount;
   const queryError =
     queryErrorText(detail) || queryErrorText(attributes) || queryErrorText(facts) || queryErrorText(issues);
   const refreshing = detail.loading || reviewLoading;
@@ -638,7 +709,7 @@ export function ProductPage() {
           </AlertDescription>
         </Alert>
       )}
-      <Tabs defaultValue="content">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex h-auto flex-wrap justify-start">
           <TabsTrigger value="content">{t('product:tabs.content')}</TabsTrigger>
           <TabsTrigger value="attributes">{t('product:tabs.attributes')}</TabsTrigger>
@@ -707,24 +778,27 @@ export function ProductPage() {
           ) : null}
         </TabsContent>
         <TabsContent value="attributes">
-          <Card>
-            <CardHeader>
-              <CardTitle aria-level={2} role="heading">
-                {t('product:attributes.title')}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">{t('product:attributes.subtitle')}</p>
-            </CardHeader>
-            <CardContent className="space-y-4 p-0">
-              <div className="px-4 md:px-6">
-                <Alert>
-                  <ShieldCheck className="h-4 w-4" />
-                  <AlertTitle>{t('product:attributes.auditTitle')}</AlertTitle>
-                  <AlertDescription>{t('product:attributes.auditDescription')}</AlertDescription>
-                </Alert>
+          <Card className="gap-0 overflow-hidden py-0">
+            <CardHeader className="gap-4 border-b py-5">
+              <div className="space-y-1.5">
+                <CardTitle aria-level={2} role="heading">
+                  {t('product:attributes.title')}
+                </CardTitle>
+                <p className="max-w-prose text-sm text-muted-foreground">{t('product:attributes.description')}</p>
               </div>
-              <div className="px-4 md:px-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative w-full sm:w-64">
+                  <Search aria-hidden className="absolute top-2 left-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    aria-label={t('product:attributes.search')}
+                    className="pl-9"
+                    placeholder={t('product:attributes.search')}
+                    value={attributeSearch}
+                    onChange={(event) => setAttributeSearch(event.target.value)}
+                  />
+                </div>
                 <Select value={attributeFilter} onValueChange={(value) => setAttributeFilter(value as AttributeFilter)}>
-                  <SelectTrigger className="w-full sm:w-64" aria-label={t('product:attributes.filterLabel')}>
+                  <SelectTrigger className="w-full sm:w-56" aria-label={t('product:attributes.filterLabel')}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -735,377 +809,203 @@ export function ProductPage() {
                     <SelectItem value="not_applicable">{t('product:attributes.filters.notApplicable')}</SelectItem>
                   </SelectContent>
                 </Select>
+                {attributeCounts.total ? (
+                  <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground lg:ml-auto">
+                    <span className="tabular-nums">
+                      {t('product:attributes.summary.total', { count: attributeCounts.total })}
+                    </span>
+                    {attributeCounts.missing ? (
+                      <span className="inline-flex items-center gap-1 tabular-nums">
+                        <AlertCircle aria-hidden className="h-3.5 w-3.5 text-destructive" />
+                        {t('product:attributes.summary.missing', { count: attributeCounts.missing })}
+                      </span>
+                    ) : null}
+                    {attributeCounts.check ? (
+                      <span className="inline-flex items-center gap-1 tabular-nums">
+                        <TriangleAlert aria-hidden className="h-3.5 w-3.5 text-warning" />
+                        {t('product:attributes.summary.check', { count: attributeCounts.check })}
+                      </span>
+                    ) : null}
+                    {attributeCounts.edited ? (
+                      <span className="inline-flex items-center gap-1 tabular-nums">
+                        <PencilLine aria-hidden className="h-3.5 w-3.5 text-info" />
+                        {t('product:attributes.summary.edited', { count: attributeCounts.edited })}
+                      </span>
+                    ) : null}
+                  </p>
+                ) : null}
               </div>
-              {attributes.loading && !attributes.data ? (
-                <Skeleton className="m-6 h-60" />
-              ) : !attributes.data?.length ? (
-                <Empty>
-                  <EmptyHeader>
-                    <EmptyTitle>{t('product:attributes.empty.title')}</EmptyTitle>
-                    <EmptyDescription>{t('product:attributes.empty.description')}</EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              ) : (
-                <>
-                  <section aria-label={t('product:attributes.title')} className="divide-y lg:hidden">
-                    {visibleAttributes.map((attribute) => {
-                      const override = overrideByCode.get(attribute.attribute_code);
-                      const effectiveValue = override?.value ?? attribute.attribute_value;
-                      const candidateOnly = !effectiveValue && Boolean(attribute.candidate_value);
-                      const outOfVocabulary = attribute.mapping_status === 'OUT_OF_VOCAB';
-                      const references = referencesFor(attribute);
-                      const editing = editingCode === attribute.attribute_code;
-                      return (
-                        // tablets lay the card out in two columns: what the value is, then how it is backed
-                        <div
-                          className="space-y-4 p-4 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-4 md:space-y-0 md:px-6"
-                          key={`mobile-${attribute.attribute_code}`}
-                        >
-                          <div>
-                            <p className="font-medium">{attribute.attribute_name}</p>
-                            <div className="mt-1 flex flex-wrap gap-1">
-                              {asBoolean(attribute.required) ? (
-                                <Badge variant="outline">{t('product:attributes.required')}</Badge>
-                              ) : null}
-                              {!asBoolean(attribute.applicable) ? (
-                                <Badge variant="secondary">{t('product:attributes.notApplicable')}</Badge>
-                              ) : null}
-                              {candidateOnly || outOfVocabulary ? (
-                                <ToneBadge
-                                  icon={candidateOnly ? TriangleAlert : undefined}
-                                  tone={candidateOnly ? 'warning' : 'quiet'}
-                                >
-                                  {candidateStatusLabel(t, attribute.mapping_status, Boolean(effectiveValue))}
-                                </ToneBadge>
-                              ) : null}
-                            </div>
-                          </div>
+            </CardHeader>
+            {attributes.loading && !attributes.data ? (
+              <Skeleton className="m-6 h-60" />
+            ) : !attributes.data?.length ? (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>{t('product:attributes.empty.title')}</EmptyTitle>
+                  <EmptyDescription>{t('product:attributes.empty.description')}</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : !visibleAttributes.length ? (
+              <p className="px-6 py-5 text-sm text-muted-foreground">{t('product:attributes.noMatches')}</p>
+            ) : (
+              <>
+                <ul aria-label={t('product:attributes.title')} className="divide-y lg:hidden">
+                  {visibleAttributes.map((view) => (
+                    <li className="relative space-y-2 px-4 py-3 hover:bg-muted/50 md:px-6" key={`mobile-${view.code}`}>
+                      <button
+                        className="text-left font-medium after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-ring"
+                        type="button"
+                        onClick={() => openAttribute(view.code)}
+                      >
+                        {view.name}
+                      </button>
+                      <p className={view.effectiveValue ? 'text-sm' : 'text-sm text-muted-foreground'}>
+                        {view.effectiveValue ||
+                          (view.candidateOnly
+                            ? t('product:attributes.notPublished')
+                            : t('product:attributes.notFound'))}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <AttributeTags attribute={view} />
+                        <EvidenceTag attribute={view} />
+                        {view.override ? (
+                          <ToneBadge icon={PencilLine} tone="info">
+                            {t('product:attributes.edited')}
+                          </ToneBadge>
+                        ) : null}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
 
-                          {editing ? (
-                            <div className="space-y-2">
-                              <Label htmlFor={`mobile-value-${attribute.attribute_code}`}>
-                                {t('product:attributes.edit.newValue')}
-                              </Label>
-                              <Input
-                                id={`mobile-value-${attribute.attribute_code}`}
-                                value={overrideValue}
-                                onChange={(event) => setOverrideValue(event.target.value)}
-                              />
-                              <Label htmlFor={`mobile-reason-${attribute.attribute_code}`}>
-                                {t('product:attributes.edit.reason')}
-                              </Label>
-                              <Textarea
-                                id={`mobile-reason-${attribute.attribute_code}`}
-                                value={overrideReason}
-                                onChange={(event) => setOverrideReason(event.target.value)}
-                                placeholder={t('product:attributes.edit.reasonPlaceholder')}
-                              />
-                              <ManualEvidenceForm
-                                description={t('product:attributes.edit.evidenceRequired')}
-                                value={overrideEvidence}
-                                onChange={setOverrideEvidence}
-                              />
-                            </div>
-                          ) : (
-                            <div>
-                              <p className="text-xs text-muted-foreground">{t('product:attributes.effectiveValue')}</p>
-                              <p className={effectiveValue ? 'mt-1 font-medium' : 'mt-1 text-muted-foreground'}>
-                                {effectiveValue ||
-                                  (candidateOnly
-                                    ? t('product:attributes.notPublished')
-                                    : t('product:attributes.notFound'))}
-                              </p>
-                              {candidateOnly ? (
-                                <p className="mt-1 text-sm font-medium">
-                                  {t('product:attributes.candidateValue', { value: attribute.candidate_value })}
-                                </p>
-                              ) : null}
-                            </div>
-                          )}
-
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <p className="text-xs text-muted-foreground">{t('product:attributes.confidence')}</p>
-                              <p className="mt-1 tabular-nums">
-                                {override ? t('product:attributes.curated') : formatPercent(attribute.confidence)}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">{t('product:attributes.valueOrigin')}</p>
-                              <div className="mt-1">
-                                {override ? (
-                                  <ToneBadge icon={PencilLine} tone="info">
-                                    {t('product:attributes.edited')}
-                                  </ToneBadge>
-                                ) : (
-                                  <Badge variant="outline">{t('product:attributes.agent')}</Badge>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <AttributeAudit
-                            aiValue={candidateOnly ? attribute.candidate_value : attribute.attribute_value}
-                            attributeName={attribute.attribute_name}
-                            candidateOnly={candidateOnly}
-                            captureExpected={expectsCapture(attribute.attribute_code)}
-                            observation={attribute.observation}
-                            reasons={reasonsFor(attribute)}
-                            onRemoveOverride={override ? () => removeOverride(attribute.attribute_code) : undefined}
-                            override={override}
-                            references={references}
-                            removingOverride={removingOverrideCode === attribute.attribute_code}
-                            manualEvidence={manualEvidenceFor(attribute.attribute_code)}
-                            onAddEvidence={(draft) =>
-                              addEvidence(attribute.attribute_code, attribute.attribute_name, draft)
-                            }
-                            onRemoveEvidence={(id) => removeEvidence(attribute.attribute_code, id)}
-                          />
-
-                          {editing ? (
-                            <div className="flex flex-wrap items-center gap-2">
-                              {editError ? (
-                                <p className="w-full text-sm text-destructive" role="alert">
-                                  {editError}
-                                </p>
-                              ) : null}
-                              <Button
-                                size="sm"
-                                disabled={!canSaveOverride}
-                                onClick={() => {
-                                  void saveOverride(attribute.attribute_code, attribute.attribute_name);
-                                }}
-                              >
-                                <Save className="mr-1 h-4 w-4" />
-                                {t('common:actions.save')}
-                              </Button>
-                              <Button size="sm" variant="ghost" onClick={() => setEditingCode(null)}>
-                                {t('common:actions.cancel')}
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button
-                              className="w-full"
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                beginOverride(attribute.attribute_code, effectiveValue ?? attribute.candidate_value)
-                              }
+                <div className="hidden lg:block">
+                  <Table className="table-fixed [&_td]:whitespace-normal">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[27%] pl-6">{t('product:attributes.table.attribute')}</TableHead>
+                        <TableHead className="w-[29%]">{t('product:attributes.effectiveValue')}</TableHead>
+                        <TableHead className="w-[17%]">{t('product:attributes.table.evidence')}</TableHead>
+                        <TableHead className="w-[11%] text-right">{t('product:attributes.confidence')}</TableHead>
+                        <TableHead className="w-[16%] pr-6 pl-6">{t('product:attributes.table.origin')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {visibleAttributes.map((view) => (
+                        <TableRow className="relative cursor-pointer hover:bg-muted/50" key={view.code}>
+                          <TableCell className="pl-6 align-top">
+                            {/* the name opens the attribute's review; its hit area covers the whole row */}
+                            <button
+                              className="text-left font-medium after:absolute after:inset-0 hover:text-primary hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-ring"
+                              type="button"
+                              onClick={() => openAttribute(view.code)}
                             >
-                              <Pencil className="mr-1 h-4 w-4" />
-                              {t('product:attributes.editAttribute')}
-                            </Button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </section>
-
-                  <div className="hidden lg:block">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t('product:attributes.table.attribute')}</TableHead>
-                          <TableHead>{t('product:attributes.effectiveValue')}</TableHead>
-                          <TableHead>{t('product:attributes.confidence')}</TableHead>
-                          <TableHead>{t('product:attributes.table.origin')}</TableHead>
-                          <TableHead>{t('product:attributes.table.audit')}</TableHead>
-                          <TableHead>
-                            <span className="sr-only">{t('common:actions.edit')}</span>
-                          </TableHead>
+                              {view.name}
+                            </button>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              <AttributeTags attribute={view} />
+                            </div>
+                            {view.issues.length ? (
+                              <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                                <AlertCircle aria-hidden className="h-3.5 w-3.5 text-destructive" />
+                                {t('product:attributes.checksFailed', { count: view.issues.length })}
+                              </p>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="align-top">
+                            <p className={`break-words ${view.effectiveValue ? '' : 'text-muted-foreground'}`}>
+                              {view.effectiveValue ||
+                                (view.candidateOnly
+                                  ? t('product:attributes.notPublished')
+                                  : t('product:attributes.notFound'))}
+                            </p>
+                            {view.candidateOnly ? (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {t('product:attributes.candidateValue', { value: view.aiValue })}
+                              </p>
+                            ) : view.override && view.aiValue && view.aiValue !== view.effectiveValue ? (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {t('product:attributes.wasValue', { value: view.aiValue })}
+                              </p>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="align-top">
+                            <div className="flex flex-wrap items-center gap-1">
+                              <EvidenceTag attribute={view} />
+                            </div>
+                            {view.manualEvidence.length ? (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {t('product:audit.manualCount', { count: view.manualEvidence.length })}
+                              </p>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="text-right align-top tabular-nums">
+                            {view.override ? (
+                              <span className="text-muted-foreground">{t('product:attributes.curated')}</span>
+                            ) : view.aiValue ? (
+                              formatPercent(view.confidence)
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="pr-6 pl-6 align-top">
+                            {view.override ? (
+                              <>
+                                <ToneBadge icon={PencilLine} tone="info">
+                                  {t('product:attributes.edited')}
+                                </ToneBadge>
+                                <p
+                                  className="mt-1 truncate text-xs text-muted-foreground"
+                                  title={view.override.created_by}
+                                >
+                                  {view.override.created_by}
+                                </p>
+                              </>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">{t('product:attributes.agent')}</span>
+                            )}
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {visibleAttributes.map((attribute) => {
-                          const override = overrideByCode.get(attribute.attribute_code);
-                          const effectiveValue = override?.value ?? attribute.attribute_value;
-                          const candidateOnly = !effectiveValue && Boolean(attribute.candidate_value);
-                          const outOfVocabulary = attribute.mapping_status === 'OUT_OF_VOCAB';
-                          const references = referencesFor(attribute);
-                          const editing = editingCode === attribute.attribute_code;
-                          return (
-                            <TableRow key={attribute.attribute_code}>
-                              <TableCell>
-                                <p className="font-medium">{attribute.attribute_name}</p>
-                                <div className="mt-1 flex gap-1">
-                                  {asBoolean(attribute.required) ? (
-                                    <Badge variant="outline">{t('product:attributes.required')}</Badge>
-                                  ) : null}
-                                  {!asBoolean(attribute.applicable) ? (
-                                    <Badge variant="secondary">{t('product:attributes.notApplicable')}</Badge>
-                                  ) : null}
-                                  {candidateOnly || outOfVocabulary ? (
-                                    <ToneBadge
-                                      icon={candidateOnly ? TriangleAlert : undefined}
-                                      tone={candidateOnly ? 'warning' : 'quiet'}
-                                    >
-                                      {candidateStatusLabel(t, attribute.mapping_status, Boolean(effectiveValue))}
-                                    </ToneBadge>
-                                  ) : null}
-                                </div>
-                              </TableCell>
-                              <TableCell className="min-w-64">
-                                {editing ? (
-                                  <div className="space-y-2">
-                                    <Label htmlFor={`value-${attribute.attribute_code}`}>
-                                      {t('product:attributes.edit.newValue')}
-                                    </Label>
-                                    <Input
-                                      id={`value-${attribute.attribute_code}`}
-                                      value={overrideValue}
-                                      onChange={(event) => setOverrideValue(event.target.value)}
-                                    />
-                                    <Label htmlFor={`reason-${attribute.attribute_code}`}>
-                                      {t('product:attributes.edit.reason')}
-                                    </Label>
-                                    <Textarea
-                                      id={`reason-${attribute.attribute_code}`}
-                                      value={overrideReason}
-                                      onChange={(event) => setOverrideReason(event.target.value)}
-                                      placeholder={t('product:attributes.edit.reasonPlaceholder')}
-                                    />
-                                    <ManualEvidenceForm
-                                      description={t('product:attributes.edit.evidenceRequired')}
-                                      value={overrideEvidence}
-                                      onChange={setOverrideEvidence}
-                                    />
-                                  </div>
-                                ) : (
-                                  <div>
-                                    <p className={effectiveValue ? '' : 'text-muted-foreground'}>
-                                      {effectiveValue ||
-                                        (candidateOnly
-                                          ? t('product:attributes.notPublished')
-                                          : t('product:attributes.notFound'))}
-                                    </p>
-                                    {candidateOnly ? (
-                                      <p className="mt-1 text-sm font-medium">
-                                        {t('product:attributes.candidateValue', { value: attribute.candidate_value })}
-                                      </p>
-                                    ) : null}
-                                  </div>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {override ? t('product:attributes.curated') : formatPercent(attribute.confidence)}
-                              </TableCell>
-                              <TableCell>
-                                {override ? (
-                                  <div>
-                                    <ToneBadge icon={PencilLine} tone="info">
-                                      {t('product:attributes.edited')}
-                                    </ToneBadge>
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                      {override.created_by}
-                                      <br />
-                                      {formatDate(override.created_at)}
-                                    </p>
-                                  </div>
-                                ) : (
-                                  <Badge variant="outline">{t('product:attributes.agent')}</Badge>
-                                )}
-                              </TableCell>
-                              <TableCell className="align-top">
-                                <AttributeAudit
-                                  aiValue={candidateOnly ? attribute.candidate_value : attribute.attribute_value}
-                                  attributeName={attribute.attribute_name}
-                                  candidateOnly={candidateOnly}
-                                  captureExpected={expectsCapture(attribute.attribute_code)}
-                                  observation={attribute.observation}
-                                  reasons={reasonsFor(attribute)}
-                                  onRemoveOverride={
-                                    override ? () => removeOverride(attribute.attribute_code) : undefined
-                                  }
-                                  override={override}
-                                  references={references}
-                                  removingOverride={removingOverrideCode === attribute.attribute_code}
-                                  manualEvidence={manualEvidenceFor(attribute.attribute_code)}
-                                  onAddEvidence={(draft) =>
-                                    addEvidence(attribute.attribute_code, attribute.attribute_name, draft)
-                                  }
-                                  onRemoveEvidence={(id) => removeEvidence(attribute.attribute_code, id)}
-                                />
-                              </TableCell>
-                              <TableCell>
-                                {editing ? (
-                                  <div className="flex max-w-56 flex-wrap gap-1">
-                                    {editError ? (
-                                      <p className="w-full text-sm text-destructive" role="alert">
-                                        {editError}
-                                      </p>
-                                    ) : null}
-                                    <Button
-                                      size="sm"
-                                      disabled={!canSaveOverride}
-                                      onClick={() => {
-                                        void saveOverride(attribute.attribute_code, attribute.attribute_name);
-                                      }}
-                                    >
-                                      <Save className="mr-1 h-4 w-4" />
-                                      {t('common:actions.save')}
-                                    </Button>
-                                    <Button size="sm" variant="ghost" onClick={() => setEditingCode(null)}>
-                                      {t('common:actions.cancel')}
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                      beginOverride(
-                                        attribute.attribute_code,
-                                        effectiveValue ?? attribute.candidate_value
-                                      )
-                                    }
-                                  >
-                                    <Pencil className="mr-1 h-4 w-4" />
-                                    {t('common:actions.edit')}
-                                  </Button>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </>
-              )}
-            </CardContent>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
           </Card>
         </TabsContent>
         <TabsContent value="evidence">
-          <Card>
-            <CardHeader>
+          <Card className="gap-0 overflow-hidden py-0">
+            <CardHeader className="border-b py-5">
               <CardTitle aria-level={2} role="heading">
                 {t('product:evidence.title')}
               </CardTitle>
+              <p className="text-sm text-muted-foreground">{t('product:evidence.description')}</p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {facts.loading && !facts.data ? (
-                <Skeleton className="h-64" />
-              ) : !facts.data?.length ? (
-                <p className="text-sm text-muted-foreground">{t('product:evidence.empty')}</p>
-              ) : (
-                facts.data.map((fact) => {
+            {facts.loading && !facts.data ? (
+              <Skeleton className="m-6 h-64" />
+            ) : !facts.data?.length ? (
+              <p className="px-6 py-5 text-sm text-muted-foreground">{t('product:evidence.empty')}</p>
+            ) : (
+              <ul className="divide-y">
+                {facts.data.map((fact) => {
                   const evidence = parseJson<EvidenceItem[]>(fact.evidence_json, []);
                   return (
-                    <div key={fact.fact_name} className="rounded-lg border p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground">{fact.fact_name}</p>
-                          <p className="break-words font-medium">{fact.normalized_value ?? fact.fact_value}</p>
-                        </div>
-                        <Badge variant="outline">
+                    <li
+                      className="grid gap-3 px-6 py-4 md:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] md:gap-8"
+                      key={fact.fact_name}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">{fact.fact_name}</p>
+                        <p className="font-medium break-words">{fact.normalized_value ?? fact.fact_value}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
                           {t('product:evidence.confidence', { value: formatPercent(fact.confidence) })}
-                        </Badge>
+                        </p>
                       </div>
-                      <div className="mt-3 space-y-2">
+                      <ul className="min-w-0 space-y-2">
                         {evidence.map((item) => (
-                          <div key={`${fact.fact_name}-${item.url}`} className="rounded-md bg-muted p-3">
+                          <li key={`${fact.fact_name}-${item.url}`}>
                             <a
-                              className="inline-flex max-w-full items-center gap-1 text-sm [overflow-wrap:anywhere] font-medium text-primary underline-offset-4 hover:underline"
+                              className="inline-flex max-w-full items-center gap-1 text-sm font-medium [overflow-wrap:anywhere] text-primary underline-offset-4 hover:underline"
                               href={item.url}
                               rel="noreferrer"
                               target="_blank"
@@ -1113,74 +1013,121 @@ export function ProductPage() {
                               {item.source_title || hostname(item.url) || item.url}
                               <ExternalLink aria-hidden className="h-3 w-3 shrink-0" />
                             </a>
-                            <p className="mt-1 text-sm text-muted-foreground">{item.excerpt}</p>
-                          </div>
+                            {item.excerpt ? (
+                              <p className="mt-0.5 text-sm text-muted-foreground">“{item.excerpt}”</p>
+                            ) : null}
+                          </li>
                         ))}
-                      </div>
-                    </div>
+                      </ul>
+                    </li>
                   );
-                })
-              )}
-            </CardContent>
+                })}
+              </ul>
+            )}
           </Card>
         </TabsContent>
         <TabsContent value="issues">
-          <Card>
-            <CardHeader>
-              <CardTitle aria-level={2} role="heading">
-                {t('product:issues.title')}
-              </CardTitle>
+          <Card className="gap-0 overflow-hidden py-0">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 border-b py-5">
+              <div className="space-y-1.5">
+                <CardTitle aria-level={2} role="heading">
+                  {t('product:issues.title')}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">{t('product:issues.description')}</p>
+              </div>
+              {issues.data?.length ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {errorCount ? (
+                    <ToneBadge icon={AlertCircle} tone="danger">
+                      {t('product:issues.errors', { count: errorCount })}
+                    </ToneBadge>
+                  ) : null}
+                  {warningCount ? (
+                    <ToneBadge icon={TriangleAlert} tone="warning">
+                      {t('product:issues.warnings', { count: warningCount })}
+                    </ToneBadge>
+                  ) : null}
+                </div>
+              ) : null}
             </CardHeader>
-            <CardContent className="space-y-3">
-              {issues.loading && !issues.data ? (
-                <Skeleton className="h-48" />
-              ) : !issues.data?.length ? (
-                <Alert>
-                  <CheckCircle2 className="h-4 w-4" />
-                  <AlertTitle>{t('product:issues.none.title')}</AlertTitle>
-                  <AlertDescription>{t('product:issues.none.description')}</AlertDescription>
-                </Alert>
-              ) : (
-                issues.data.map((issue, index) => (
-                  <Alert
-                    key={`${issue.issue_code}-${issue.field}-${index}`}
-                    // the Alert draws its icon in the text color; a warning shows the warning tone instead
-                    className={issue.severity === 'ERROR' ? undefined : '[&>svg]:text-warning!'}
-                    variant={issue.severity === 'ERROR' ? 'destructive' : 'default'}
-                  >
-                    {issue.severity === 'ERROR' ? (
-                      <AlertCircle className="h-4 w-4" />
-                    ) : (
-                      <TriangleAlert className="h-4 w-4" />
-                    )}
-                    <AlertTitle className="flex flex-wrap items-center gap-x-2">
-                      <span>{issueTitle(issue.issue_code)}</span>
-                      {issue.field ? (
-                        <span className="text-xs font-normal text-muted-foreground">{fieldLabel(issue.field)}</span>
-                      ) : null}
-                      <span className="text-xs font-normal text-muted-foreground">
-                        {severityLabel(issue.severity)} · {issue.issue_code}
-                      </span>
-                    </AlertTitle>
-                    <AlertDescription>{issueMessage(issue)}</AlertDescription>
-                  </Alert>
-                ))
-              )}
-            </CardContent>
+            {issues.loading && !issues.data ? (
+              <Skeleton className="m-6 h-48" />
+            ) : !issues.data?.length ? (
+              <div className="flex items-start gap-3 px-6 py-5">
+                <CheckCircle2 aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <div>
+                  <p className="text-sm font-medium">{t('product:issues.none.title')}</p>
+                  <p className="text-sm text-muted-foreground">{t('product:issues.none.description')}</p>
+                </div>
+              </div>
+            ) : (
+              <ul className="divide-y">
+                {issueGroups.map((group) => {
+                  const error = group.severity === 'ERROR';
+                  const Icon = error ? AlertCircle : TriangleAlert;
+                  return (
+                    <li className="flex gap-3 px-6 py-4" key={group.key}>
+                      <Icon
+                        aria-hidden
+                        className={`mt-0.5 h-4 w-4 shrink-0 ${error ? 'text-destructive' : 'text-warning'}`}
+                      />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
+                          <span className="font-medium" title={group.code}>
+                            {issueTitle(group.code)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {error ? t('product:issues.error') : t('product:issues.warning')}
+                            {group.issues.length > 1
+                              ? ` · ${t('product:issues.places', { count: group.issues.length })}`
+                              : ''}
+                          </span>
+                        </p>
+                        {group.issues.length === 1 ? (
+                          <p className="text-sm text-muted-foreground">{issueMessage(group.issues[0])}</p>
+                        ) : null}
+                        <div className="flex flex-wrap gap-1.5">
+                          {group.issues.map((issue, index) => {
+                            const code = attributeCodeOf(issue.field);
+                            return code ? (
+                              <Button
+                                className="h-7 px-2 text-xs"
+                                key={`${code}-${index}`}
+                                size="sm"
+                                title={issueMessage(issue)}
+                                variant="outline"
+                                onClick={() => openAttribute(code)}
+                              >
+                                {attributeName(code)}
+                              </Button>
+                            ) : issue.field ? (
+                              <Badge key={`${issue.field}-${index}`} title={issueMessage(issue)} variant="outline">
+                                {fieldLabel(issue.field)}
+                              </Badge>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </Card>
         </TabsContent>
-        <TabsContent value="review" className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
-          <Card>
-            <CardHeader>
+        <TabsContent value="review" className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
+          <Card className="gap-0 overflow-hidden py-0">
+            <CardHeader className="border-b py-5">
               <CardTitle aria-level={2} role="heading">
                 {t('product:review.title')}
               </CardTitle>
+              <p className="text-sm text-muted-foreground">{t('product:review.description')}</p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {!reviewLoaded ? (
-                <Skeleton className="h-56" />
-              ) : (
-                <>
+            {!reviewLoaded ? (
+              <Skeleton className="m-6 h-56" />
+            ) : (
+              <>
+                <CardContent className="space-y-5 py-5">
                   {isStaleDecision(reviewState.review) && reviewState.review ? (
                     <Alert>
                       <AlertDescription>
@@ -1190,30 +1137,63 @@ export function ProductPage() {
                       </AlertDescription>
                     </Alert>
                   ) : null}
-                  <div className="space-y-2">
-                    <Label htmlFor="review-status">{t('product:review.status')}</Label>
-                    <Select
+                  {errorCount || warningCount || attributeCounts.missing ? (
+                    <div className="flex flex-wrap items-center gap-3 rounded-lg bg-warning-soft px-4 py-3 text-sm text-warning">
+                      <TriangleAlert aria-hidden className="h-4 w-4 shrink-0" />
+                      <p className="min-w-0 flex-1">
+                        {t('product:review.readiness.open', {
+                          errors: errorCount,
+                          warnings: warningCount,
+                          missing: attributeCounts.missing,
+                        })}
+                      </p>
+                      <Button className="bg-background" size="sm" variant="outline" onClick={() => setTab('issues')}>
+                        {t('product:review.readiness.see')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="flex items-center gap-2 rounded-lg bg-success-soft px-4 py-3 text-sm text-success">
+                      <CircleCheck aria-hidden className="h-4 w-4 shrink-0" />
+                      {t('product:review.readiness.clean')}
+                    </p>
+                  )}
+                  <fieldset className="space-y-2">
+                    <legend className="mb-2 text-sm font-medium">{t('product:review.status')}</legend>
+                    <RadioGroup
+                      className="grid gap-2 sm:grid-cols-2"
                       value={reviewStatus}
                       onValueChange={(value) => {
                         setReviewStatus(value as Review['status']);
                         setReviewSaved(false);
                       }}
                     >
-                      <SelectTrigger id="review-status">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PENDING">{t('common:status.PENDING')}</SelectItem>
-                        <SelectItem value="IN_REVIEW">{t('common:status.IN_REVIEW')}</SelectItem>
-                        <SelectItem value="APPROVED">{t('common:status.APPROVED')}</SelectItem>
-                        <SelectItem value="REJECTED">{t('common:status.REJECTED')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
+                      {DECISIONS.map(({ status, icon: Icon, tone }) => (
+                        <Label
+                          className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 font-normal transition-colors hover:bg-muted/50 ${
+                            reviewStatus === status ? 'border-ring ring-1 ring-ring' : ''
+                          }`}
+                          htmlFor={`decision-${status}`}
+                          key={status}
+                        >
+                          <RadioGroupItem className="mt-0.5" id={`decision-${status}`} value={status} />
+                          <span className="min-w-0 space-y-0.5">
+                            <span className="flex items-center gap-1.5 text-sm font-medium">
+                              {Icon ? <Icon aria-hidden className={`h-4 w-4 ${tone}`} /> : null}
+                              {t(`common:status.${status}`)}
+                            </span>
+                            <span className="block text-xs leading-5 text-muted-foreground">
+                              {t(`product:review.options.${status}`)}
+                            </span>
+                          </span>
+                        </Label>
+                      ))}
+                    </RadioGroup>
+                  </fieldset>
+                  <div className="space-y-1.5">
                     <Label htmlFor="assignee">{t('product:review.assignee')}</Label>
                     <Input
                       id="assignee"
+                      placeholder={t('product:review.assigneePlaceholder')}
                       value={assignee}
                       onChange={(event) => {
                         setAssignee(event.target.value);
@@ -1221,11 +1201,12 @@ export function ProductPage() {
                       }}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label htmlFor="notes">{t('product:review.notes')}</Label>
                     <Textarea
                       id="notes"
-                      rows={5}
+                      placeholder={t('product:review.notesPlaceholder')}
+                      rows={4}
                       value={notes}
                       onChange={(event) => {
                         setNotes(event.target.value);
@@ -1233,73 +1214,102 @@ export function ProductPage() {
                       }}
                     />
                   </div>
-                  <Button
-                    disabled={savingReview}
-                    onClick={() => {
-                      void saveReview();
-                    }}
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    {savingReview ? t('common:actions.saving') : t('product:review.save')}
-                  </Button>
                   {decisionError ? (
                     <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>{decisionError}</AlertDescription>
                     </Alert>
                   ) : null}
-                  {reviewSaved ? (
-                    <p className="flex items-center gap-1.5 text-sm text-muted-foreground" role="status">
-                      <CheckCircle2 aria-hidden className="h-4 w-4 text-success" />
-                      {t('product:review.saved')}
-                    </p>
-                  ) : null}
-                  {nextProduct ? (
-                    <p className="text-xs text-muted-foreground">{t('product:queue.afterDecision')}</p>
-                  ) : null}
-                </>
-              )}
-            </CardContent>
+                </CardContent>
+                <div className="flex flex-wrap items-center gap-3 border-t bg-muted/30 px-6 py-3">
+                  <p className="min-w-0 flex-1 basis-48 text-xs text-muted-foreground" role="status">
+                    {reviewSaved ? (
+                      <span className="flex items-center gap-1.5 text-sm text-foreground">
+                        <CheckCircle2 aria-hidden className="h-4 w-4 text-success" />
+                        {t('product:review.saved')}
+                      </span>
+                    ) : nextProduct ? (
+                      t('product:queue.afterDecision')
+                    ) : null}
+                  </p>
+                  <Button disabled={savingReview} onClick={() => void saveReview()}>
+                    <Save aria-hidden className="mr-2 h-4 w-4" />
+                    {savingReview ? t('common:actions.saving') : t('product:review.save')}
+                  </Button>
+                </div>
+              </>
+            )}
           </Card>
-          <Card>
-            <CardHeader>
+          <Card className="gap-0 overflow-hidden py-0">
+            <CardHeader className="border-b py-5">
               <CardTitle aria-level={2} role="heading">
                 {t('product:history.title')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {!reviewState.events.length ? (
-                <p className="text-sm text-muted-foreground">{t('product:history.empty')}</p>
-              ) : (
-                reviewState.events.map((event) => (
-                  <div key={event.id} className="border-l-2 border-border pl-3">
+            {!reviewState.events.length ? (
+              <p className="px-6 py-5 text-sm text-muted-foreground">{t('product:history.empty')}</p>
+            ) : (
+              <ol className="max-h-[42rem] divide-y overflow-y-auto">
+                {reviewState.events.map((event) => (
+                  <li className="space-y-1 px-6 py-4" key={event.id}>
                     <p className="text-sm font-medium">
                       {AUDIT_EVENTS.has(event.event_type)
                         ? t(`product:history.events.${event.event_type}`)
                         : event.event_type}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {event.actor} · {formatDate(event.created_at)}
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      {formatDate(event.created_at)} · {event.actor}
                     </p>
                     {event.after_value ? (
-                      <p className="mt-1 break-words text-sm">
-                        {fieldLabel(event.field_key)}: {historyValue(t, event)}
+                      <p className="text-sm break-words">
+                        <span className="text-muted-foreground">
+                          {event.field_key && attributeCodeOf(event.field_key)
+                            ? attributeName(attributeCodeOf(event.field_key) ?? '')
+                            : fieldLabel(event.field_key)}
+                          :
+                        </span>{' '}
+                        {historyValue(t, event)}
                       </p>
                     ) : null}
                     {event.event_type === 'REVIEW_REOPENED' ? (
-                      <p className="mt-1 text-xs text-muted-foreground">{t('product:history.reopenedReason')}</p>
+                      <p className="text-xs text-muted-foreground">{t('product:history.reopenedReason')}</p>
                     ) : event.reason ? (
-                      <p className="mt-1 whitespace-pre-line break-words text-xs text-muted-foreground">
-                        {event.reason}
-                      </p>
+                      <p className="text-xs break-words whitespace-pre-line text-foreground/80">“{event.reason}”</p>
                     ) : null}
-                  </div>
-                ))
-              )}
-            </CardContent>
+                  </li>
+                ))}
+              </ol>
+            )}
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AttributeSheet
+        attribute={sheetAttribute}
+        editRequested={sheetEdit}
+        open={sheetAttribute !== null}
+        position={sheetIndex >= 0 ? { index: sheetIndex, count: visibleAttributes.length } : undefined}
+        removingOverride={removingOverrideCode === sheetCode}
+        onAddEvidence={
+          sheetAttribute ? (draft) => addEvidence(sheetAttribute.code, sheetAttribute.name, draft) : undefined
+        }
+        onNext={
+          sheetIndex >= 0 && sheetIndex < visibleAttributes.length - 1
+            ? () => openAttribute(visibleAttributes[sheetIndex + 1].code)
+            : undefined
+        }
+        onOpenChange={(open) => {
+          if (!open) setSheetCode(null);
+        }}
+        onPrevious={sheetIndex > 0 ? () => openAttribute(visibleAttributes[sheetIndex - 1].code) : undefined}
+        onRemoveEvidence={sheetAttribute ? (id) => removeEvidence(sheetAttribute.code, id) : undefined}
+        onRemoveOverride={sheetAttribute?.override ? () => removeOverride(sheetAttribute.code) : undefined}
+        onSaveEdit={
+          sheetAttribute
+            ? (value, reason, draft) => saveOverride(sheetAttribute.code, sheetAttribute.name, value, reason, draft)
+            : undefined
+        }
+      />
     </div>
   );
 }

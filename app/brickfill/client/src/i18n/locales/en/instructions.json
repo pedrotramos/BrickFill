@@ -16,7 +16,9 @@
     "placeholder": "One instruction per line, in plain language.",
     "count": "{{length}} / {{max}} characters",
     "save": "Save new version",
-    "guard": "Each result records the version it was generated with. Page content is still untrusted, whatever these instructions say."
+    "guard": "Each result records the version it was generated with. Page content is still untrusted, whatever these instructions say.",
+    "unsaved": "Unsaved changes",
+    "noChanges": "No unsaved changes"
   },
   "history": {
     "title": "Versions",

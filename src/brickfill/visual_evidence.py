@@ -71,6 +71,8 @@ def _script(name: str, argument: Any = None) -> str:
 
 DOM_SCRIPT = _script("dom_map")
 DISMISS_SCRIPT = _script("dismiss")
+OVERLAYS_SCRIPT = _script("overlays")
+OVERLAY_PASSES = 3  # answering a notice can open another one
 EXPAND_SCRIPT = _script("expand")
 SCROLL_BOTTOM_SCRIPT = _script("scroll", "bottom")
 SCROLL_TOP_SCRIPT = _script("scroll", "top")
@@ -109,7 +111,9 @@ def crop_value(excerpt: str | None, *values: str | None) -> str:
 STABLE_TOLERANCE_PX = 2.0
 # Values that the focused capture tries again (a full-page FAILED only counts when the page itself was captured).
 FOCUS_STATUSES = {"NO_MATCH", "AMBIGUOUS", "SCREENSHOT_ONLY", "FAILED"}
-MAX_FOCUS_TARGETS = 6  # one paid scrape per page; 7 actions per value
+MAX_FOCUS_TARGETS = 6  # one paid scrape per page
+FOCUS_ACTIONS_PER_VALUE = 7
+FIRECRAWL_MAX_ACTIONS = 50  # Firecrawl refuses a scrape with more actions (HTTP 400)
 
 
 def table_cells(excerpt: str | None) -> list[str]:
@@ -367,6 +371,7 @@ class CaptureCollector:
         location: dict[str, Any] | None = None,
         pdf_parser: DocumentParser | None = None,
         pdf_parser_max_pages: int = 20,
+        dismiss_overlays: bool = False,
     ) -> None:
         if max_credits is not None and max_credits < 1:
             raise ValueError("Credit budget must be positive")
@@ -390,6 +395,33 @@ class CaptureCollector:
         # Reads scanned PDFs (no text layer), e.g. ai_parse_document on the job; None keeps them NO_MATCH.
         self.pdf_parser = pdf_parser
         self.pdf_parser_max_pages = pdf_parser_max_pages
+        # Also close welcome tours, location prompts, newsletters and stacked dialogs (capture_scripts/overlays.js).
+        self.dismiss_overlays = dismiss_overlays
+
+    def _dismiss_actions(self) -> list[dict[str, Any]]:
+        """Refuse the cookie banner, then (with ``dismiss_overlays``) answer the other notices a few times."""
+        actions: list[dict[str, Any]] = [
+            {"type": "executeJavascript", "script": DISMISS_SCRIPT},
+            {"type": "wait", "milliseconds": 500},
+        ]
+        if self.dismiss_overlays:
+            for _ in range(OVERLAY_PASSES):
+                actions += [
+                    {"type": "executeJavascript", "script": OVERLAYS_SCRIPT},
+                    {"type": "wait", "milliseconds": 600},
+                ]
+        return actions
+
+    @property
+    def _focus_limit(self) -> int:
+        """Values one focused scrape can show: with ``dismiss_overlays`` its notice passes leave room for fewer."""
+        room = FIRECRAWL_MAX_ACTIONS - 1 - len(self._dismiss_actions())
+        return min(MAX_FOCUS_TARGETS, room // FOCUS_ACTIONS_PER_VALUE)
+
+    @property
+    def _dismiss_returns(self) -> int:
+        """Script returns of :meth:`_dismiss_actions` at the start of ``javascriptReturns``."""
+        return 1 + (OVERLAY_PASSES if self.dismiss_overlays else 0)
 
     async def __aenter__(self) -> Self:
         if self._http is None:
@@ -473,13 +505,11 @@ class CaptureCollector:
             original_actions = (
                 [item for item in requested if isinstance(item, dict)] if isinstance(requested, list) else []
             )
-            payload["actions"] = [
-                *original_actions,
+            capture_actions = [
                 {"type": "wait", "milliseconds": 1000},
                 # Refuse the cookie banner, open what a visitor can open (accordions, <details>, "show more"), then
                 # scroll to the end and back so lazy-loaded content is rendered before the text maps and the screenshot.
-                {"type": "executeJavascript", "script": DISMISS_SCRIPT},
-                {"type": "wait", "milliseconds": 500},
+                *self._dismiss_actions(),
                 {"type": "executeJavascript", "script": EXPAND_SCRIPT},
                 {"type": "executeJavascript", "script": SCROLL_BOTTOM_SCRIPT},
                 {"type": "wait", "milliseconds": 1500},
@@ -489,6 +519,9 @@ class CaptureCollector:
                 {"type": "screenshot", "fullPage": True, "quality": 100},
                 {"type": "executeJavascript", "script": DOM_SCRIPT},
             ]
+            # the agent's own actions run first, in the room the capture leaves under Firecrawl's limit
+            original_actions = original_actions[: max(0, FIRECRAWL_MAX_ACTIONS - len(capture_actions))]
+            payload["actions"] = [*original_actions, *capture_actions]
         if self._budget_exhausted():
             page.error = "Recapture credit budget exhausted; no paid request was made."
             page.tool_payload = self._error_payload(page.error)
@@ -858,7 +891,7 @@ class CaptureCollector:
                 needle = ""  # an excerpt that is not literally on the page cannot locate the element
             key = {"needle": needle, "value": value}
             index = next((item["index"] for item in targets if {k: item[k] for k in key} == key), None)
-            if index is None and len(targets) < MAX_FOCUS_TARGETS:
+            if index is None and len(targets) < self._focus_limit:
                 index = len(targets)
                 targets.append({"index": index, **key})
             assigned.append((evidence, value, index))
@@ -868,11 +901,7 @@ class CaptureCollector:
             for evidence, _value, _index in assigned:
                 self._not_visible(evidence, "Recapture credit budget exhausted before the focused capture.")
             return
-        actions: list[dict[str, Any]] = [
-            {"type": "wait", "milliseconds": 1000},
-            {"type": "executeJavascript", "script": DISMISS_SCRIPT},
-            {"type": "wait", "milliseconds": 500},
-        ]
+        actions: list[dict[str, Any]] = [{"type": "wait", "milliseconds": 1000}, *self._dismiss_actions()]
         for target in targets:
             actions += [
                 {"type": "executeJavascript", "script": _script("reveal", target)},
@@ -894,7 +923,7 @@ class CaptureCollector:
             data = await self._post_scrape(payload, page)
             returns = (data.get("actions") or {}).get("javascriptReturns") or []
             screenshots = (data.get("actions") or {}).get("screenshots") or []
-            returns = returns[1:]  # the first return is the cookie banner refusal
+            returns = returns[self._dismiss_returns :]  # the cookie banner refusal (and the other notices)
             if len(returns) != 4 * len(targets) or len(screenshots) != len(targets):
                 raise ValueError("Firecrawl did not return every focused capture")
         except (httpx.HTTPError, DatabricksError, OSError, ValueError, KeyError, TypeError) as exc:

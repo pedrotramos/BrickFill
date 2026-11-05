@@ -34,14 +34,12 @@ import { queryErrorText } from '../lib/api-errors';
 import { useCatalogQuery } from '../lib/catalog-query';
 import { formatDate, formatNumber, formatPercent } from '../lib/formatters';
 import { issueTitle } from '../lib/issues';
+import { CategoryCombobox } from '../components/CategoryCombobox';
+import { categoryOptions, type CategoryOption, type CategoryTreeRow } from '../lib/category-tree';
+import { useTemplateMatches } from '../lib/editors';
 
 const NO_PARAMETERS = {};
 
-/** Categories carry a stable category_id from the canonical contract; older sources only the name. */
-function categoryKey(item: { category: string }): string {
-  const id = (item as { category_id?: unknown }).category_id;
-  return typeof id === 'string' && id ? id : item.category;
-}
 const PAGE_SIZES = [25, 50, 100];
 const SORTS = [
   { value: 'queue', label: 'catalog:sort.queue' },
@@ -97,7 +95,16 @@ export function CatalogPage() {
       setter(value);
       setPage(0);
     };
-  const categories = useCatalogQuery('categories', NO_PARAMETERS);
+  const tree = useCatalogQuery('category_tree', NO_PARAMETERS);
+  const templateMatches = useTemplateMatches();
+  // the product list filters by category name; one choice per name, found by name, id or synonym
+  const categoryChoices = useMemo(() => {
+    const byName = new Map<string, CategoryOption>();
+    for (const option of categoryOptions((tree.data ?? []) as CategoryTreeRow[], 'category', templateMatches)) {
+      if (!byName.has(option.name)) byName.set(option.name, option);
+    }
+    return [...byName.values()];
+  }, [templateMatches, tree.data]);
   const issueParameters = useMemo(() => ({ refresh_token: String(refreshToken) }), [refreshToken]);
   const issueCodes = useCatalogQuery('issue_codes', issueParameters);
 
@@ -163,22 +170,16 @@ export function CatalogPage() {
               <SelectItem value="PENDING">{t('common:status.PENDING')}</SelectItem>
             </SelectContent>
           </Select>
-          <Select
-            value={category || '__all__'}
-            onValueChange={(value) => changeFilter(setCategory)(value === '__all__' ? '' : value)}
-          >
-            <SelectTrigger aria-label={t('catalog:filters.categoryLabel')} className="w-full md:w-auto">
-              <SelectValue placeholder={t('catalog:filters.allCategories')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">{t('catalog:filters.allCategories')}</SelectItem>
-              {categories.data?.map((item) => (
-                <SelectItem key={categoryKey(item)} value={item.category}>
-                  {item.category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="w-full md:w-60">
+            <CategoryCombobox
+              allLabel={t('catalog:filters.allCategories')}
+              label={t('catalog:filters.categoryLabel')}
+              options={categoryChoices}
+              placeholder={t('catalog:filters.allCategories')}
+              value={categoryChoices.find((item) => item.name === category)?.id ?? (category || null)}
+              onChange={(_value, option) => changeFilter(setCategory)(option?.name ?? '')}
+            />
+          </div>
           <Select
             value={issue || '__all__'}
             onValueChange={(value) => changeFilter(setIssue)(value === '__all__' ? '' : value)}

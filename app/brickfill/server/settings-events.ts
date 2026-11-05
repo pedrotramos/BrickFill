@@ -41,9 +41,17 @@ export function changes(before: JsonObject, after: JsonObject): FieldChange[] {
   };
   const left = flatten(before);
   const right = flatten(after);
+  // an empty list or text is no value: creating a record with empty fields records no change for them
+  // keys sorted: jsonb returns an object's keys in its own order, the app in the order it built them
+  const comparable = (value: unknown) =>
+    JSON.stringify(value === '' || (Array.isArray(value) && !value.length) ? null : (value ?? null), (_key, item) =>
+      item && typeof item === 'object' && !Array.isArray(item)
+        ? Object.fromEntries(Object.entries(item as JsonObject).sort(([a], [b]) => a.localeCompare(b)))
+        : item
+    );
   const keys = [...new Set([...Object.keys(left), ...Object.keys(right)])].sort();
   return keys
-    .filter((key) => JSON.stringify(left[key] ?? null) !== JSON.stringify(right[key] ?? null))
+    .filter((key) => comparable(left[key]) !== comparable(right[key]))
     .map((key) => ({ key, before: left[key] ?? null, after: right[key] ?? null }));
 }
 

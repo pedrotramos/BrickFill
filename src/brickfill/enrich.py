@@ -405,6 +405,7 @@ def research(
     rules_for: RulesResolver | None = None,
     pdf_parser: DocumentParser | None = None,
     pdf_parser_max_pages: int = 20,
+    dismiss_overlays: bool = False,
 ) -> list[tuple[ProductSeed, ProductEnrichment | None, list[ValidationIssue], str | None]]:
     """Research, validate and capture visual evidence for every seed (concurrently).
 
@@ -429,6 +430,7 @@ def research(
         location={"country": market.country, "languages": market.languages} if market else None,
         pdf_parser=pdf_parser,
         pdf_parser_max_pages=pdf_parser_max_pages,
+        dismiss_overlays=dismiss_overlays,
     )
     agent.capture_collector = collector
 

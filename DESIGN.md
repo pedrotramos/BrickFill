@@ -418,6 +418,9 @@ Workspace buttons: one blue fill per area, and outlines everywhere else.
   sit at 50% opacity.
 - **Toolbar:** catalog filters are a single wrapping row: the search field first, then the select triggers, then the
   actions.
+- **Tag field** (`TagInput`): a list of short values (synonyms, fields, facts) edited inside one field outline. Each
+  value is a 4px quiet tag with its own remove button; Enter, comma or Tab adds, a pasted list adds every line, and
+  Backspace in the empty field removes the last tag. It replaces "one per line" textareas.
 
 ### Navigation
 - **Sidebar items:** 32px rows with a 16px icon and 14px label, 6px corners and 10px side padding. Inactive items are
@@ -426,12 +429,61 @@ Workspace buttons: one blue fill per area, and outlines everywhere else.
 - **Tabs:** an underline row on a 1px baseline, 20px between triggers. Inactive tabs are Slate Secondary and turn
   Slate Ink on hover. The active tab is Slate Ink semibold with a 2px Action Blue underline. Tabs stay on one line
   and scroll sideways. On phones the right edge fades out (over 40px) so the hidden tabs read as "scroll for more".
+- **Sidebar groups:** the items sit in two labeled groups, Review (Overview, Catalog) and Configure (Settings,
+  Category templates, Attributes, Agent instructions). The group label is 12px medium Slate Secondary, 20px above
+  the group.
 - **Skip link:** "Skip to content" slides in on the first Tab, as a 6px primary-blue button.
+- **Unknown address:** a 404 page in the shell (icon tile, page title, one line, an outline button back to the
+  overview), never the router's default error screen.
 
-### Evidence audit sheet (signature)
-A side sheet that puts the AI value, the curated value and each source side by side. Each source shows its host, a
-source-tier tag, a capture tag, the screenshot crop in an 8px bordered frame, and the excerpt. Anything new that
-shows a value should be able to show its proof the same way.
+### Attribute sheet (signature)
+One side sheet (`AttributeSheet`, 672px) is where an attribute is both audited and edited; the list never edits in
+place. The header holds ‹ › to walk the visible attributes without closing it ("6 of 23"), the name, and its tags
+(required, evidence, edited). Then, in order:
+- the checks this value failed, as a bordered list with the severity icon;
+- **Value**: the AI value (with its confidence) and the published value side by side, and "Edit value", which turns
+  the section into the edit form (value, reason, evidence) with a sticky footer (Cancel, the one blue Save edit);
+- **Sources**: one bordered tile per source, the crop on top, then the source-tier and capture tags, the host, the
+  title, the excerpt and ghost links to the page and the full screenshot;
+- the reviewer's own evidence, and the research note.
+
+Anything new that shows a value should be able to show its proof the same way.
+
+### Evidence field
+Reviewer evidence (`ManualEvidenceForm`) leads with a dashed drop area (drop, paste with Ctrl+V or choose; a preview
+with name, size and Remove once attached), then "or prove it with the source page" and the URL and excerpt, then an
+optional note. A status line under it says whether the evidence is enough to save. The native file input is never
+shown.
+
+### Attribute list
+Rows are uniform and read-only: name and tags, the published value (with the AI value it replaced, or the candidate),
+one evidence tag, the confidence right-aligned, and the origin. The evidence tag says how the value is backed: "On the
+page" (success, a crop or reviewer evidence), "Check capture" (warning), "N references" (neutral, text only), "No
+reference" (danger). The name opens the attribute sheet and its hit area covers the row. Above the list: search, the
+filter and the counts (required without value, to check, edited).
+
+### Validations and decision
+Validations are grouped by rule and severity, one row each, with the attributes they hit as outline buttons that
+open the attribute sheet. The review decision is four radio tiles (pending, in review, approve, reject) with what each
+does, under a readiness line (amber with the open errors and a "See validations" button, or green when clean).
+
+### Record editor page
+A record with several sections and ordered lists (a category template) is edited on its own page, not in a modal:
+- a ghost "back" button to the list, the record's name as the h1, then its status tag, identifier tag and last save;
+- the sections as panels in a left column, and on desktop a sticky right column (22rem) with a live preview of the
+  result (for a template, the title built from example values with its length against the profile limit, and the
+  fact-sheet outline);
+- ordered lists as bordered, divided rows: a tabular index, the item, its inputs, then ghost up / down / remove;
+- a sticky bottom bar on the content column: the save state ("Unsaved changes" with an amber dot, what is missing to
+  save, or "Saved · revision N"), the optional reason (from 640px up), Cancel and the one blue Save. Leaving with
+  unsaved changes asks first in an alert dialog.
+
+### Change history
+Every editing screen shows its history the same way (`ChangeLog`): a panel whose rows are saves, not fields. The left
+column names the record, the date and revision, the author and the quoted reason; the right one lists each changed
+field with its new value. Lists show what was added (success tag, plus icon) and removed (danger tag, minus icon,
+struck through); a replaced value shows the old one struck through above the new one. Ids are shown by name, and
+events that changed nothing are left out.
 
 ### "How it works" dialog
 A wide dialog with four numbered pipeline stages. The steps are selectable 8px outline tiles; the selected one takes
@@ -463,3 +515,7 @@ non-system hue.
 - **Don't** introduce warm surfaces or a warm accent; the brick of the mark stays the only warm brand note.
 - **Don't** add an arrow or "open" column to a table whose row is already a link.
 - **Don't** add glows, gradients or gradient text to sell the AI. Show the evidence instead.
+- **Don't** put a long, multi-section editor in a modal; give the record its own page with a preview and a sticky
+  save bar.
+- **Don't** draw a lifecycle state (active, required) in Action Blue: active is a success tag, inactive quiet,
+  required a quiet tag with an asterisk.

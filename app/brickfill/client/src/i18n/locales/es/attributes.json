@@ -10,7 +10,7 @@
     "description": "Busque por nombre, identificador o sinónimo; la ruta muestra el departamento y la categoría.",
     "label": "Subcategoría",
     "placeholder": "Elija una subcategoría",
-    "counts": "{{attributes}} atributos · {{required}} obligatorios · {{overrides}} elecciones del equipo"
+    "counts": "{{attributes}} atributos · {{required}} obligatorios · elecciones del equipo: {{overrides}}"
   },
   "table": {
     "title": "Atributos de la subcategoría",
@@ -24,7 +24,8 @@
     "updated": "Cambiado por",
     "notInSource": "ya no está en el origen",
     "sourceDefault": "no informado: valor por defecto del despliegue",
-    "choiceFor": "Obligatoriedad de {{name}}"
+    "choiceFor": "Obligatoriedad de {{name}}",
+    "teamChoice": "Elección del equipo"
   },
   "choice": {
     "follow": "Seguir el origen",
@@ -35,6 +36,16 @@
     "title": "Historial",
     "description": "Cambios en la obligatoriedad de esta subcategoría.",
     "empty": "Todavía no hay cambios.",
-    "revision": "revisión {{revision}}"
+    "revision": "revisión {{revision}}",
+    "field": "Obligatoriedad"
+  },
+  "overview": {
+    "title": "Subcategorías",
+    "description": "{{count}} subcategorías con atributos en la fuente. Elija una arriba, o abra una de estas.",
+    "subcategory": "Subcategoría",
+    "attributes": "Atributos",
+    "required": "Obligatorios",
+    "choices": "Elecciones del equipo",
+    "more": "Se muestran {{shown}} de {{count}}, primero las que tienen elecciones del equipo. Busque arriba cualquier otra."
   }
 }

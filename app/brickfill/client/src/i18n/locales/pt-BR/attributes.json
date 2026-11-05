@@ -10,7 +10,7 @@
     "description": "Busque por nome, identificador ou sinônimo; o caminho mostra o departamento e a categoria.",
     "label": "Subcategoria",
     "placeholder": "Escolha uma subcategoria",
-    "counts": "{{attributes}} atributos · {{required}} obrigatórios · {{overrides}} escolhas do time"
+    "counts": "{{attributes}} atributos · {{required}} obrigatórios · escolhas da equipe: {{overrides}}"
   },
   "table": {
     "title": "Atributos da subcategoria",
@@ -19,12 +19,13 @@
     "empty": "Ainda não há atributos para esta subcategoria. Eles aparecem depois que o job de carga sincroniza a origem.",
     "attribute": "Atributo",
     "source": "Origem",
-    "choice": "Escolha do time",
+    "choice": "Escolha da equipe",
     "effective": "Efetivo",
     "updated": "Alterado por",
     "notInSource": "não está mais na origem",
     "sourceDefault": "não informado: padrão do deploy",
-    "choiceFor": "Obrigatoriedade de {{name}}"
+    "choiceFor": "Obrigatoriedade de {{name}}",
+    "teamChoice": "Escolha da equipe"
   },
   "choice": {
     "follow": "Seguir a origem",
@@ -35,6 +36,16 @@
     "title": "Histórico",
     "description": "Alterações na obrigatoriedade desta subcategoria.",
     "empty": "Nenhuma alteração ainda.",
-    "revision": "revisão {{revision}}"
+    "revision": "revisão {{revision}}",
+    "field": "Obrigatoriedade"
+  },
+  "overview": {
+    "title": "Subcategorias",
+    "description": "{{count}} subcategorias com atributos na origem. Escolha uma acima, ou abra uma destas.",
+    "subcategory": "Subcategoria",
+    "attributes": "Atributos",
+    "required": "Obrigatórios",
+    "choices": "Escolhas da equipe",
+    "more": "Mostrando {{shown}} de {{count}}, primeiro as que têm escolhas da equipe. Busque acima qualquer outra."
   }
 }

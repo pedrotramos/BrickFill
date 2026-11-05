@@ -46,9 +46,6 @@
   },
   "attributes": {
     "title": "Atributos técnicos",
-    "subtitle": "Compara el valor propuesto con la fuente original antes de aprobar o editar.",
-    "auditTitle": "Auditoría por atributo",
-    "auditDescription": "«Ver auditoría» muestra la página de origen, el fragmento capturado y el tipo de fuente, y permite adjuntar evidencias manuales (URL y fragmento, o una captura de pantalla). Cada edición necesita su propia evidencia.",
     "filterLabel": "Filtrar atributos",
     "filters": {
       "relevant": "Relevantes",
@@ -69,11 +66,10 @@
     },
     "effectiveValue": "Valor efectivo",
     "confidence": "Confianza",
-    "valueOrigin": "Origen del valor",
     "table": {
       "attribute": "Atributo",
       "origin": "Origen",
-      "audit": "Auditoría"
+      "evidence": "Evidencia"
     },
     "notPublished": "No publicado",
     "notFound": "No encontrado",
@@ -83,7 +79,6 @@
     "curated": "Revisado",
     "edited": "Editado",
     "agent": "Agente de IA",
-    "editAttribute": "Editar atributo",
     "candidate": {
       "outOfVocabulary": "Fuera del vocabulario",
       "outOfVocabularyPreapproved": "Fuera del vocabulario · Preaprobado",
@@ -102,28 +97,68 @@
       "REQUIRED_NO_EVIDENCE": "Atributo obligatorio sin evidencia suficiente.",
       "OPTIONAL_NO_CANDIDATE": "Atributo opcional sin candidato ni evidencia para este producto.",
       "NOT_IN_MATRIX": "El atributo no pertenece a la matriz aplicable o se marcó como no aplicable."
+    },
+    "description": "Cada valor con lo que lo respalda. Abra un atributo para compararlo con sus fuentes, adjuntar evidencia o editarlo; toda edición necesita su propia evidencia.",
+    "search": "Buscar atributos",
+    "noMatches": "Ningún atributo coincide con la búsqueda o el filtro.",
+    "wasValue": "Valor de la IA: {{value}}",
+    "checksFailed_one": "{{count}} verificación falló",
+    "checksFailed_other": "{{count}} verificaciones fallaron",
+    "summary": {
+      "total_one": "{{count}} atributo",
+      "total_other": "{{count}} atributos",
+      "missing_one": "{{count}} obligatorio sin valor",
+      "missing_other": "{{count}} obligatorios sin valor",
+      "check_one": "{{count}} por verificar",
+      "check_other": "{{count}} por verificar",
+      "edited_one": "{{count}} editado",
+      "edited_other": "{{count}} editados"
     }
   },
   "evidence": {
     "title": "Hechos y fuentes",
     "confidence": "Confianza {{value}}",
-    "empty": "Todavía no se investigaron hechos para este producto."
+    "empty": "Todavía no se investigaron hechos para este producto.",
+    "description": "Cada dato que investigó el agente, con las páginas que lo indican."
   },
   "issues": {
     "title": "Validaciones deterministas",
     "none": {
       "title": "No se encontraron problemas",
       "description": "El resultado superó todas las validaciones."
-    }
+    },
+    "description": "Verificaciones hechas por código sobre el resultado: reglas, vocabularios y evidencias. Abra un atributo para corregirlo.",
+    "errors_one": "{{count}} error",
+    "errors_other": "{{count}} errores",
+    "warnings_one": "{{count}} advertencia",
+    "warnings_other": "{{count}} advertencias",
+    "error": "Error",
+    "warning": "Advertencia",
+    "places_one": "{{count}} lugar",
+    "places_other": "{{count}} lugares"
   },
   "review": {
     "title": "Decisión de revisión",
-    "status": "Estado",
+    "status": "Decisión",
     "assignee": "Responsable",
     "notes": "Notas",
-    "save": "Guardar revisión",
+    "save": "Guardar decisión",
     "staleDecision": "La decisión anterior ({{status}}) se tomó sobre un resultado de enriquecimiento más antiguo. Revisa este resultado y decide de nuevo.",
-    "saved": "Revisión guardada."
+    "saved": "Revisión guardada.",
+    "description": "La decisión vale para este resultado y las ediciones que se muestran aquí.",
+    "assigneePlaceholder": "Quién revisa este producto",
+    "notesPlaceholder": "Qué verificó y por qué decidió así",
+    "options": {
+      "PENDING": "Todavía no hay decisión.",
+      "IN_REVIEW": "Está verificando este producto; la decisión viene después.",
+      "APPROVED": "El resultado y sus ediciones se publican en la próxima publicación.",
+      "REJECTED": "El resultado no se publica."
+    },
+    "readiness": {
+      "open": "Aún abierto en este resultado: {{errors}} errores, {{warnings}} advertencias y {{missing}} atributos obligatorios sin valor.",
+      "clean": "Todas las validaciones pasaron y todo atributo obligatorio tiene valor.",
+      "see": "Ver validaciones"
+    }
   },
   "history": {
     "title": "Historial",
@@ -148,7 +183,7 @@
     "screenshot": "Captura de pantalla",
     "previewAlt": "Vista previa de la captura de pantalla",
     "removeScreenshot": "Quitar captura",
-    "fileHint": "PNG, JPEG o WebP de hasta 10 MB. También puedes pegar con Ctrl+V.",
+    "fileHint": "PNG, JPEG o WebP, hasta 10 MB. Ctrl+V pega desde el portapapeles.",
     "note": "Nota (opcional)",
     "notePlaceholder": "Contexto para quien audite después",
     "problems": {
@@ -156,7 +191,11 @@
       "imageSize": "La captura debe pesar como máximo 10 MB.",
       "https": "La URL de la fuente debe empezar por https://.",
       "missing": "Adjunta una captura de pantalla o indica la URL de la fuente y el fragmento que demuestra el valor."
-    }
+    },
+    "dropTitle": "Suelte, pegue o elija una captura de pantalla",
+    "size": "{{size}} KB",
+    "or": "o pruébelo con la página de la fuente",
+    "ready": "La evidencia es suficiente para guardar."
   },
   "audit": {
     "image": {
@@ -183,9 +222,7 @@
     "manualCount_one": "{{count}} manual",
     "manualCount_many": "{{count}} manuales",
     "manualCount_other": "{{count}} manuales",
-    "open": "Ver auditoría",
     "humanOverride": "Edición humana",
-    "title": "Auditoría de {{attribute}}",
     "description": "Revisa el valor propuesto y las fuentes que lo respaldan antes de aprobar o editar.",
     "candidateFound": "Candidato encontrado",
     "aiValue": "Valor original de la IA",
@@ -242,11 +279,26 @@
       "save": "Guardar evidencia",
       "add": "Añadir evidencia"
     },
-    "researchNote": "Nota de la investigación"
+    "researchNote": "Nota de la investigación",
+    "previous": "Atributo anterior",
+    "next": "Siguiente atributo",
+    "position": "{{index}} de {{count}}",
+    "checks": "Verificaciones en las que este valor falló",
+    "value": "Valor",
+    "editValue": "Editar valor",
+    "published": "Valor publicado",
+    "confidence": "Confianza {{value}}",
+    "editedBy": "Editado por {{actor}} el {{date}}",
+    "editNote": "La edición se registra con su evidencia; un producto aprobado vuelve a revisión.",
+    "saveEdit": "Guardar edición"
   },
   "loadFailed": {
     "title": "No se pudo cargar este producto",
     "description": "El catálogo no respondió. Inténtalo de nuevo en un momento."
   },
-  "loading": "Cargando el producto…"
+  "loading": "Cargando el producto…",
+  "evidenceState": {
+    "captured": "En la página",
+    "check": "Verificar captura"
+  }
 }

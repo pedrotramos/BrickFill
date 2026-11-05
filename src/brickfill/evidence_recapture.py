@@ -78,6 +78,7 @@ def run(
     max_credits: int = 3,
     pdf_parser: DocumentParser | None = None,
     pdf_parser_max_pages: int = 20,
+    dismiss_overlays: bool = False,
 ) -> dict:
     """Capture evidence for up to three attributes of one SKU without re-enriching or publishing."""
     if not re.fullmatch(r"\d{8,14}", ean):
@@ -116,6 +117,7 @@ def run(
         max_credits=max_credits,
         pdf_parser=pdf_parser,
         pdf_parser_max_pages=pdf_parser_max_pages,
+        dismiss_overlays=dismiss_overlays,
     )
     initialize_output_tables(namespace)
     usage = _run_async(capture_recapture(selected, collector, track_credit_usage=True))

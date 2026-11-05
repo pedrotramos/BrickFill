@@ -14,7 +14,9 @@
     "skip": "Saltar al contenido",
     "templates": "Plantillas de categoría",
     "attributes": "Atributos",
-    "instructions": "Instrucciones del agente"
+    "instructions": "Instrucciones del agente",
+    "review": "Revisión",
+    "configure": "Configuración"
   },
   "footer": {
     "product": "BrickFill · acelerador de enriquecimiento de catálogo",
@@ -70,5 +72,22 @@
     "empty": "No se encontró nada.",
     "more_one": "{{count}} más: afine la búsqueda",
     "more_other": "{{count}} más: afine la búsqueda"
+  },
+  "tags": {
+    "remove": "Quitar {{value}}",
+    "full": "Límite de {{count}} alcanzado"
+  },
+  "history": {
+    "empty": "Sin definir",
+    "added": "Agregado",
+    "removed": "Quitado",
+    "yes": "Sí",
+    "no": "No",
+    "revision": "revisión {{revision}}"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "description": "Esta dirección no corresponde a ninguna página de la app. Puede estar mal escrita, o el enlace está desactualizado.",
+    "home": "Ir al resumen"
   }
 }

@@ -16,7 +16,9 @@
     "placeholder": "Una instrucción por línea, en lenguaje sencillo.",
     "count": "{{length}} / {{max}} caracteres",
     "save": "Guardar nueva versión",
-    "guard": "Cada resultado registra la versión con que se generó. El contenido de las páginas sigue sin ser confiable, digan lo que digan estas instrucciones."
+    "guard": "Cada resultado registra la versión con que se generó. El contenido de las páginas sigue sin ser confiable, digan lo que digan estas instrucciones.",
+    "unsaved": "Cambios sin guardar",
+    "noChanges": "No hay cambios pendientes"
   },
   "history": {
     "title": "Versiones",

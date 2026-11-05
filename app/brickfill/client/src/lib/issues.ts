@@ -53,6 +53,10 @@ export function fieldLabel(field: string | null | undefined): string {
   if (name && (prefix === 'fact' || prefix === 'attribute' || prefix === 'attributes')) {
     return i18n.t(`issues:fields.${prefix === 'fact' ? 'fact' : 'attribute'}`, { name });
   }
+  // a position in a list ("images.0") reads as the item's number ("Image 1")
+  if (/^\d+$/.test(name) && i18n.exists(`issues:fields.item.${prefix}`)) {
+    return i18n.t(`issues:fields.item.${prefix}`, { index: Number(name) + 1 });
+  }
   return i18n.exists(`issues:fields.${field}`) ? i18n.t(`issues:fields.${field}`) : field;
 }
 

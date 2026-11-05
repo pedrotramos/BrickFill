@@ -9,6 +9,17 @@ versions the canonical data contract separately.
 
 ### Added
 
+- Searchable category pickers: the catalog filter, the Settings scopes, the category templates and the Attributes
+  screen find a category by name, identifier or synonym (from the category templates), ignoring accents and case.
+- `dismiss_overlays` job parameter (off by default): before the screenshots, also answer the notices beyond the
+  cookie banner (welcome tours, location or region prompts, newsletters, notification requests, stacked dialogs),
+  from a closed list of labels and never accepting anything, with safeguards so the page itself is never hidden.
+  Checked on synthetic pages at window heights 1080 and 100000 (`tests/test_overlays.py`, with Chrome and
+  `BRICKFILL_BROWSER_TESTS=1`). Its passes take room under Firecrawl's limit of 50 actions per scrape, so a focused
+  capture shows at most 5 values of a page with it (6 without).
+- Every scrape stays within Firecrawl's 50 actions: actions the agent asks for beyond the room the capture leaves are
+  dropped instead of failing the scrape with HTTP 400.
+
 - **Category templates** screen: the content model of each product type (title formula with a live example,
   fact-sheet sections and fields, facts always shown, required and optional), matched to departments, categories and
   subcategories by id, name or synonym. Templates are one more settings layer (between the global settings and the
@@ -48,9 +59,29 @@ versions the canonical data contract separately.
 - Pages that add a fragment, a variant or tracking parameters to their address during the capture are no longer
   rejected as "changed address"; a change of path still is.
 - Error messages are no longer garbled when no secret is configured.
+- Review app: an unknown address shows the app's own "Page not found" instead of the router's developer error page.
+- Agent instructions: the character counter showed "{{length}}" instead of the count; read-only text is no longer
+  dimmed as if disabled.
+- Settings history listed category template and attribute requirement changes (with "[object Object]" values); it
+  now shows only the settings scopes, and each screen keeps its own history.
+- Saving a category template no longer records empty fields or a reordering of the same object as changes.
 
 ### Changed
 
+- Category templates are edited on their own page (`/templates/<id>`) instead of a modal: the sections in panels, a
+  sticky live preview (the title built from example values, with its length against the profile limit, and the
+  fact-sheet outline), tag fields for synonyms, fields and facts, one search for departments, categories and
+  subcategories, and a sticky save bar that says what is unsaved or missing. Leaving with unsaved changes asks first.
+- The template, attribute, instruction and settings histories show one row per save, with lists as added and removed
+  tags and ids by name. Active, inactive and required are tone tags with an icon instead of the action blue.
+- Product review: attributes are no longer edited inside their table row. Each row shows the published value, how it
+  is backed ("On the page", "Check capture", "No reference") and the checks it failed, and opens one side sheet that
+  audits and edits the attribute (‹ › walks through the list). Evidence is attached through a drop area (drop, paste
+  or choose a screenshot) instead of the browser's file input. Validations are grouped by rule, with the affected
+  attributes one click away; the decision is four described options under a readiness line; the evidence and history
+  are divided lists.
+- Attributes opens on an overview of the subcategories (attributes, required, team choices); the sidebar groups its
+  items under Review and Configure; Agent instructions puts the editor and its versions side by side.
 - Titles separate their parts with spaces: the prompt no longer asks for a hyphen as separator, and leaves out
   the parts of the title formula without a verified value.
 - `scripts/replay_capture.py` also crops the archived screenshot with the current code and prints the window height
