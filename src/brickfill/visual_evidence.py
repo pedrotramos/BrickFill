@@ -23,6 +23,7 @@ from tenacity import AsyncRetrying, retry_if_exception, stop_after_attempt, wait
 from brickfill.errors import safe_exception_message
 from brickfill.issues import make
 from brickfill.models import ProductEnrichment, Severity, ValidationIssue, VisualEvidence
+from brickfill.pdf_evidence import DocumentParser, PdfRefused, PdfSource, fetch_pdf, locate
 from brickfill.research import canonicalize_url
 
 MAX_IMAGE_BYTES = 30 * 1024 * 1024
@@ -335,6 +336,8 @@ class PageCapture:
     source_text: str = ""
     # Credits Firecrawl reported for this page (full capture plus focused capture).
     credits: int = 0
+    # A PDF downloaded directly: its text maps and page images (the page itself has no screenshot or geometry).
+    pdf: PdfSource | None = None
 
 
 @dataclass
@@ -362,6 +365,8 @@ class CaptureCollector:
         http_client: httpx.AsyncClient | None = None,
         concurrency: int | None = None,
         location: dict[str, Any] | None = None,
+        pdf_parser: DocumentParser | None = None,
+        pdf_parser_max_pages: int = 20,
     ) -> None:
         if max_credits is not None and max_credits < 1:
             raise ValueError("Credit budget must be positive")
@@ -382,6 +387,9 @@ class CaptureCollector:
         # Firecrawl scrape location ({"country": "BR", "languages": ["pt-BR"]}) of the market, when one is configured:
         # sites then serve the localized page (language, currency, regional catalog).
         self.location = location
+        # Reads scanned PDFs (no text layer), e.g. ai_parse_document on the job; None keeps them NO_MATCH.
+        self.pdf_parser = pdf_parser
+        self.pdf_parser_max_pages = pdf_parser_max_pages
 
     async def __aenter__(self) -> Self:
         if self._http is None:
@@ -447,11 +455,18 @@ class CaptureCollector:
         if self.location and "location" not in payload:
             payload["location"] = self.location
         is_pdf = urlsplit(url).path.casefold().endswith(".pdf")
-        if self.max_credits is not None and is_pdf:
-            page.status = "UNSUPPORTED"
-            page.error = "PDF excluded from the credit-limited recapture; no paid request was made."
-            page.tool_payload = self._error_payload(page.error)
-            return page
+        pdf_problem: str | None = None
+        if is_pdf:
+            # downloaded directly: no Firecrawl credit, and the text the agent quotes is the text the crop reads
+            pdf_problem = await self._capture_pdf(page, url)
+            if pdf_problem is None:
+                return page
+            if self.max_credits is not None:
+                page.status = "UNSUPPORTED"
+                page.error = f"PDF: {pdf_problem}; no paid request was made in the credit-limited recapture."
+                page.tool_payload = self._error_payload(page.error)
+                return page
+            # otherwise Firecrawl still extracts its text (without visual capture), as before
         original_actions: list[dict[str, Any]] = []
         if not is_pdf:
             requested = arguments.get("actions", []) if self.max_credits is None else []
@@ -503,8 +518,13 @@ class CaptureCollector:
                 page.error = f"The page answered HTTP {status_code}."
                 return page
             if is_pdf or "pdf" in str(metadata.get("contentType", "")).casefold():
+                if not is_pdf:
+                    # a PDF served without the suffix: download it directly for its pages (the scrape is kept)
+                    pdf_problem = await self._capture_pdf(page, url)
+                    if pdf_problem is None:
+                        return page
                 page.status = "UNSUPPORTED"
-                page.error = "Text extracted from PDF; visual capture is unavailable."
+                page.error = f"PDF: text extracted by Firecrawl; visual capture is unavailable ({pdf_problem})."
                 return page
             actions = data.get("actions") or {}
             screenshots = actions.get("screenshots") or []
@@ -540,7 +560,63 @@ class CaptureCollector:
             page.error = safe_exception_message(exc, self.api_key)
             if not page.tool_payload:
                 page.tool_payload = self._error_payload(page.error)
+                if not is_pdf and self.max_credits is None:
+                    # servers that send a PDF without suffix nor content type, which Firecrawl failed to extract
+                    error = page.error
+                    if await self._capture_pdf(page, url) is not None:
+                        page.error = error
         return page
+
+    async def _capture_pdf(self, page: PageCapture, url: str) -> str | None:
+        """Download and map a PDF; returns why it cannot be used (``None`` when the page is captured)."""
+        if self._http is None:
+            raise RuntimeError("CaptureCollector must be used as an async context manager")
+        try:
+            content, final_url = await fetch_pdf(url, self._http)
+        except PdfRefused as exc:
+            return str(exc)
+        except (httpx.HTTPError, OSError, ValueError) as exc:
+            return f"PDF download failed: {safe_exception_message(exc, self.api_key)}"
+        directory = f"{self.run_id}/{page.capture_id}"
+        try:
+            path = await asyncio.to_thread(self.archive.write, f"{directory}/source.pdf", content)
+            source = await asyncio.to_thread(PdfSource.open, content, final_url)
+            if not source.has_text and self.pdf_parser is not None:
+                try:
+                    await asyncio.to_thread(source.apply_ocr, self.pdf_parser, path, self.pdf_parser_max_pages)
+                except Exception as exc:  # noqa: BLE001 - OCR is optional: any failure leaves the PDF unread
+                    print(f"WARNING: PDF OCR failed for {url}: {safe_exception_message(exc, self.api_key)}")
+        except PdfRefused as exc:
+            return str(exc)
+        except (DatabricksError, OSError, ValueError) as exc:
+            return safe_exception_message(exc, self.api_key)
+        page.pdf = source
+        page.final_url = final_url
+        page.captured_at = datetime.now(UTC)
+        page.text_path = path
+        page.source_text = source.text
+        page.status = "CAPTURED"
+        page.error = None
+        metadata = {
+            "url": final_url,
+            "sourceURL": url,
+            "title": source.title,
+            "contentType": "application/pdf",
+            "numPages": len(source.pages),
+        }
+        page.tool_payload = json.dumps(
+            {
+                "is_error": False,
+                "content": [
+                    {
+                        "type": "text",
+                        "text": json.dumps({"markdown": source.markdown(), "metadata": metadata}, ensure_ascii=False),
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        )
+        return None
 
     def _budget_exhausted(self) -> bool:
         return self.max_credits is not None and max(self.attempts, self.reported_credits) >= self.max_credits
@@ -622,7 +698,7 @@ class CaptureCollector:
                 parts.append(part)
             return b"".join(parts)
 
-    def crop(self, evidence: VisualEvidence, value: str) -> VisualEvidence:
+    def crop(self, evidence: VisualEvidence, value: str, label: str = "") -> VisualEvidence:
         page = self.pages.get(canonicalize_url(evidence.url) or "")
         if page is None:
             evidence.capture_status = "NOT_CAPTURED"
@@ -640,6 +716,8 @@ class CaptureCollector:
             setattr(evidence, name, getattr(page, name))
         evidence.capture_status = page.status
         evidence.capture_error = page.error
+        if page.pdf is not None:
+            return self._crop_pdf(evidence, value, page, page.pdf, label)
         if page.status != "CAPTURED" or page.screenshot is None or page.geometry is None:
             return evidence
         return self._crop_image(
@@ -664,6 +742,38 @@ class CaptureCollector:
         return crop_screenshot(
             self.archive, evidence, value, screenshot, geometry, previous, crop_directory, viewport, self.api_key
         )
+
+    def _crop_pdf(
+        self, evidence: VisualEvidence, value: str, page: PageCapture, source: PdfSource, label: str
+    ) -> VisualEvidence:
+        """Crop the cited value on the right page of a PDF; without a match the page is kept as the capture."""
+        target = locate(source, _visible_excerpt(evidence.excerpt), value, table_cells(evidence.excerpt), label)
+        directory = f"{self.run_id}/{page.capture_id}"
+        try:
+            image = source.image(target.page)
+            page_map = source.pages[target.page - 1]
+            if page_map.image_path is None:
+                page_map.image_path = self.archive.write(f"{directory}/page-{target.page}.png", image)
+                page_map.coordinates_path = self.archive.write(
+                    f"{directory}/page-{target.page}.json",
+                    json.dumps(page_map.geometry, ensure_ascii=False).encode(),
+                )
+        except (DatabricksError, OSError, ValueError) as exc:
+            evidence.capture_status = "FAILED"
+            evidence.capture_error = f"PDF: page rendering failed: {safe_exception_message(exc, self.api_key)}"
+            return evidence
+        evidence.screenshot_path = page_map.image_path
+        evidence.coordinates_path = page_map.coordinates_path
+        evidence.screenshot_sha256 = _digest(image)
+        if target.geometry is None:
+            evidence.capture_status, evidence.capture_error = target.status, target.reason
+            return evidence
+        crop_screenshot(
+            self.archive, evidence, value, image, target.geometry, None, f"{directory}/crops", secret=self.api_key
+        )
+        if evidence.capture_status != "COMPLETE" and evidence.capture_error:
+            evidence.capture_error = f"PDF: {evidence.capture_error}"
+        return evidence
 
     def attach(self, result: ProductEnrichment) -> list[ValidationIssue]:
         """Crop every attribute value from the full-page captures; run ``focus`` afterwards for what is left."""
@@ -691,7 +801,7 @@ class CaptureCollector:
                         url=str(url),
                         capture_status="NOT_CAPTURED",
                     )
-                    attribute.visual_evidence.append(self.crop(reference, candidate))
+                    attribute.visual_evidence.append(self.crop(reference, candidate, attribute.name))
                 for fact, source in matches:
                     reference = VisualEvidence(
                         evidence_id=str(uuid.uuid4()),
@@ -704,7 +814,7 @@ class CaptureCollector:
                         capture_status="NOT_CAPTURED",
                     )
                     value = crop_value(source.excerpt, fact.value, fact.normalized_value, candidate)
-                    attribute.visual_evidence.append(self.crop(reference, value))
+                    attribute.visual_evidence.append(self.crop(reference, value, attribute.name or fact.name))
                     if reference.captured_at is not None:
                         source.retrieved_at = reference.captured_at
         return visual_issues(result)
@@ -727,7 +837,9 @@ class CaptureCollector:
                 value = crop_value(
                     evidence.excerpt, evidence.fact_value, attribute.candidate_value, attribute.value
                 ) or (attribute.candidate_value or attribute.value or "")
-                if page is None or page.status != "CAPTURED" or not _contains(page.source_text, value):
+                if page is None or page.status != "CAPTURED" or page.pdf is not None:
+                    continue  # a PDF has no focused capture: its pages are complete already
+                if not _contains(page.source_text, value):
                     continue  # not on the page at all: no paid request (the full screenshot stays as evidence)
                 pending.setdefault(url, []).append((evidence, value))
         if self.max_credits is not None:

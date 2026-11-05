@@ -2,3 +2,9 @@ BrickFill
 Copyright 2026 BrickFill contributors
 
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Third-party software used at run time (installed as dependencies, not distributed with this repository):
+
+- pypdfium2 (https://github.com/pypdfium2-team/pypdfium2), Apache-2.0 or BSD-3-Clause, renders PDF pages and
+  extracts their text for the visual evidence. Its wheels bundle PDFium (https://pdfium.googlesource.com/pdfium/),
+  BSD-3-Clause, with third-party components under their own permissive licenses (listed in the wheel's licenses).

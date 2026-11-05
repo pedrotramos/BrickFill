@@ -221,7 +221,8 @@
       "UNSUPPORTED": "Fonte sem captura visual (PDF) — revisão necessária",
       "NOT_CAPTURED": "Fonte não capturada — revisão necessária",
       "FAILED": "Falha na captura — revisão necessária",
-      "BLANK": "A página não foi renderizada (captura em branco) — revisão necessária"
+      "BLANK": "A página não foi renderizada (captura em branco) — revisão necessária",
+      "PDF_FAILED": "Falha no recorte do PDF — confira a página do PDF"
     },
     "capturedAt": "Capturada em {{date}}",
     "sourceValue": "Valor na fonte: {{value}}",

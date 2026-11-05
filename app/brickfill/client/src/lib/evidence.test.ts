@@ -28,4 +28,11 @@ describe('captureLabelKey', () => {
     );
     expect(captureLabelKey('FAILED', 'Missing rendered text coordinates', true)).toBe('FAILED');
   });
+
+  it('labels PDF crop failures apart, but keeps the old text-only PDF label', () => {
+    expect(captureLabelKey('NO_MATCH', "PDF: the value was not found in the document's text.", true)).toBe(
+      'PDF_FAILED'
+    );
+    expect(captureLabelKey('UNSUPPORTED', 'PDF: text extracted by Firecrawl', true)).toBe('UNSUPPORTED');
+  });
 });

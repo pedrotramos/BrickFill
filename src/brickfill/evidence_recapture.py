@@ -9,6 +9,7 @@ import httpx
 from databricks.sdk import WorkspaceClient
 
 from brickfill.models import ProductEnrichment
+from brickfill.pdf_evidence import DocumentParser
 from brickfill.research import canonicalize_url
 from brickfill.secrets import firecrawl_api_key
 from brickfill.visual_evidence import CaptureCollector, EvidenceArchive, evidence_rows
@@ -75,6 +76,8 @@ def run(
     firecrawl_secret_key: str,
     evidence_volume: str = "brickfill_evidence",
     max_credits: int = 3,
+    pdf_parser: DocumentParser | None = None,
+    pdf_parser_max_pages: int = 20,
 ) -> dict:
     """Capture evidence for up to three attributes of one SKU without re-enriching or publishing."""
     if not re.fullmatch(r"\d{8,14}", ean):
@@ -111,6 +114,8 @@ def run(
         EvidenceArchive(f"/Volumes/{catalog}/{schema}/{volume}", workspace),
         run_id,
         max_credits=max_credits,
+        pdf_parser=pdf_parser,
+        pdf_parser_max_pages=pdf_parser_max_pages,
     )
     initialize_output_tables(namespace)
     usage = _run_async(capture_recapture(selected, collector, track_credit_usage=True))

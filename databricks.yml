@@ -165,6 +165,12 @@ variables:
   use_native_web_search:
     description: '"false" (default) discovers candidate sources with Firecrawl search (2 credits per query, same path in AWS, Azure and GCP); "true" uses system.ai.web_search, which is billed as Model Serving and is not available in every cloud'
     default: "false"
+  pdf_ocr:
+    description: '"true" reads scanned PDFs (no text layer) with ai_parse_document, billed per page; "false" keeps them for human review'
+    default: "false"
+  pdf_ocr_max_pages:
+    description: Pages of a scanned PDF that ai_parse_document reads when pdf_ocr is "true"
+    default: "20"
   firecrawl_concurrency:
     description: Maximum simultaneous Firecrawl requests in a run (searches, scrapes and focused captures). 2 on the free plan; raise it with a paid plan
     default: "2"
@@ -219,6 +225,7 @@ variables:
       - pydantic==2.13.5
       - tenacity==9.1.4
       - psycopg[binary]==3.3.6
+      - pypdfium2==5.14.0
 
 targets:
   # Development. No workspace is pinned here: deploy with --profile <PROFILE> and set the workspace-specific values
