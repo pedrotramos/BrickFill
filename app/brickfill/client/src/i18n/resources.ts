@@ -31,6 +31,7 @@ import ptIssues from './locales/pt-BR/issues.json';
 import ptOverview from './locales/pt-BR/overview.json';
 import ptProduct from './locales/pt-BR/product.json';
 import ptSettings from './locales/pt-BR/settings.json';
+import type { Resources } from './translator';
 
 export const NAMESPACES = [
   'common',
@@ -46,7 +47,7 @@ export const NAMESPACES = [
   'instructions',
 ] as const;
 
-export const resources = {
+export const resources: Resources = {
   en: {
     common: enCommon,
     overview: enOverview,
@@ -86,4 +87,4 @@ export const resources = {
     attributes: esAttributes,
     instructions: esInstructions,
   },
-} as const;
+};

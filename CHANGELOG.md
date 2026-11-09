@@ -7,6 +7,17 @@ versions the canonical data contract separately.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-09
+
+### Changed
+
+- The default Foundation Model endpoint is now Claude Sonnet 5.5 (`databricks-claude-sonnet-5-5`).
+
+### Fixed
+
+- Review-app locale resources now satisfy their recursive message type directly, so the AppKit lint gate passes
+  without double type assertions.
+
 ## [0.3.0] - 2026-11-05
 
 ### Added
@@ -174,7 +185,8 @@ First public release.
 - `scripts/replay_capture.py`: replays the evidence crops of a past run from its archived text maps, without credits.
 - CI on GitHub Actions (Python, app, bundles, secret scanning) and a tag-driven release workflow.
 
-[Unreleased]: https://github.com/pedrotramos/BrickFill/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/pedrotramos/BrickFill/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/pedrotramos/BrickFill/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/pedrotramos/BrickFill/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/pedrotramos/BrickFill/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pedrotramos/BrickFill/compare/v0.1.0...v0.2.0

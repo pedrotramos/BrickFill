@@ -150,7 +150,7 @@ variables:
   # --- Research agent and evidence capture ---
   model_endpoint:
     description: Databricks Foundation Model API endpoint used by the research agent
-    default: databricks-claude-sonnet-4-6
+    default: databricks-claude-sonnet-5-5
   # The Firecrawl key is read from the Unity Catalog secret secret_catalog.secret_schema.firecrawl_secret_key, created
   # by an admin (docs/setup-guide.md). The defaults place it in the working schema.
   secret_catalog:

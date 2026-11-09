@@ -3,8 +3,9 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { NAMESPACES, resources } from './resources';
 import { SUPPORTED_LANGUAGES, matchLanguage } from './languages';
+import type { MessageTree } from './translator';
 
-type Tree = { [key: string]: string | Tree };
+type Tree = MessageTree;
 
 const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/;
 
@@ -28,7 +29,7 @@ function placeholders(text: string): string[] {
 }
 
 const languages = SUPPORTED_LANGUAGES.map((language) => language.code);
-const all = resources as unknown as Record<string, Record<string, Tree>>;
+const all = resources;
 
 describe('locale resources', () => {
   it('ships every namespace for every language', () => {
