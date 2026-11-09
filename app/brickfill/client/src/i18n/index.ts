@@ -6,7 +6,7 @@ import {
   type LanguageCode,
 } from './languages';
 import { resources } from './resources';
-import { Translator, type Resources } from './translator';
+import { Translator } from './translator';
 
 /*
  * Language resolution: the reviewer's explicit choice (localStorage) → the browser languages → the app default
@@ -32,7 +32,7 @@ function browserLanguage(): LanguageCode | null {
 
 const i18n = new Translator({
   lng: storedLanguage() ?? browserLanguage() ?? FALLBACK_LANGUAGE,
-  resources: resources as unknown as Resources,
+  resources,
   defaultNS: 'common',
   fallbackLng: FALLBACK_LANGUAGE,
   supportedLngs: SUPPORTED_LANGUAGES.map((language) => language.code),

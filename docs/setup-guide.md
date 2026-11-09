@@ -59,7 +59,7 @@ retailer tables ──► adapter (adapters/<name>/*.sql) ──► Job "BrickFi
 
 The workspace needs Unity Catalog, serverless Jobs, Databricks Apps and Lakebase enabled, plus:
 
-- **Foundation Model API endpoint** for `model_endpoint` (default `databricks-claude-sonnet-4-6`).
+- **Foundation Model API endpoint** for `model_endpoint` (default `databricks-claude-sonnet-5-5`).
   - The model is most of the cost; compare the options in [docs/finops.md](finops.md#2-cost-per-product-by-model).
   - Outside the regions where the pay-per-token models are served, the account admin must enable **cross-geography
     processing**. Without it the pay-per-token models don't answer, and the job fails at the endpoint check.
@@ -247,7 +247,7 @@ variables, and a required variable without a value makes `validate` fail with it
 | `alert_emails` | `[catalog-ops@example.com]` | List; receives failures and long runs |
 | `budget_policy_id` | `a1b2…` | Step 1.4 |
 | `tag_cost_center`, `tag_owner`, `tag_business_unit` | | Same values as the policy tags |
-| `model_endpoint` | default `databricks-claude-sonnet-4-6` | [FinOps, section 4](finops.md#4-choosing-and-changing-the-model) |
+| `model_endpoint` | default `databricks-claude-sonnet-5-5` | [FinOps, section 4](finops.md#4-choosing-and-changing-the-model) |
 | `use_native_web_search` | default `"false"` | `"false"` uses Firecrawl search; `"true"` uses `system.ai.web_search` (step 1.1) |
 | `firecrawl_concurrency` | default `"2"` | Simultaneous Firecrawl requests in the whole run. The free plan accepts 2 |
 | `dismiss_overlays` | default `"false"` | `"true"` also closes welcome tours, region prompts, newsletters and stacked dialogs before the screenshots. Turn it on when captures show such notices covering the values (`NOT_VISIBLE`, covered crops) |

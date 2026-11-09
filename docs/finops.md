@@ -52,8 +52,8 @@ The sample is small: use the table as an order of magnitude.
 
 | Model | `model_endpoint` | Tokens per product (input / output; % cached) | Required attributes filled |
 | --- | --- | --- | --- |
-| Claude Sonnet 4.6 (default) | `databricks-claude-sonnet-4-6` | 139–172 k / 17–19 k; 48–55% | ~71% |
-| Claude Sonnet 5.5 | `databricks-claude-sonnet-5-5` | 215 k / 14.5 k; 27% | ~69% |
+| Claude Sonnet 4.6 | `databricks-claude-sonnet-4-6` | 139–172 k / 17–19 k; 48–55% | ~71% |
+| Claude Sonnet 5.5 (default) | `databricks-claude-sonnet-5-5` | 215 k / 14.5 k; 27% | ~69% |
 | GPT 6.1 Sol | `databricks-gpt-6-1-sol` | 153 k / 6.0 k; 69% | ~64% |
 | Claude Haiku 5.5 | `databricks-claude-haiku-5-5` | 74–160 k / 14–18 k; 37–58% | ~64% |
 
@@ -193,9 +193,9 @@ Add the fixed costs to each row:
 
 | Model | Choose it when |
 | --- | --- |
-| `databricks-claude-sonnet-4-6` (default) | You want the best share of required attributes filled in the tests |
+| `databricks-claude-sonnet-4-6` | You want the best share of required attributes filled in the tests |
 | `databricks-gpt-6-1-sol` | Cost matters more: ~1/3 of the Sonnet 4.6 model cost per product, with fewer required attributes filled (~64% against ~71%). Check its availability and discount terms in your cloud |
-| `databricks-claude-sonnet-5-5` | Its tokens cost 1/3 less than 4.6's, but the measured cost per product was similar, because 5.5 used more input and less cache |
+| `databricks-claude-sonnet-5-5` (default) | Its tokens cost 1/3 less than 4.6's, but the measured cost per product was similar, because 5.5 used more input and less cache |
 | `databricks-claude-haiku-5-5` | Volume over coverage: ~1/35 of the Sonnet 4.6 model cost, with fewer attributes filled |
 
 **Before changing the default,** compare quality in staging on products already approved in production (see

@@ -103,7 +103,7 @@ def run(monkeypatch, seed):
     def run(answers: list[Message], definitions=(), structured: bool = False, rules=None):
         agent = CatalogResearchAgent.__new__(CatalogResearchAgent)
         agent.__dict__.update(
-            model_endpoint="databricks-claude-sonnet-4-6",
+            model_endpoint="databricks-claude-sonnet-5-5",
             mcp_url="https://mcp.example.com",
             api_key="key",
             max_steps=3,
